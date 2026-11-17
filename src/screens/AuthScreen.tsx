@@ -92,7 +92,7 @@ export function AuthScreen({
   return (
     <FormModal visible={visible} title={mode === 'signUp' ? t.createAccount : t.signIn} isMobile={isMobile} onClose={close}>
       <FormField label={t.emailField} value={email} onChangeText={setEmail} placeholder={t.emailPlaceholder} keyboardType="email-address" required />
-      <FormField label={t.passwordField} value={password} onChangeText={setPassword} placeholder={t.passwordPlaceholder} required />
+      <FormField label={t.passwordField} value={password} onChangeText={setPassword} placeholder={t.passwordPlaceholder} required secureTextEntry />
       {!!error && <Text style={shared.fieldError}>{error}</Text>}
       {!!info && <Text style={shared.statNote}>{info}</Text>}
 

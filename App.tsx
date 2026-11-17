@@ -33,7 +33,6 @@ import { FarmScreen } from './src/screens/FarmScreen';
 import { RecordsScreen } from './src/screens/RecordsScreen';
 import { MoreScreen } from './src/screens/MoreScreen';
 import { shared } from './src/styles/shared';
-import { CONTENT_MAX_WIDTH, NAV_MAX_WIDTH } from './src/theme';
 
 type Tab = 'Home' | 'Diary' | 'Farm' | 'Records' | 'More';
 
@@ -52,7 +51,7 @@ export default function App() {
   const [showAuth, setShowAuth] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
 
-  const { isMobile, lg, horizontalPadding, gridColumns, cardWidth } = useResponsive();
+  const { isMobile, lg, horizontalPadding, gridColumns, cardWidth, contentMaxWidth } = useResponsive();
   const { webAlert, setWebAlert, showAlert } = useCrossPlatformAlert();
   const auth = useAuth();
   // Every entity query is scoped by this value (see schema.ts's
@@ -220,7 +219,7 @@ export default function App() {
     <SafeAreaView style={shared.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <View style={shared.header}>
-        <View style={[shared.headerInner, { maxWidth: CONTENT_MAX_WIDTH, paddingHorizontal: horizontalPadding }]}>
+        <View style={[shared.headerInner, { maxWidth: contentMaxWidth, paddingHorizontal: horizontalPadding }]}>
           <View style={shared.brandMark}><Text style={shared.brandLeaf}>✦</Text></View>
           <View style={{ flex: 1 }}>
             <Text style={[shared.brand, lg && shared.brandLg]}>BHOOMISHAKTI</Text>
@@ -238,7 +237,7 @@ export default function App() {
       <ScrollView
         contentContainerStyle={[
           shared.content,
-          { paddingHorizontal: horizontalPadding, paddingTop: isMobile ? 18 : 28, maxWidth: CONTENT_MAX_WIDTH, width: '100%', alignSelf: 'center' },
+          { paddingHorizontal: horizontalPadding, paddingTop: isMobile ? 18 : 28, maxWidth: contentMaxWidth, width: '100%', alignSelf: 'center' },
         ]}
         keyboardShouldPersistTaps="handled"
       >
@@ -324,13 +323,17 @@ export default function App() {
       </ScrollView>
 
       <View style={shared.bottomNav}>
-        <View style={[shared.bottomNavInner, { maxWidth: isMobile ? '100%' : NAV_MAX_WIDTH }]}>
+        <View style={[shared.bottomNavInner, { maxWidth: isMobile ? '100%' : contentMaxWidth, paddingHorizontal: horizontalPadding }]}>
           {([
             ['Home', '⌂', t.home], ['Diary', '▤', t.diary], ['Farm', '♧', t.farm],
             ['Records', '▣', t.records], ['More', '•••', t.more],
           ] as [Tab, string, string][]).map(([key, icon, label]) => (
-            <TouchableOpacity key={key} style={shared.navItem} onPress={() => setTab(key)}>
-              <Text style={[shared.navIcon, tab === key && shared.navActive]}>{icon}</Text>
+            <TouchableOpacity
+              key={key}
+              style={[shared.navItem, lg && shared.navItemLg, tab === key && lg && shared.navItemLgActive]}
+              onPress={() => setTab(key)}
+            >
+              <Text style={[shared.navIcon, lg && shared.navIconLg, tab === key && shared.navActive]}>{icon}</Text>
               <Text style={[shared.navLabel, lg && shared.navLabelLg, tab === key && shared.navActive]}>{label}</Text>
             </TouchableOpacity>
           ))}

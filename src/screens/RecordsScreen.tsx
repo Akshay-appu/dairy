@@ -17,6 +17,13 @@ import { formatINR, formatShortDate, isValidDateString, parseAmount, todayDateSt
 
 type RecordsSection = 'overview' | 'finance' | 'harvests';
 
+const SEASON_IDS: Record<string, number> = {
+  kharif: 1,
+  rabi: 2,
+  zaid: 3,
+  perennial: 4,
+};
+
 const EMPTY_FINANCE: FinanceFormState = { type: 'expense', category: 'seeds', amount: '', date: todayDateString(), notes: '' };
 const EMPTY_HARVEST: HarvestFormState = {
   cropId: null, plotId: null, harvestDate: todayDateString(), quantity: '', quantityUnit: 'kg', sellingPrice: '', buyer: '', notes: '',
@@ -177,7 +184,11 @@ export function RecordsScreen({
           <SectionTitle title={t.seasonalHistory} lg={lg} />
           {seasonalGroups.length ? (
             <GridList
-              items={seasonalGroups.map(([season, list]) => ({ id: season.length, season, list }))}
+              items={seasonalGroups.map(([season, list], index) => ({
+                id: SEASON_IDS[season] ?? (index + 10),
+                season,
+                list,
+              }))}
               gridColumns={gridColumns}
               cardWidth={cardWidth}
               renderItem={group => (

@@ -100,6 +100,7 @@ export function DeleteAccountModal({
                 onChangeText={setPassword}
                 placeholder=""
                 required
+                secureTextEntry
               />
             </View>
           )}
