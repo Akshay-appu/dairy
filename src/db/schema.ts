@@ -1,6 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 import { uuidv4 } from '../utils/uuid';
 export * from './cropSchedulesRepo';
+export * from './vaultRepo';
 
 // Sync bookkeeping columns shared by every syncable table:
 //   uuid         - stable cross-device identity; also the Firestore doc id
@@ -247,6 +248,14 @@ export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
       cropName TEXT NOT NULL,
       sowingDate TEXT NOT NULL,
       createdAt TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS vault_documents (
+      id TEXT PRIMARY KEY,
+      workspaceId TEXT NOT NULL,
+      title TEXT NOT NULL,
+      category TEXT NOT NULL,
+      localUri TEXT NOT NULL,
+      capturedAt TEXT NOT NULL
     );
   `);
 

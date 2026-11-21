@@ -7,6 +7,7 @@ import { EmptyState } from '../components/EmptyState';
 import { SectionTitle } from '../components/SectionTitle';
 import { Stat } from '../components/Stat';
 import { CropStageCalendar } from '../components/CropStageCalendar';
+import { ReceiptVault } from '../components/ReceiptVault';
 import { FarmerToolCard } from '../components/FarmerToolCard';
 import { Copy } from '../i18n/copy';
 import { Entry } from '../db/schema';
@@ -86,6 +87,12 @@ export function HomeScreen({
       )}
 
       <CropStageCalendar
+        db={db ?? null}
+        workspaceId={workspaceId || 'default'}
+        lg={lg}
+      />
+
+      <ReceiptVault
         db={db ?? null}
         workspaceId={workspaceId || 'default'}
         lg={lg}
