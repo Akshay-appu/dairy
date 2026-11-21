@@ -5,35 +5,35 @@ import { uuidv4 } from '../utils/uuid';
 
 export type PlotInput = { name: string; area: number | null; areaUnit: string; notes: string };
 
-export async function listPlots(db: SQLite.SQLiteDatabase, ownerId: string | null): Promise<Plot[]> {
+export async function listPlots(db: SQLite.SQLiteDatabase, ownerId: string | null, workspaceId: string = 'default'): Promise<Plot[]> {
   return db.getAllAsync<Plot>(
-    'SELECT * FROM plots WHERE deletedAt IS NULL AND (userId IS ?) ORDER BY id DESC',
-    ownerId
+    'SELECT * FROM plots WHERE deletedAt IS NULL AND (userId IS ?) AND workspaceId = ? ORDER BY id DESC',
+    ownerId, workspaceId
   );
 }
 
-export async function addPlot(db: SQLite.SQLiteDatabase, input: PlotInput, ownerId: string | null): Promise<void> {
+export async function addPlot(db: SQLite.SQLiteDatabase, input: PlotInput, ownerId: string | null, workspaceId: string = 'default'): Promise<void> {
   const now = new Date().toISOString();
   await db.runAsync(
-    'INSERT INTO plots (name, area, areaUnit, notes, createdAt, updatedAt, uuid, userId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    input.name, input.area, input.areaUnit, input.notes, now, now, uuidv4(), ownerId
+    'INSERT INTO plots (name, area, areaUnit, notes, createdAt, updatedAt, uuid, userId, workspaceId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    input.name, input.area, input.areaUnit, input.notes, now, now, uuidv4(), ownerId, workspaceId
   );
 }
 
-export async function updatePlot(db: SQLite.SQLiteDatabase, id: number, input: PlotInput, ownerId: string | null): Promise<void> {
+export async function updatePlot(db: SQLite.SQLiteDatabase, id: number, input: PlotInput, ownerId: string | null, workspaceId: string = 'default'): Promise<void> {
   await db.runAsync(
-    'UPDATE plots SET name = ?, area = ?, areaUnit = ?, notes = ?, updatedAt = ? WHERE id = ? AND (userId IS ?)',
-    input.name, input.area, input.areaUnit, input.notes, new Date().toISOString(), id, ownerId
+    'UPDATE plots SET name = ?, area = ?, areaUnit = ?, notes = ?, updatedAt = ? WHERE id = ? AND (userId IS ?) AND workspaceId = ?',
+    input.name, input.area, input.areaUnit, input.notes, new Date().toISOString(), id, ownerId, workspaceId
   );
 }
 
 // Unlinks (doesn't cascade-delete) crops/activities/harvests that reference this
 // plot, then soft-deletes the plot — history survives, just shown as "no plot linked",
 // and the tombstone can still propagate to other devices/the cloud.
-export async function deletePlot(db: SQLite.SQLiteDatabase, id: number, ownerId: string | null): Promise<void> {
+export async function deletePlot(db: SQLite.SQLiteDatabase, id: number, ownerId: string | null, workspaceId: string = 'default'): Promise<void> {
   const now = new Date().toISOString();
   await db.runAsync('UPDATE crops SET plotId = NULL, updatedAt = ? WHERE plotId = ?', now, id);
   await db.runAsync('UPDATE harvests SET plotId = NULL, updatedAt = ? WHERE plotId = ?', now, id);
-  await unlinkPlotFromActivities(db, id);
-  await db.runAsync('UPDATE plots SET deletedAt = ?, updatedAt = ? WHERE id = ? AND (userId IS ?)', now, now, id, ownerId);
+  await unlinkPlotFromActivities(db, id, workspaceId);
+  await db.runAsync('UPDATE plots SET deletedAt = ?, updatedAt = ? WHERE id = ? AND (userId IS ?) AND workspaceId = ?', now, now, id, ownerId, workspaceId);
 }

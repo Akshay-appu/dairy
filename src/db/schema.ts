@@ -86,10 +86,11 @@ export type Harvest = {
   updatedAt: string;
 } & SyncColumns;
 
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 // Every syncable table except farm_profile (singleton, no uuid/tombstone needed).
 const SYNCABLE_TABLES = ['plots', 'crops', 'diary_entries', 'finance_entries', 'harvests'] as const;
+const ALL_TABLES_WITH_WORKSPACE = [...SYNCABLE_TABLES, 'farm_profile'] as const;
 
 async function columnExists(db: SQLite.SQLiteDatabase, table: string, column: string): Promise<boolean> {
   const rows = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${table})`);
@@ -198,6 +199,36 @@ async function migrateToV3(db: SQLite.SQLiteDatabase): Promise<void> {
   }
 }
 
+async function migrateToV4(db: SQLite.SQLiteDatabase): Promise<void> {
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS workspaces (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      isDefault INTEGER NOT NULL DEFAULT 0,
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL,
+      userId TEXT,
+      uuid TEXT,
+      deletedAt TEXT,
+      lastSyncedAt TEXT
+    );
+  `);
+
+  const existingDefault = await db.getFirstAsync<{ id: string }>('SELECT id FROM workspaces WHERE id = ?', 'default');
+  if (!existingDefault) {
+    const now = new Date().toISOString();
+    await db.runAsync(
+      `INSERT INTO workspaces (id, name, isDefault, createdAt, updatedAt, uuid) VALUES (?, ?, 1, ?, ?, ?)`,
+      'default', 'Default Workspace', now, now, uuidv4()
+    );
+  }
+
+  for (const table of ALL_TABLES_WITH_WORKSPACE) {
+    await addColumnIfMissing(db, table, 'workspaceId', 'workspaceId TEXT');
+    await db.execAsync(`UPDATE ${table} SET workspaceId = 'default' WHERE workspaceId IS NULL;`);
+  }
+}
+
 export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
   const database = await SQLite.openDatabaseAsync('bhoomishakti-diary.db');
   await database.execAsync(`
@@ -224,6 +255,10 @@ export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (version < 3) {
     await migrateToV3(database);
     version = 3;
+  }
+  if (version < 4) {
+    await migrateToV4(database);
+    version = 4;
   }
   await database.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
 

@@ -25,7 +25,27 @@
     },
     "plugins": [
       "expo-sqlite",
-      "expo-web-browser"
-    ]
+      "expo-web-browser",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow BhoomiShakti Diary to use the microphone for voice typing.",
+          "speechRecognitionPermission": "Allow BhoomiShakti Diary to recognize speech."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow BhoomiShakti Diary to access your photos for bills and soil reports.",
+          "cameraPermission": "Allow BhoomiShakti Diary to use the camera to capture receipts and soil reports."
+        }
+      ],
+      "expo-sharing"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "125090d5-abbc-49e4-8ccf-2d58340316a8"
+      }
+    }
   }
 }

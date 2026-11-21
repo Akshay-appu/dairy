@@ -92,6 +92,11 @@ export type Copy = {
   deleteAccountNeedsPassword: string; deleteAccountGoogleNativeUnsupported: string; deleteAccountDone: string;
   deleteAccountExported: string; deleteAccountStepWaitingSync: string; deleteAccountSyncBusy: string;
   deleteAccountStepLock: string;
+
+  // Workspaces
+  workspaces: string; workspacesSubtitle: string; addWorkspace: string; editWorkspace: string;
+  workspaceName: string; workspaceNamePlaceholder: string; defaultWorkspaceName: string;
+  exportSeasonReport: string;
 };
 
 export const copy: Record<Language, Copy> = {
@@ -216,6 +221,15 @@ export const copy: Record<Language, Copy> = {
     deleteAccountStepWaitingSync: 'Finishing a pending sync before continuing…',
     deleteAccountSyncBusy: 'A sync is taking longer than expected to finish. Please try again in a moment.',
     deleteAccountStepLock: 'Securing your account for deletion…',
+
+    workspaces: 'Workspaces',
+    workspacesSubtitle: 'Manage different farm plots as separate workspaces.',
+    addWorkspace: 'Add Workspace',
+    editWorkspace: 'Edit Workspace',
+    workspaceName: 'Workspace name',
+    workspaceNamePlaceholder: 'e.g. South farm / Organic plot',
+    defaultWorkspaceName: 'Default',
+    exportSeasonReport: 'Export Season Report (PDF)',
   },
   kn: {
     tagline: 'ಪ್ರತಿ ಹೊಲದ ಕಥೆ, ಒಂದೇ ಡೈರಿಯಲ್ಲಿ',
@@ -338,6 +352,15 @@ export const copy: Record<Language, Copy> = {
     deleteAccountStepWaitingSync: 'ಮುಂದುವರಿಯುವ ಮೊದಲು ಬಾಕಿ ಇರುವ ಸಿಂಕ್ ಅನ್ನು ಪೂರ್ಣಗೊಳಿಸಲಾಗುತ್ತಿದೆ…',
     deleteAccountSyncBusy: 'ಸಿಂಕ್ ಪೂರ್ಣಗೊಳ್ಳಲು ನಿರೀಕ್ಷೆಗಿಂತ ಹೆಚ್ಚು ಸಮಯ ತೆಗೆದುಕೊಳ್ಳುತ್ತಿದೆ. ದಯವಿಟ್ಟು ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
     deleteAccountStepLock: 'ಅಳಿಸುವಿಕೆಗಾಗಿ ನಿಮ್ಮ ಖಾತೆಯನ್ನು ಸುರಕ್ಷಿತಗೊಳಿಸಲಾಗುತ್ತಿದೆ…',
+
+    workspaces: 'ಕಾರ್ಯಕ್ಷೇತ್ರಗಳು',
+    workspacesSubtitle: 'ವಿವಿಧ ಕೃಷಿ ಪ್ಲಾಟ್‌ಗಳನ್ನು ಪ್ರತ್ಯೇಕ ಕಾರ್ಯಕ್ಷೇತ್ರಗಳಾಗಿ ನಿರ್ವಹಿಸಿ.',
+    addWorkspace: 'ಕಾರ್ಯಕ್ಷೇತ್ರ ಸೇರಿಸಿ',
+    editWorkspace: 'ಕಾರ್ಯಕ್ಷೇತ್ರ ಸಂಪಾದಿಸಿ',
+    workspaceName: 'ಕಾರ್ಯಕ್ಷೇತ್ರದ ಹೆಸರು',
+    workspaceNamePlaceholder: 'ಉದಾ. ದಕ್ಷಿಣ ಕೃಷಿ / ಸಾವಯವ ಪ್ಲಾಟ್',
+    defaultWorkspaceName: 'ಡೀಫಾಲ್ಟ್',
+    exportSeasonReport: 'ಋತುವಿನ ವರದಿ ರಫ್ತು ಮಾಡಿ (PDF)',
   },
   hi: {
     tagline: 'हर खेत की कहानी, एक ही डायरी में',
@@ -460,5 +483,14 @@ export const copy: Record<Language, Copy> = {
     deleteAccountStepWaitingSync: 'आगे बढ़ने से पहले लंबित सिंक पूरा किया जा रहा है…',
     deleteAccountSyncBusy: 'सिंक पूरा होने में अपेक्षा से अधिक समय लग रहा है। कृपया कुछ देर बाद फिर से प्रयास करें।',
     deleteAccountStepLock: 'हटाने के लिए आपका खाता सुरक्षित किया जा रहा है…',
+
+    workspaces: 'कार्यक्षेत्र',
+    workspacesSubtitle: 'विभिन्न कृषि भूखंडों को अलग-अलग कार्यक्षेत्र के रूप में प्रबंधित करें।',
+    addWorkspace: 'कार्यक्षेत्र जोड़ें',
+    editWorkspace: 'कार्यक्षेत्र संपादित करें',
+    workspaceName: 'कार्यक्षेत्र का नाम',
+    workspaceNamePlaceholder: 'उदा. दक्षिण फ़ार्म / जैविक प्लॉट',
+    defaultWorkspaceName: 'डिफ़ॉल्ट',
+    exportSeasonReport: 'सीज़न रिपोर्ट निर्यात करें (PDF)',
   },
 };

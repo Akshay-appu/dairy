@@ -13,36 +13,36 @@ export type HarvestInput = {
   notes: string;
 };
 
-export async function listHarvests(db: SQLite.SQLiteDatabase, ownerId: string | null): Promise<Harvest[]> {
+export async function listHarvests(db: SQLite.SQLiteDatabase, ownerId: string | null, workspaceId: string = 'default'): Promise<Harvest[]> {
   return db.getAllAsync<Harvest>(
-    'SELECT * FROM harvests WHERE deletedAt IS NULL AND (userId IS ?) ORDER BY harvestDate DESC, id DESC',
-    ownerId
+    'SELECT * FROM harvests WHERE deletedAt IS NULL AND (userId IS ?) AND workspaceId = ? ORDER BY harvestDate DESC, id DESC',
+    ownerId, workspaceId
   );
 }
 
-export async function addHarvest(db: SQLite.SQLiteDatabase, input: HarvestInput, ownerId: string | null): Promise<void> {
+export async function addHarvest(db: SQLite.SQLiteDatabase, input: HarvestInput, ownerId: string | null, workspaceId: string = 'default'): Promise<void> {
   const now = new Date().toISOString();
   await db.runAsync(
-    `INSERT INTO harvests (cropId, plotId, harvestDate, quantity, quantityUnit, sellingPrice, buyer, notes, createdAt, updatedAt, uuid, userId)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO harvests (cropId, plotId, harvestDate, quantity, quantityUnit, sellingPrice, buyer, notes, createdAt, updatedAt, uuid, userId, workspaceId)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     input.cropId, input.plotId, input.harvestDate, input.quantity, input.quantityUnit,
-    input.sellingPrice, input.buyer, input.notes, now, now, uuidv4(), ownerId
+    input.sellingPrice, input.buyer, input.notes, now, now, uuidv4(), ownerId, workspaceId
   );
 }
 
-export async function updateHarvest(db: SQLite.SQLiteDatabase, id: number, input: HarvestInput, ownerId: string | null): Promise<void> {
+export async function updateHarvest(db: SQLite.SQLiteDatabase, id: number, input: HarvestInput, ownerId: string | null, workspaceId: string = 'default'): Promise<void> {
   await db.runAsync(
     `UPDATE harvests SET cropId = ?, plotId = ?, harvestDate = ?, quantity = ?, quantityUnit = ?,
-       sellingPrice = ?, buyer = ?, notes = ?, updatedAt = ? WHERE id = ? AND (userId IS ?)`,
+       sellingPrice = ?, buyer = ?, notes = ?, updatedAt = ? WHERE id = ? AND (userId IS ?) AND workspaceId = ?`,
     input.cropId, input.plotId, input.harvestDate, input.quantity, input.quantityUnit,
-    input.sellingPrice, input.buyer, input.notes, new Date().toISOString(), id, ownerId
+    input.sellingPrice, input.buyer, input.notes, new Date().toISOString(), id, ownerId, workspaceId
   );
 }
 
-export async function deleteHarvest(db: SQLite.SQLiteDatabase, id: number, ownerId: string | null): Promise<void> {
+export async function deleteHarvest(db: SQLite.SQLiteDatabase, id: number, ownerId: string | null, workspaceId: string = 'default'): Promise<void> {
   const now = new Date().toISOString();
   await db.runAsync(
-    'UPDATE harvests SET deletedAt = ?, updatedAt = ? WHERE id = ? AND (userId IS ?)',
-    now, now, id, ownerId
+    'UPDATE harvests SET deletedAt = ?, updatedAt = ? WHERE id = ? AND (userId IS ?) AND workspaceId = ?',
+    now, now, id, ownerId, workspaceId
   );
 }

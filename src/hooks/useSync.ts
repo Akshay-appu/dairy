@@ -4,24 +4,14 @@ import {
 } from 'react';
 import { db as firestore } from '../firebase/config';
 import {
-  ALL_ENTITY_SYNC_CONFIGS, pullEntity, pullProfile, pushEntity, pushProfile,
+  ALL_ENTITY_SYNC_CONFIGS, pullEntity, pullProfile, pullWorkspaces, pushEntity, pushProfile, pushWorkspaces, processSyncQueue,
 } from '../firebase/sync';
+import * as workspacesRepo from '../db/workspacesRepo';
 
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
 
 const FOREGROUND_SYNC_INTERVAL_MS = 2 * 60 * 1000;
 
-// One-shot push-then-pull pass across every entity, triggered on sign-in,
-// on a conservative foreground interval, and manually via syncNow(). Not a
-// realtime listener — see Phase 3 plan for why that scope was deliberately
-// kept out.
-//
-// `pausedRef` is a shared lock with useAccountDeletion: while account
-// deletion is in progress, it sets pausedRef.current = true so that NEITHER
-// the periodic interval NOR a manual "Sync Now" click can start a new push
-// that would recreate cloud documents the deletion flow just removed. This
-// only protects against races originating from this same app session —
-// see useAccountDeletion.ts for the documented cross-device limitation.
 export function useSync(
   db: SQLite.SQLiteDatabase | null, ownerId: string | null, onSynced: () => Promise<void>,
   pausedRef: MutableRefObject<boolean>
@@ -38,14 +28,26 @@ export function useSync(
     syncingRef.current = true;
     setStatus('syncing');
     try {
-      for (const config of ALL_ENTITY_SYNC_CONFIGS) {
-        await pushEntity(db, firestore, ownerId, config);
+      // Process any queued offline mutations first
+      await processSyncQueue(db, firestore, ownerId);
+
+      await pushWorkspaces(db, firestore, ownerId);
+      await pullWorkspaces(db, firestore, ownerId);
+
+      const workspaces = await workspacesRepo.listWorkspaces(db, ownerId);
+      const workspaceIds = workspaces.map(w => w.uuid ?? w.id);
+
+      for (const wsId of workspaceIds) {
+        for (const config of ALL_ENTITY_SYNC_CONFIGS) {
+          await pushEntity(db, firestore, ownerId, wsId, config);
+        }
+        await pushProfile(db, firestore, ownerId, wsId);
+        for (const config of ALL_ENTITY_SYNC_CONFIGS) {
+          await pullEntity(db, firestore, ownerId, wsId, config);
+        }
+        await pullProfile(db, firestore, ownerId, wsId);
       }
-      await pushProfile(db, firestore, ownerId);
-      for (const config of ALL_ENTITY_SYNC_CONFIGS) {
-        await pullEntity(db, firestore, ownerId, config);
-      }
-      await pullProfile(db, firestore, ownerId);
+
       await onSynced();
       setStatus('success');
       setLastSyncedAt(new Date().toISOString());
@@ -55,12 +57,9 @@ export function useSync(
     } finally {
       syncingRef.current = false;
     }
-    // onSynced is a stable callback from the caller (wrapped in useCallback there)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [db, ownerId]);
 
-  // Sync once when a user becomes signed in (covers both "just signed in"
-  // and "app started with a restored session").
   useEffect(() => {
     (async () => {
       if (db && ownerId) await syncNow();
@@ -68,20 +67,26 @@ export function useSync(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [db, ownerId]);
 
-  // Conservative periodic retry while the app is open and signed in — not
-  // tied to connectivity detection (no NetInfo dependency); a sync attempt
-  // while offline just fails fast and the status reflects that.
   useEffect(() => {
     if (!ownerId) return;
     const interval = setInterval(() => { void syncNow(); }, FOREGROUND_SYNC_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [ownerId, syncNow]);
 
+  // Automatically retry and sync when connection is restored
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleOnline = () => {
+      void syncNow();
+    };
+    window.addEventListener('online', handleOnline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [syncNow]);
+
   return {
     status, lastSyncedAt, errorMessage, syncNow,
-    // Exposed so useAccountDeletion can wait out an already-in-flight sync
-    // (reading a ref, not state, so the wait loop always sees the live
-    // value rather than a stale closure).
     syncingRef,
   };
 }

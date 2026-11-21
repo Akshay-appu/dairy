@@ -1,15 +1,19 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { BackupCounts, BackupData } from '../db/backupRepo';
+import { Workspace } from '../db/workspacesRepo';
 import { useAuth } from '../hooks/useAuth';
 import { useSync } from '../hooks/useSync';
 import { Copy, Language, languages } from '../i18n/copy';
 import { shared } from '../styles/shared';
 import { AccountSection } from './AccountSection';
 import { BackupSection } from './BackupSection';
+import { WorkspaceSection } from './WorkspaceSection';
 
 export function MoreScreen({
-  t, lg, language, onLanguageChange, auth, sync, onSignIn, onSignOutConfirm, onDeleteAccount, backup, onError, onConfirmRestore,
+  t, lg, language, onLanguageChange, auth, sync, onSignIn, onSignOutConfirm, onDeleteAccount, backup,
+  workspaces, activeWorkspaceId, onSwitchWorkspace, onCreateWorkspace, onUpdateWorkspace, onDeleteWorkspace,
+  onError, onConfirmRestore,
 }: {
   t: Copy;
   lg: boolean;
@@ -24,6 +28,12 @@ export function MoreScreen({
     exportBackup: () => Promise<string>;
     previewRestore: (text: string) => { data: BackupData; counts: BackupCounts };
   };
+  workspaces: Workspace[];
+  activeWorkspaceId: string;
+  onSwitchWorkspace: (id: string) => void;
+  onCreateWorkspace: (input: { name: string }) => Promise<void>;
+  onUpdateWorkspace: (id: string, name: string) => Promise<void>;
+  onDeleteWorkspace: (id: string) => Promise<void>;
   onError: (message: string) => void;
   onConfirmRestore: (data: BackupData) => void;
 }) {
@@ -35,6 +45,17 @@ export function MoreScreen({
       <AccountSection
         t={t} language={language} auth={auth} sync={sync}
         onSignIn={onSignIn} onSignOutConfirm={onSignOutConfirm} onDeleteAccount={onDeleteAccount}
+      />
+
+      <WorkspaceSection
+        t={t}
+        workspaces={workspaces}
+        activeWorkspaceId={activeWorkspaceId}
+        onSwitch={onSwitchWorkspace}
+        onCreate={onCreateWorkspace}
+        onUpdate={onUpdateWorkspace}
+        onDelete={onDeleteWorkspace}
+        onError={onError}
       />
 
       <Text style={shared.fieldLabel}>{t.language}</Text>

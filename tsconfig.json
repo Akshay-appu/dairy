@@ -3,5 +3,5 @@
   "compilerOptions": {
     "strict": true
   },
-  "exclude": ["node_modules", "App copy.tsx"]
+  "exclude": ["node_modules", "App copy.tsx", "scripts"]
 }

@@ -19,6 +19,7 @@ import { useAuth } from './src/hooks/useAuth';
 import { useClaimLocalData } from './src/hooks/useClaimLocalData';
 import { useSync } from './src/hooks/useSync';
 import { useAccountDeletion } from './src/hooks/useAccountDeletion';
+import { useWorkspaces } from './src/hooks/useWorkspaces';
 import { AuthScreen } from './src/screens/AuthScreen';
 import { DeleteAccountModal } from './src/screens/DeleteAccountModal';
 import { openDatabase } from './src/db/schema';
@@ -58,13 +59,15 @@ export default function App() {
   // SyncColumns): null while signed out (today's local-only behavior,
   // untouched), the Firebase uid once signed in.
   const ownerId: string | null = auth.user?.uid ?? null;
-  const activities = useActivities(db, dbReady, ownerId);
-  const profile = useFarmProfile(db, dbReady, ownerId);
-  const plots = usePlots(db, dbReady, ownerId);
-  const crops = useCrops(db, dbReady, ownerId);
-  const finance = useFinance(db, dbReady, ownerId);
-  const harvests = useHarvests(db, dbReady, ownerId);
-  const backup = useBackup(db, ownerId);
+  const workspaces = useWorkspaces(db, dbReady, ownerId);
+  const activeWsId = workspaces.activeWorkspaceId;
+  const activities = useActivities(db, dbReady, ownerId, activeWsId);
+  const profile = useFarmProfile(db, dbReady, ownerId, activeWsId);
+  const plots = usePlots(db, dbReady, ownerId, activeWsId);
+  const crops = useCrops(db, dbReady, ownerId, activeWsId);
+  const finance = useFinance(db, dbReady, ownerId, activeWsId);
+  const harvests = useHarvests(db, dbReady, ownerId, activeWsId);
+  const backup = useBackup(db, ownerId, activeWsId);
 
   const refreshAllEntities = useCallback(async () => {
     await Promise.all([
@@ -210,10 +213,17 @@ export default function App() {
     ]);
   }, [backup, refreshAllEntities, showAlert, t.cancel, t.confirmRestore, t.replaceDataWarning, t.restoreSuccess, t.restoreWarningTitle]);
 
+  const activeWorkspace = workspaces.workspaces.find(w => (w.uuid ?? w.id) === activeWsId);
+  const workspaceName = activeWorkspace?.name ?? 'Default Workspace';
+
   const dateLabel = new Date().toLocaleDateString(
     language === 'kn' ? 'kn-IN' : language === 'hi' ? 'hi-IN' : 'en-IN',
     { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }
   );
+
+  const totalIncome = finance.items.filter(i => i.type === 'income').reduce((sum, i) => sum + i.amount, 0);
+  const totalExpenses = finance.items.filter(i => i.type === 'expense').reduce((sum, i) => sum + i.amount, 0);
+  const netBalance = totalIncome - totalExpenses;
 
   return (
     <SafeAreaView style={shared.safe}>
@@ -251,6 +261,9 @@ export default function App() {
             entries={activities.entries}
             loading={activities.loading}
             plotsCount={plots.items.length}
+            cropsCount={crops.items.length}
+            workspaceName={workspaceName}
+            financeTotals={{ totalIncome, totalExpenses, netBalance }}
             currentSeasonLabel={crops.items.length ? seasonLabel(language, crops.items[0].season) : ''}
             onAddPress={openAddActivity}
             onDeleteEntry={id => deleteActivity(id)}
@@ -316,6 +329,12 @@ export default function App() {
             onSignOutConfirm={() => auth.signOutUser()}
             onDeleteAccount={() => setShowDeleteAccount(true)}
             backup={backup}
+            workspaces={workspaces.workspaces}
+            activeWorkspaceId={workspaces.activeWorkspaceId}
+            onSwitchWorkspace={workspaces.switchWorkspace}
+            onCreateWorkspace={workspaces.createWorkspace}
+            onUpdateWorkspace={workspaces.updateWorkspace}
+            onDeleteWorkspace={workspaces.deleteWorkspace}
             onError={message => showAlert('Save failed', message)}
             onConfirmRestore={confirmRestore}
           />

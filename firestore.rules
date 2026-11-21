@@ -2,44 +2,39 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Every user's cloud data lives under users/{uid}/... . A request is
-    // only allowed if it's authenticated AND the uid in the token matches
-    // the uid in the path — so a signed-in user can read/write their own
-    // subtree and nobody else's, and an unauthenticated request is denied
-    // outright. This is deliberately the ONLY rule: no broader allow exists
-    // anywhere else in this file for these paths.
-    match /users/{userId}/{document=**} {
-      // Reads and deletes are always allowed for the owner. Reads can't
-      // recreate data; deletes are exactly what account-deletion cleanup
-      // needs to keep working even while a deletion lock (below) is active.
-      allow read, delete: if request.auth != null && request.auth.uid == userId;
-
-      // Creates/updates are allowed for the owner ONLY while no account
-      // deletion is in progress for this uid. Account deletion
-      // (src/firebase/accountDeletion.ts) writes a marker doc at
-      // users/{uid}/meta/deletionInProgress before deleting anything; while
-      // it exists, this condition blocks EVERY device/session signed into
-      // this account from creating or updating any synced record — which
-      // is what stops a concurrent sync push (src/firebase/sync.ts's
-      // pushEntity, which only ever creates/updates, never deletes) from
-      // recreating data the deletion flow just removed. A client-side pause
-      // flag alone (see useSync.ts/useAccountDeletion.ts) cannot provide
-      // this guarantee across devices — this rule is what actually does.
-      //
-      // The lock doc itself is governed by this same condition: before it
-      // exists, !exists(...) is true so creating it succeeds; once it
-      // exists, the same check blocks it from being touched again via
-      // create/update (including by a retry) — client code must
-      // check-then-create (ensureDeletionLock), never blindly overwrite.
-      // The lock is intentionally never cleared by client code on error or
-      // success (see accountDeletion.ts) — deleting it is still possible
-      // for the owner (covered by the unconditional allow above) but
-      // nothing in this app's normal flow does so.
-      allow create, update: if request.auth != null && request.auth.uid == userId
-        && !exists(/databases/$(database)/documents/users/$(userId)/meta/deletionInProgress);
+    // Helper function to verify ownership (requesting user ID matches document userId)
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
     }
 
-    // Everything else is denied by default (no matching rule = deny in
-    // Firestore), so there is no accidental catch-all permissive path.
+    // Helper function to check if account deletion is NOT in progress for this user
+    function notDeleting(userId) {
+      return !exists(/databases/$(database)/documents/users/$(userId)/meta/deletionInProgress);
+    }
+
+    // Comprehensive rules for all user data trees under /users/{userId}/**
+    match /users/{userId}/{document=**} {
+      // Reads and deletes are always allowed for the owner
+      allow read, delete: if isOwner(userId);
+
+      // Creates and updates require ownership and that no account deletion is locked
+      allow create, update: if isOwner(userId) && notDeleting(userId);
+    }
+
+    // Explicit workspace isolation rules matching our multi-workspace schema
+    match /users/{userId}/workspaces/{workspaceId} {
+      allow read, delete: if isOwner(userId);
+      allow create, update: if isOwner(userId) && notDeleting(userId);
+
+      match /{collection}/{documentId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && notDeleting(userId);
+      }
+
+      match /meta/{metaDoc} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && notDeleting(userId);
+      }
+    }
   }
 }
