@@ -1,10 +1,12 @@
 import React from 'react';
 import { ActivityIndicator, DimensionValue, Text, TouchableOpacity, View } from 'react-native';
+import * as SQLite from 'expo-sqlite';
 import { GridList } from '../components/GridList';
 import { ListCard } from '../components/ListCard';
 import { EmptyState } from '../components/EmptyState';
 import { SectionTitle } from '../components/SectionTitle';
 import { Stat } from '../components/Stat';
+import { CropStageCalendar } from '../components/CropStageCalendar';
 import { FarmerToolCard } from '../components/FarmerToolCard';
 import { Copy } from '../i18n/copy';
 import { Entry } from '../db/schema';
@@ -13,7 +15,7 @@ import { GREEN } from '../theme';
 import { formatShortDate } from '../utils/format';
 
 export function HomeScreen({
-  t, lg, gridColumns, cardWidth, dateLabel, entries, loading, plotsCount, cropsCount, workspaceName, financeTotals, currentSeasonLabel, onAddPress, onDeleteEntry, onViewAll,
+  t, lg, gridColumns, cardWidth, dateLabel, entries, loading, plotsCount, cropsCount, workspaceName, workspaceId, db, financeTotals, currentSeasonLabel, onAddPress, onDeleteEntry, onViewAll,
 }: {
   t: Copy;
   lg: boolean;
@@ -25,6 +27,8 @@ export function HomeScreen({
   plotsCount: number;
   cropsCount: number;
   workspaceName: string;
+  workspaceId?: string;
+  db?: SQLite.SQLiteDatabase | null;
   financeTotals: { totalIncome: number; totalExpenses: number; netBalance: number };
   currentSeasonLabel: string;
   onAddPress: () => void;
@@ -80,6 +84,12 @@ export function HomeScreen({
       ) : (
         <EmptyState title={t.noActivities} detail={t.startDiary} lg={lg} />
       )}
+
+      <CropStageCalendar
+        db={db ?? null}
+        workspaceId={workspaceId || 'default'}
+        lg={lg}
+      />
 
       <FarmerToolCard
         t={t}

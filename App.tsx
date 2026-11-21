@@ -263,6 +263,8 @@ export default function App() {
             plotsCount={plots.items.length}
             cropsCount={crops.items.length}
             workspaceName={workspaceName}
+            workspaceId={activeWsId}
+            db={db}
             financeTotals={{ totalIncome, totalExpenses, netBalance }}
             currentSeasonLabel={crops.items.length ? seasonLabel(language, crops.items[0].season) : ''}
             onAddPress={openAddActivity}
