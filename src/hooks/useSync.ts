@@ -2,6 +2,7 @@ import * as SQLite from 'expo-sqlite';
 import {
   useCallback, useEffect, useRef, useState, type MutableRefObject,
 } from 'react';
+import { Platform } from 'react-native';
 import { db as firestore } from '../firebase/config';
 import {
   ALL_ENTITY_SYNC_CONFIGS, pullEntity, pullProfile, pullWorkspaces, pushEntity, pushProfile, pushWorkspaces, processSyncQueue,
@@ -48,7 +49,9 @@ export function useSync(
         await pullProfile(db, firestore, ownerId, wsId);
       }
 
-      await onSynced();
+      if (typeof onSynced === 'function') {
+        await onSynced();
+      }
       setStatus('success');
       setLastSyncedAt(new Date().toISOString());
     } catch (err) {
@@ -73,16 +76,25 @@ export function useSync(
     return () => clearInterval(interval);
   }, [ownerId, syncNow]);
 
-  // Automatically retry and sync when connection is restored
+  // Automatically retry and sync when connection is restored (Web only)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (Platform.OS !== 'web') return;
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return;
     const handleOnline = () => {
       void syncNow();
     };
-    window.addEventListener('online', handleOnline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-    };
+    try {
+      window.addEventListener('online', handleOnline);
+      return () => {
+        try {
+          window.removeEventListener?.('online', handleOnline);
+        } catch (e) {
+          console.warn('Error removing online listener:', e);
+        }
+      };
+    } catch (e) {
+      console.warn('Error adding online listener:', e);
+    }
   }, [syncNow]);
 
   return {

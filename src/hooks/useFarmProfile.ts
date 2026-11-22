@@ -16,10 +16,15 @@ export function useFarmProfile(db: SQLite.SQLiteDatabase | null, ready: boolean,
         if (alive) setLoading(false);
         return;
       }
-      const row = await profileRepo.getProfile(db, ownerId, workspaceId);
-      if (alive) {
-        setProfile(row);
-        setLoading(false);
+      try {
+        const row = await profileRepo.getProfile(db, ownerId, workspaceId);
+        if (alive) {
+          setProfile(row);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.warn('Failed to load farm profile:', err);
+        if (alive) setLoading(false);
       }
     })();
     return () => { alive = false; };

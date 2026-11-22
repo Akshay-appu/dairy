@@ -30,10 +30,17 @@ export function useEntityList<T extends { id: number }, Input>(
         if (alive) setLoading(false);
         return;
       }
-      const rows = await repo.list(db, ownerId, workspaceId);
-      if (alive) {
-        setItems(rows);
-        setLoading(false);
+      try {
+        if (repo && typeof repo.list === 'function') {
+          const rows = await repo.list(db, ownerId, workspaceId);
+          if (alive) {
+            setItems(rows);
+            setLoading(false);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load entity list:', err);
+        if (alive) setLoading(false);
       }
     })();
     return () => { alive = false; };

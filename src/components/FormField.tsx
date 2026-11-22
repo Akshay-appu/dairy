@@ -1,7 +1,42 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { KeyboardTypeOptions, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
+import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
 import { shared } from '../styles/shared';
+
+function useSafeSpeechRecognitionEvent(
+  eventName: string,
+  listener: (event: any) => void
+) {
+  useEffect(() => {
+    try {
+      if (
+        !ExpoSpeechRecognitionModule ||
+        typeof (ExpoSpeechRecognitionModule as any).addListener !== 'function'
+      ) {
+        return;
+      }
+      const subscription = (ExpoSpeechRecognitionModule as any).addListener(
+        eventName,
+        (event: any) => {
+          try {
+            listener(event);
+          } catch (err) {
+            console.warn(`[SpeechRecognition] Error in "${eventName}" listener:`, err);
+          }
+        }
+      );
+      return () => {
+        try {
+          subscription?.remove?.();
+        } catch (err) {
+          console.warn(`[SpeechRecognition] Error removing "${eventName}" listener:`, err);
+        }
+      };
+    } catch (err) {
+      console.warn(`[SpeechRecognition] Failed to attach listener for "${eventName}":`, err);
+    }
+  }, [eventName, listener]);
+}
 
 export function FormField({
   label,
@@ -56,7 +91,7 @@ export function FormField({
     };
   }, []);
 
-  useSpeechRecognitionEvent('result', (event) => {
+  useSafeSpeechRecognitionEvent('result', (event) => {
     try {
       const transcript = event?.results?.[0]?.transcript;
       if (transcript !== undefined) {
@@ -73,7 +108,7 @@ export function FormField({
     }
   });
 
-  useSpeechRecognitionEvent('end', () => {
+  useSafeSpeechRecognitionEvent('end', () => {
     try {
       setIsListening(false);
     } catch (err) {
@@ -81,7 +116,7 @@ export function FormField({
     }
   });
 
-  useSpeechRecognitionEvent('error', (event) => {
+  useSafeSpeechRecognitionEvent('error', (event) => {
     try {
       console.warn('Speech recognition error event:', event);
       setIsListening(false);

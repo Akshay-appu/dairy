@@ -5,6 +5,7 @@ import {
   SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View,
 } from 'react-native';
 import * as SQLite from 'expo-sqlite';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { AlertModal } from './src/components/AlertModal';
 import { useCrossPlatformAlert } from './src/hooks/useCrossPlatformAlert';
 import { useResponsive } from './src/hooks/useResponsive';
@@ -36,7 +37,7 @@ import { shared } from './src/styles/shared';
 
 type Tab = 'Home' | 'Diary' | 'Farm' | 'Records' | 'More';
 
-export default function App() {
+function MainApp() {
   const [db, setDb] = useState<SQLite.SQLiteDatabase | null>(null);
   const [dbReady, setDbReady] = useState(false);
   const [tab, setTab] = useState<Tab>('Home');
@@ -395,5 +396,13 @@ export default function App() {
 
       <AlertModal alert={webAlert} onClose={() => setWebAlert(null)} />
     </SafeAreaView>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <MainApp />
+    </ErrorBoundary>
   );
 }

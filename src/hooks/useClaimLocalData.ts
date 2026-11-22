@@ -19,14 +19,18 @@ export function useClaimLocalData(db: SQLite.SQLiteDatabase | null, uid: string 
         if (alive) setPendingClaim(false);
         return;
       }
-      const alreadyPrompted = await AsyncStorage.getItem(promptedKey(uid));
-      if (alreadyPrompted) return;
-      const hasUnclaimed = await ownershipRepo.hasUnclaimedData(db);
-      if (!alive) return;
-      if (hasUnclaimed) {
-        setPendingClaim(true);
-      } else {
-        await AsyncStorage.setItem(promptedKey(uid), '1');
+      try {
+        const alreadyPrompted = await AsyncStorage.getItem(promptedKey(uid));
+        if (alreadyPrompted) return;
+        const hasUnclaimed = await ownershipRepo.hasUnclaimedData(db);
+        if (!alive) return;
+        if (hasUnclaimed) {
+          setPendingClaim(true);
+        } else {
+          await AsyncStorage.setItem(promptedKey(uid), '1');
+        }
+      } catch (err) {
+        console.warn('Failed to check unclaimed local data:', err);
       }
     })();
     return () => { alive = false; };

@@ -25,13 +25,18 @@ export function useWorkspaces(db: SQLite.SQLiteDatabase | null, ready: boolean, 
         if (alive) setLoading(false);
         return;
       }
-      const list = await workspacesRepo.listWorkspaces(db, ownerId);
-      if (alive) {
-        setWorkspaces(list);
-        if (list.length > 0 && !list.some(w => w.id === activeWorkspaceId)) {
-          setActiveWorkspaceId('default');
+      try {
+        const list = await workspacesRepo.listWorkspaces(db, ownerId);
+        if (alive) {
+          setWorkspaces(list);
+          if (list.length > 0 && !list.some(w => w.id === activeWorkspaceId)) {
+            setActiveWorkspaceId('default');
+          }
+          setLoading(false);
         }
-        setLoading(false);
+      } catch (err) {
+        console.warn('Failed to load workspaces:', err);
+        if (alive) setLoading(false);
       }
     })();
     return () => { alive = false; };

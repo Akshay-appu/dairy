@@ -33,14 +33,24 @@ export function useAuth() {
   const [loading, setLoading] = useState(isFirebaseConfigured);
 
   useEffect(() => {
-    // loading's initial state already matches !isFirebaseConfigured, so
-    // there's nothing to flip synchronously when auth is null here.
     if (!auth) return;
-    const unsubscribe = onAuthStateChanged(auth, nextUser => {
-      setUser(nextUser);
-      setLoading(false);
-    });
-    return unsubscribe;
+    try {
+      const unsubscribe = onAuthStateChanged(auth, nextUser => {
+        setUser(nextUser);
+        setLoading(false);
+      });
+      return () => {
+        try {
+          if (typeof unsubscribe === 'function') {
+            unsubscribe();
+          }
+        } catch (err) {
+          console.warn('Auth unsubscribe failed:', err);
+        }
+      };
+    } catch (err) {
+      console.warn('onAuthStateChanged setup failed:', err);
+    }
   }, []);
 
   const requireAuth = useCallback(() => {
