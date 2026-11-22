@@ -24,10 +24,15 @@ export async function listVaultDocuments(
   db: SQLite.SQLiteDatabase,
   workspaceId: string = 'default'
 ): Promise<VaultDocument[]> {
-  return db.getAllAsync<VaultDocument>(
-    'SELECT * FROM vault_documents WHERE workspaceId = ? ORDER BY capturedAt DESC',
-    workspaceId
-  );
+  try {
+    return await db.getAllAsync<VaultDocument>(
+      'SELECT * FROM vault_documents WHERE workspaceId = ? ORDER BY capturedAt DESC',
+      workspaceId
+    );
+  } catch (err) {
+    console.warn('Could not list vault documents from SQLite:', err);
+    return [];
+  }
 }
 
 export async function addVaultDocument(
@@ -68,9 +73,11 @@ export async function deleteVaultDocument(
   );
   if (row && row.localUri) {
     try {
-      const fileInfo = await FileSystem.getInfoAsync(row.localUri);
-      if (fileInfo.exists) {
-        await FileSystem.deleteAsync(row.localUri, { idempotent: true });
+      if (FileSystem && typeof FileSystem.getInfoAsync === 'function' && typeof FileSystem.deleteAsync === 'function') {
+        const fileInfo = await FileSystem.getInfoAsync(row.localUri);
+        if (fileInfo?.exists) {
+          await FileSystem.deleteAsync(row.localUri, { idempotent: true });
+        }
       }
     } catch (e) {
       console.warn('Could not delete local file for vault document:', e);

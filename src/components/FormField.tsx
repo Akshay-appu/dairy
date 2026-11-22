@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { KeyboardTypeOptions, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { shared } from '../styles/shared';
@@ -30,40 +30,120 @@ export function FormField({
 }) {
   const [isRevealed, setIsRevealed] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isSpeechAvailable] = useState(() => {
+    try {
+      if (ExpoSpeechRecognitionModule && typeof ExpoSpeechRecognitionModule.isRecognitionAvailable === 'function') {
+        return Boolean(ExpoSpeechRecognitionModule.isRecognitionAvailable());
+      }
+    } catch (err) {
+      console.warn('Speech recognition availability check failed:', err);
+    }
+    return false;
+  });
   const baseValueRef = useRef('');
   const shouldMask = Boolean(secureTextEntry && !isRevealed);
 
-  useSpeechRecognitionEvent('result', (event) => {
-    const transcript = event.results[0]?.transcript;
-    if (transcript !== undefined) {
-      const base = baseValueRef.current;
-      if (base) {
-        const separator = base.endsWith(' ') ? '' : ' ';
-        onChangeText(`${base}${separator}${transcript}`);
-      } else {
-        onChangeText(transcript);
+  // Safe cleanup on unmount
+  useEffect(() => {
+    return () => {
+      try {
+        if (ExpoSpeechRecognitionModule?.abort) {
+          ExpoSpeechRecognitionModule.abort();
+        }
+      } catch (err) {
+        console.warn('Failed to abort speech recognition on unmount:', err);
       }
+    };
+  }, []);
+
+  useSpeechRecognitionEvent('result', (event) => {
+    try {
+      const transcript = event?.results?.[0]?.transcript;
+      if (transcript !== undefined) {
+        const base = baseValueRef.current;
+        if (base) {
+          const separator = base.endsWith(' ') ? '' : ' ';
+          onChangeText(`${base}${separator}${transcript}`);
+        } else {
+          onChangeText(transcript);
+        }
+      }
+    } catch (err) {
+      console.warn('Error processing speech recognition result:', err);
     }
   });
 
-  useSpeechRecognitionEvent('end', () => setIsListening(false));
-  useSpeechRecognitionEvent('error', () => setIsListening(false));
+  useSpeechRecognitionEvent('end', () => {
+    try {
+      setIsListening(false);
+    } catch (err) {
+      console.warn('Error handling speech recognition end:', err);
+    }
+  });
+
+  useSpeechRecognitionEvent('error', (event) => {
+    try {
+      console.warn('Speech recognition error event:', event);
+      setIsListening(false);
+    } catch (err) {
+      console.warn('Error handling speech recognition error event:', err);
+      setIsListening(false);
+    }
+  });
 
   const handleToggleVoice = async () => {
-    if (isListening) {
-      ExpoSpeechRecognitionModule.stop();
-      setIsListening(false);
-    } else {
-      const { granted } = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-      if (granted) {
-        baseValueRef.current = value;
-        setIsListening(true);
-        ExpoSpeechRecognitionModule.start({ lang: 'en-IN', interimResults: true });
+    try {
+      if (!ExpoSpeechRecognitionModule) {
+        setIsListening(false);
+        return;
       }
+
+      if (isListening) {
+        try {
+          await ExpoSpeechRecognitionModule.stop?.();
+        } catch (stopErr) {
+          console.warn('ExpoSpeechRecognitionModule.stop error:', stopErr);
+        } finally {
+          setIsListening(false);
+        }
+      } else {
+        try {
+          const isAvail = typeof ExpoSpeechRecognitionModule.isRecognitionAvailable === 'function'
+            ? ExpoSpeechRecognitionModule.isRecognitionAvailable()
+            : true;
+          if (!isAvail) {
+            console.warn('Speech recognition is not available on this device');
+            setIsListening(false);
+            return;
+          }
+        } catch (checkErr) {
+          console.warn('Speech recognition availability check threw error:', checkErr);
+          setIsListening(false);
+          return;
+        }
+
+        const permResponse = await ExpoSpeechRecognitionModule.requestPermissionsAsync?.();
+        if (permResponse?.granted) {
+          baseValueRef.current = value;
+          setIsListening(true);
+          try {
+            await ExpoSpeechRecognitionModule.start?.({ lang: 'en-IN', interimResults: true });
+          } catch (startErr) {
+            console.warn('ExpoSpeechRecognitionModule.start error:', startErr);
+            setIsListening(false);
+          }
+        } else {
+          setIsListening(false);
+        }
+      }
+    } catch (err) {
+      console.warn('Speech recognition toggle error:', err);
+      setIsListening(false);
     }
   };
 
-  const rightPadding = (secureTextEntry ? 46 : 0) + (enableVoice ? 46 : 0);
+  const showVoice = Boolean(enableVoice && isSpeechAvailable);
+  const rightPadding = (secureTextEntry ? 46 : 0) + (showVoice ? 46 : 0);
 
   return (
     <View>
@@ -87,7 +167,7 @@ export function FormField({
           autoCapitalize={secureTextEntry ? 'none' : undefined}
           autoCorrect={secureTextEntry ? false : undefined}
         />
-        {enableVoice && (
+        {showVoice && (
           <TouchableOpacity
             onPress={handleToggleVoice}
             style={{

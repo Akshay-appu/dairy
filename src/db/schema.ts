@@ -231,7 +231,9 @@ async function migrateToV4(db: SQLite.SQLiteDatabase): Promise<void> {
   }
 }
 
-export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
+let databasePromise: Promise<SQLite.SQLiteDatabase> | null = null;
+
+async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
   const database = await SQLite.openDatabaseAsync('bhoomishakti-diary.db');
   await database.execAsync(`
     PRAGMA journal_mode = WAL;
@@ -249,6 +251,8 @@ export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
       sowingDate TEXT NOT NULL,
       createdAt TEXT NOT NULL
     );
+    CREATE INDEX IF NOT EXISTS idx_crop_schedules_workspace ON crop_schedules(workspaceId);
+
     CREATE TABLE IF NOT EXISTS vault_documents (
       id TEXT PRIMARY KEY,
       workspaceId TEXT NOT NULL,
@@ -257,6 +261,7 @@ export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
       localUri TEXT NOT NULL,
       capturedAt TEXT NOT NULL
     );
+    CREATE INDEX IF NOT EXISTS idx_vault_documents_workspace ON vault_documents(workspaceId);
   `);
 
   const row = await database.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
@@ -277,7 +282,30 @@ export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
     await migrateToV4(database);
     version = 4;
   }
+
+  // Ensure crop_schedules & vault_documents columns are verified even if db was already at V4
+  await addColumnIfMissing(database, 'crop_schedules', 'workspaceId', "workspaceId TEXT NOT NULL DEFAULT 'default'");
+  await addColumnIfMissing(database, 'crop_schedules', 'cropName', "cropName TEXT NOT NULL DEFAULT ''");
+  await addColumnIfMissing(database, 'crop_schedules', 'sowingDate', "sowingDate TEXT NOT NULL DEFAULT ''");
+  await addColumnIfMissing(database, 'crop_schedules', 'createdAt', "createdAt TEXT NOT NULL DEFAULT ''");
+
+  await addColumnIfMissing(database, 'vault_documents', 'workspaceId', "workspaceId TEXT NOT NULL DEFAULT 'default'");
+  await addColumnIfMissing(database, 'vault_documents', 'title', "title TEXT NOT NULL DEFAULT ''");
+  await addColumnIfMissing(database, 'vault_documents', 'category', "category TEXT NOT NULL DEFAULT 'Other'");
+  await addColumnIfMissing(database, 'vault_documents', 'localUri', "localUri TEXT NOT NULL DEFAULT ''");
+  await addColumnIfMissing(database, 'vault_documents', 'capturedAt', "capturedAt TEXT NOT NULL DEFAULT ''");
+
   await database.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
 
   return database;
+}
+
+export function openDatabase(): Promise<SQLite.SQLiteDatabase> {
+  if (!databasePromise) {
+    databasePromise = initDatabase().catch((err) => {
+      databasePromise = null;
+      throw err;
+    });
+  }
+  return databasePromise;
 }

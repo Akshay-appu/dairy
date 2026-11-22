@@ -18,10 +18,15 @@ export async function listCropSchedules(
   db: SQLite.SQLiteDatabase,
   workspaceId: string = 'default'
 ): Promise<CropSchedule[]> {
-  return db.getAllAsync<CropSchedule>(
-    'SELECT * FROM crop_schedules WHERE workspaceId = ? ORDER BY sowingDate DESC, createdAt DESC',
-    workspaceId
-  );
+  try {
+    return await db.getAllAsync<CropSchedule>(
+      'SELECT * FROM crop_schedules WHERE workspaceId = ? ORDER BY sowingDate DESC, createdAt DESC',
+      workspaceId
+    );
+  } catch (err) {
+    console.warn('Could not list crop schedules from SQLite:', err);
+    return [];
+  }
 }
 
 export async function addCropSchedule(

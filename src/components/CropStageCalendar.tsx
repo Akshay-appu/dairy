@@ -337,8 +337,27 @@ export function CropStageCalendar({
   }, [db, workspaceId, activeScheduleId]);
 
   useEffect(() => {
-    loadSchedules();
-  }, [loadSchedules]);
+    let alive = true;
+    (async () => {
+      if (!db) return;
+      try {
+        const list = await listCropSchedules(db, workspaceId);
+        if (!alive) return;
+        setSavedSchedules(list);
+        if (list.length > 0 && !activeScheduleId) {
+          const first = list[0];
+          setActiveScheduleId(first.id);
+          if (CROPS_LIST.includes(first.cropName as SupportedCrop)) {
+            setSelectedCrop(first.cropName as SupportedCrop);
+            setSowingDate(first.sowingDate);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load crop schedules:', err);
+      }
+    })();
+    return () => { alive = false; };
+  }, [db, workspaceId, activeScheduleId]);
 
   const handleSelectSaved = (schedule: CropSchedule) => {
     setActiveScheduleId(schedule.id);

@@ -67,8 +67,22 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
   }, [db, workspaceId]);
 
   useEffect(() => {
-    loadDocuments();
-  }, [loadDocuments]);
+    let alive = true;
+    (async () => {
+      if (!db) return;
+      try {
+        const list = await listVaultDocuments(db, workspaceId);
+        if (alive) {
+          setDocuments(list);
+        }
+      } catch (e) {
+        console.warn('Failed to load vault documents:', e);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [db, workspaceId]);
 
   const handleCapturePhoto = async () => {
     try {
@@ -136,18 +150,24 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
 
     setIsSaving(true);
     try {
-      // 1. Ensure persistent vault directory exists
+      // 1. Ensure persistent vault directory exists safely
       let destUri = draftUri;
-      if (FileSystem.documentDirectory) {
-        const vaultDir = FileSystem.documentDirectory + 'vault/';
-        const dirInfo = await FileSystem.getInfoAsync(vaultDir);
-        if (!dirInfo.exists) {
-          await FileSystem.makeDirectoryAsync(vaultDir, { intermediates: true });
-        }
+      try {
+        const docDir = FileSystem?.documentDirectory;
+        if (docDir && typeof FileSystem.getInfoAsync === 'function' && typeof FileSystem.makeDirectoryAsync === 'function' && typeof FileSystem.copyAsync === 'function') {
+          const vaultDir = `${docDir}vault/`;
+          const dirInfo = await FileSystem.getInfoAsync(vaultDir);
+          if (!dirInfo.exists) {
+            await FileSystem.makeDirectoryAsync(vaultDir, { intermediates: true });
+          }
 
-        const ext = draftUri.split('.').pop() || 'jpg';
-        destUri = `${vaultDir}vault_${Date.now()}_${uuidv4().slice(0, 8)}.${ext}`;
-        await FileSystem.copyAsync({ from: draftUri, to: destUri });
+          const ext = draftUri.split('.').pop() || 'jpg';
+          destUri = `${vaultDir}vault_${Date.now()}_${uuidv4().slice(0, 8)}.${ext}`;
+          await FileSystem.copyAsync({ from: draftUri, to: destUri });
+        }
+      } catch (fsErr) {
+        console.warn('Could not copy receipt image into vault folder, using picked URI:', fsErr);
+        destUri = draftUri;
       }
 
       // 2. Save metadata to SQLite scoped to active workspace
