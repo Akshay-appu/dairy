@@ -2,11 +2,14 @@ import React, {
   useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
 import {
-  SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View,
+  Platform, ScrollView, StatusBar, Text, TouchableOpacity, View,
 } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as SQLite from 'expo-sqlite';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { AlertModal } from './src/components/AlertModal';
+import { LanguageProvider } from './src/i18n/LanguageContext';
 import { useCrossPlatformAlert } from './src/hooks/useCrossPlatformAlert';
 import { useResponsive } from './src/hooks/useResponsive';
 import { useActivities } from './src/hooks/useActivities';
@@ -34,6 +37,7 @@ import { FarmScreen } from './src/screens/FarmScreen';
 import { RecordsScreen } from './src/screens/RecordsScreen';
 import { MoreScreen } from './src/screens/MoreScreen';
 import { shared } from './src/styles/shared';
+import { GREEN } from './src/theme';
 
 type Tab = 'Home' | 'Diary' | 'Farm' | 'Records' | 'More';
 
@@ -225,26 +229,41 @@ function MainApp() {
   const totalExpenses = finance.items.filter(i => i.type === 'expense').reduce((sum, i) => sum + i.amount, 0);
   const netBalance = totalIncome - totalExpenses;
 
-  return (
-    <SafeAreaView style={shared.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      <View style={shared.header}>
-        <View style={[shared.headerInner, { maxWidth: contentMaxWidth, paddingHorizontal: horizontalPadding }]}>
-          <View style={shared.brandMark}><Text style={shared.brandLeaf}>✦</Text></View>
-          <View style={{ flex: 1 }}>
-            <Text style={[shared.brand, lg && shared.brandLg]}>BHOOMISHAKTI</Text>
-            <Text style={[shared.brandSub, lg && shared.brandSubLg]}>DIARY · {t.tagline}</Text>
-          </View>
-          <TouchableOpacity style={shared.langButton} onPress={() => {
-            const next: Language = language === 'en' ? 'kn' : language === 'kn' ? 'hi' : 'en';
-            setLanguage(next);
-          }}>
-            <Text style={shared.langButtonText}>{languages[language]}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0);
 
-      <ScrollView
+  return (
+    <LanguageProvider language={language} setLanguage={setLanguage}>
+      <SafeAreaView edges={['left', 'right']} style={shared.safe}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View style={[
+          shared.header,
+          {
+            paddingTop: topInset,
+            minHeight: 62 + topInset,
+          }
+        ]}>
+          <View style={[shared.headerInner, { maxWidth: contentMaxWidth, paddingHorizontal: horizontalPadding }]}>
+            <View style={shared.brandMark}><Text style={shared.brandLeaf}>✦</Text></View>
+            <View style={{ flex: 1, minWidth: 0, flexShrink: 1, marginRight: 8 }}>
+              <Text style={[shared.brand, lg && shared.brandLg]} numberOfLines={1}>BHOOMISHAKTI</Text>
+              <Text style={[shared.brandSub, lg && shared.brandSubLg]} numberOfLines={1} ellipsizeMode="tail">DIARY · {t.tagline}</Text>
+            </View>
+            <TouchableOpacity
+              style={shared.langButton}
+              onPress={() => {
+                const next: Language = language === 'en' ? 'kn' : language === 'kn' ? 'hi' : 'en';
+                setLanguage(next);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={`Change language, current is ${languages[language]}`}
+            >
+              <Text style={shared.langButtonText}>{languages[language]}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <ScrollView
         contentContainerStyle={[
           shared.content,
           { paddingHorizontal: horizontalPadding, paddingTop: isMobile ? 18 : 28, maxWidth: contentMaxWidth, width: '100%', alignSelf: 'center' },
@@ -343,21 +362,36 @@ function MainApp() {
         )}
       </ScrollView>
 
-      <View style={shared.bottomNav}>
+      <View style={[shared.bottomNav, { paddingBottom: Math.max(8, insets.bottom) }]}>
         <View style={[shared.bottomNavInner, { maxWidth: isMobile ? '100%' : contentMaxWidth, paddingHorizontal: horizontalPadding }]}>
           {([
-            ['Home', '⌂', t.home], ['Diary', '▤', t.diary], ['Farm', '♧', t.farm],
-            ['Records', '▣', t.records], ['More', '•••', t.more],
-          ] as [Tab, string, string][]).map(([key, icon, label]) => (
-            <TouchableOpacity
-              key={key}
-              style={[shared.navItem, lg && shared.navItemLg, tab === key && lg && shared.navItemLgActive]}
-              onPress={() => setTab(key)}
-            >
-              <Text style={[shared.navIcon, lg && shared.navIconLg, tab === key && shared.navActive]}>{icon}</Text>
-              <Text style={[shared.navLabel, lg && shared.navLabelLg, tab === key && shared.navActive]}>{label}</Text>
-            </TouchableOpacity>
-          ))}
+            ['Home', tab === 'Home' ? 'home' : 'home-outline', t.home, 'ionic'],
+            ['Diary', tab === 'Diary' ? 'book' : 'book-outline', t.diary, 'ionic'],
+            ['Farm', tab === 'Farm' ? 'sprout' : 'sprout-outline', t.farm, 'mci'],
+            ['Records', tab === 'Records' ? 'bar-chart' : 'bar-chart-outline', t.records, 'ionic'],
+            ['More', tab === 'More' ? 'ellipsis-horizontal' : 'ellipsis-horizontal-outline', t.more, 'ionic'],
+          ] as [Tab, string, string, 'ionic' | 'mci'][]).map(([key, iconName, label, family]) => {
+            const isActive = tab === key;
+            const iconColor = isActive ? GREEN : '#87948A';
+            return (
+              <TouchableOpacity
+                key={key}
+                style={[shared.navItem, lg && shared.navItemLg, isActive && lg && shared.navItemLgActive]}
+                onPress={() => setTab(key)}
+                accessibilityRole="button"
+                accessibilityLabel={label}
+              >
+                {family === 'mci' ? (
+                  <MaterialCommunityIcons name={iconName as any} size={22} color={iconColor} style={{ height: 25 }} />
+                ) : (
+                  <Ionicons name={iconName as any} size={22} color={iconColor} style={{ height: 25 }} />
+                )}
+                <Text style={[shared.navLabel, lg && shared.navLabelLg, isActive && shared.navActive]}>
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
 
@@ -396,13 +430,16 @@ function MainApp() {
 
       <AlertModal alert={webAlert} onClose={() => setWebAlert(null)} />
     </SafeAreaView>
+  </LanguageProvider>
   );
 }
 
 export default function App() {
   return (
-    <ErrorBoundary>
-      <MainApp />
-    </ErrorBoundary>
+    <SafeAreaProvider>
+      <ErrorBoundary>
+        <MainApp />
+      </ErrorBoundary>
+    </SafeAreaProvider>
   );
 }

@@ -1,23 +1,34 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { KeyboardTypeOptions, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
+import { useActiveLanguage } from '../i18n/LanguageContext';
+import { getSpeechLocale } from '../i18n/languageUtils';
 import { shared } from '../styles/shared';
+
+interface SpeechRecognitionEvent {
+  results?: { transcript?: string }[];
+  [key: string]: unknown;
+}
 
 function useSafeSpeechRecognitionEvent(
   eventName: string,
-  listener: (event: any) => void
+  listener: (event: SpeechRecognitionEvent) => void
 ) {
   useEffect(() => {
     try {
+      const moduleWithEvents = ExpoSpeechRecognitionModule as unknown as {
+        addListener?: (event: string, callback: (event: SpeechRecognitionEvent) => void) => { remove?: () => void };
+      };
       if (
         !ExpoSpeechRecognitionModule ||
-        typeof (ExpoSpeechRecognitionModule as any).addListener !== 'function'
+        typeof moduleWithEvents.addListener !== 'function'
       ) {
         return;
       }
-      const subscription = (ExpoSpeechRecognitionModule as any).addListener(
+      const subscription = moduleWithEvents.addListener(
         eventName,
-        (event: any) => {
+        (event: SpeechRecognitionEvent) => {
           try {
             listener(event);
           } catch (err) {
@@ -50,6 +61,8 @@ export function FormField({
   required,
   secureTextEntry,
   enableVoice = keyboardType !== 'numeric' && keyboardType !== 'decimal-pad',
+  language: propLanguage,
+  locale: propLocale,
 }: {
   label: string;
   value: string;
@@ -62,6 +75,8 @@ export function FormField({
   required?: boolean;
   secureTextEntry?: boolean;
   enableVoice?: boolean;
+  language?: string;
+  locale?: string;
 }) {
   const [isRevealed, setIsRevealed] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -77,6 +92,10 @@ export function FormField({
   });
   const baseValueRef = useRef('');
   const shouldMask = Boolean(secureTextEntry && !isRevealed);
+
+  const { language: activeLanguage, locale: activeContextLocale, t } = useActiveLanguage();
+  const effectiveLanguage = propLanguage || activeLanguage || 'en';
+  const effectiveLocale = propLocale || activeContextLocale || getSpeechLocale(effectiveLanguage);
 
   // Safe cleanup on unmount
   useEffect(() => {
@@ -162,7 +181,7 @@ export function FormField({
           baseValueRef.current = value;
           setIsListening(true);
           try {
-            await ExpoSpeechRecognitionModule.start?.({ lang: 'en-IN', interimResults: true });
+            await ExpoSpeechRecognitionModule.start?.({ lang: effectiveLocale, interimResults: true });
           } catch (startErr) {
             console.warn('ExpoSpeechRecognitionModule.start error:', startErr);
             setIsListening(false);
@@ -213,17 +232,19 @@ export function FormField({
               justifyContent: 'center',
               alignItems: 'center',
               width: 32,
-              backgroundColor: isListening ? '#E6F4FE' : 'transparent',
+              backgroundColor: isListening ? '#FDE8E8' : 'transparent',
               borderRadius: 8,
             }}
             accessibilityRole="button"
-            accessibilityLabel={isListening ? 'Stop voice input' : 'Start voice input'}
+            accessibilityLabel={isListening ? (t?.voiceInputStop || 'Stop voice input') : (t?.voiceInputStart || 'Start voice input')}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 16, lineHeight: 20, color: isListening ? '#B3261E' : '#2E7D32' }}>
-                {isListening ? '⏹' : '🎤'}
-              </Text>
+            <View style={{ width: 24, height: 24, alignItems: 'center', justifyContent: 'center' }}>
+              {isListening ? (
+                <Ionicons name="stop-circle" size={22} color="#B3261E" />
+              ) : (
+                <Ionicons name="mic-outline" size={20} color="#2E7D32" />
+              )}
             </View>
           </TouchableOpacity>
         )}
@@ -243,20 +264,12 @@ export function FormField({
             accessibilityLabel={isRevealed ? 'Hide password' : 'Show password'}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 16, lineHeight: 20 }}>👁</Text>
-              {!isRevealed && (
-                <View
-                  style={{
-                    position: 'absolute',
-                    width: 20,
-                    height: 2,
-                    backgroundColor: '#66756B',
-                    transform: [{ rotate: '-45deg' }],
-                    borderRadius: 1,
-                  }}
-                />
-              )}
+            <View style={{ width: 24, height: 24, alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons
+                name={isRevealed ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color="#66756B"
+              />
             </View>
           </TouchableOpacity>
         )}

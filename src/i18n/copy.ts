@@ -97,6 +97,38 @@ export type Copy = {
   workspaces: string; workspacesSubtitle: string; addWorkspace: string; editWorkspace: string;
   workspaceName: string; workspaceNamePlaceholder: string; defaultWorkspaceName: string;
   exportSeasonReport: string;
+
+  // Crop Growth Stage Calendar & Custom Crop
+  cropStageCalendarTitle: string;
+  cropStageCalendarSubtitle: string;
+  cropInputLabel: string;
+  cropInputPlaceholder: string;
+  sowingDateLabel: string;
+  quickPick: string;
+  trackedInWorkspace: string;
+  newCropPlan: string;
+  growthSchedule: string;
+  activeNow: string;
+  stageCompleted: string;
+  stageUpcoming: string;
+  irrigation: string;
+  fertilizerNutrition: string;
+  trackingActive: string;
+  deleteSchedule: string;
+  deleteScheduleTitle: string;
+  deleteScheduleConfirm: string;
+  saveScheduleToWorkspace: string;
+  savingSchedule: string;
+  daysGrowth: string;
+  cropMatured: string;
+  sowingInDays: string;
+  stageLabel: string;
+  stageGermination: string;
+  stageVegetative: string;
+  stageFlowering: string;
+  stageHarvest: string;
+  voiceInputStart: string;
+  voiceInputStop: string;
 };
 
 export const copy: Record<Language, Copy> = {
@@ -230,6 +262,37 @@ export const copy: Record<Language, Copy> = {
     workspaceNamePlaceholder: 'e.g. South farm / Organic plot',
     defaultWorkspaceName: 'Default',
     exportSeasonReport: 'Export Season Report (PDF)',
+
+    cropStageCalendarTitle: 'Automated Crop Growth Calendar',
+    cropStageCalendarSubtitle: 'Workspace-scoped stage milestones & agronomic reminders',
+    cropInputLabel: 'Crop Name',
+    cropInputPlaceholder: 'Type your crop name (e.g. Paddy, Wheat, Cotton, Maize…)',
+    sowingDateLabel: 'Sowing Date (YYYY-MM-DD)',
+    quickPick: 'Quick Pick:',
+    trackedInWorkspace: 'Tracked In Workspace:',
+    newCropPlan: '＋ New Crop',
+    growthSchedule: 'Growth Schedule',
+    activeNow: 'Active Now',
+    stageCompleted: 'Completed',
+    stageUpcoming: 'Upcoming',
+    irrigation: 'Irrigation',
+    fertilizerNutrition: 'Fertilizer & Nutrition',
+    trackingActive: '✓ Tracking active in this workspace',
+    deleteSchedule: 'Delete Schedule',
+    deleteScheduleTitle: 'Delete Schedule',
+    deleteScheduleConfirm: 'Delete the growth stage calendar for {name}?',
+    saveScheduleToWorkspace: 'Save Schedule to Workspace',
+    savingSchedule: 'Saving…',
+    daysGrowth: 'Total Growth Days',
+    cropMatured: 'Crop Matured',
+    sowingInDays: 'Sowing in',
+    stageLabel: 'Stage',
+    stageGermination: 'Germination',
+    stageVegetative: 'Vegetative',
+    stageFlowering: 'Flowering/Fruiting',
+    stageHarvest: 'Harvest',
+    voiceInputStart: 'Start voice input',
+    voiceInputStop: 'Stop voice input',
   },
   kn: {
     tagline: 'ಪ್ರತಿ ಹೊಲದ ಕಥೆ, ಒಂದೇ ಡೈರಿಯಲ್ಲಿ',
@@ -361,6 +424,37 @@ export const copy: Record<Language, Copy> = {
     workspaceNamePlaceholder: 'ಉದಾ. ದಕ್ಷಿಣ ಕೃಷಿ / ಸಾವಯವ ಪ್ಲಾಟ್',
     defaultWorkspaceName: 'ಡೀಫಾಲ್ಟ್',
     exportSeasonReport: 'ಋತುವಿನ ವರದಿ ರಫ್ತು ಮಾಡಿ (PDF)',
+
+    cropStageCalendarTitle: 'ಸ್ವಯಂಚಾಲಿತ ಬೆಳೆ ಬೆಳವಣಿಗೆ ಕ್ಯಾಲೆಂಡರ್',
+    cropStageCalendarSubtitle: 'ಕಾರ್ಯಕ್ಷೇತ್ರ-ಆಧಾರಿತ ಹಂತದ ಮೈಲಿಗಲ್ಲುಗಳು ಮತ್ತು ಕೃಷಿ ಜ್ಞಾಪನೆಗಳು',
+    cropInputLabel: 'ಬೆಳೆಯ ಹೆಸರು',
+    cropInputPlaceholder: 'ನಿಮ್ಮ ಬೆಳೆಯ ಹೆಸರನ್ನು ಟೈಪ್ ಮಾಡಿ (ಉದಾ: ಭತ್ತ, ಗೋಧಿ, ಹತ್ತಿ, ಜೋಳ…)',
+    sowingDateLabel: 'ಬಿತ್ತನೆ ದಿನಾಂಕ (YYYY-MM-DD)',
+    quickPick: 'ತ್ವರಿತ ಆಯ್ಕೆ:',
+    trackedInWorkspace: 'ಕಾರ್ಯಕ್ಷೇತ್ರದಲ್ಲಿ ಟ್ರ್ಯಾಕ್ ಮಾಡಲಾಗಿದೆ:',
+    newCropPlan: '＋ ಹೊಸ ಬೆಳೆ',
+    growthSchedule: 'ಬೆಳವಣಿಗೆ ವೇಳಾಪಟ್ಟಿ',
+    activeNow: 'ಈಗ ಸಕ್ರಿಯ',
+    stageCompleted: 'ಪೂರ್ಣಗೊಂಡಿದೆ',
+    stageUpcoming: 'ಮುಂಬರುವ',
+    irrigation: 'ನೀರಾವರಿ',
+    fertilizerNutrition: 'ಗೊಬ್ಬರ ಮತ್ತು ಪೋಷಕಾಂಶ',
+    trackingActive: '✓ ಈ ಕಾರ್ಯಕ್ಷೇತ್ರದಲ್ಲಿ ಟ್ರ್ಯಾಕಿಂಗ್ ಸಕ್ರಿಯವಾಗಿದೆ',
+    deleteSchedule: 'ವೇಳಾಪಟ್ಟಿ ಅಳಿಸಿ',
+    deleteScheduleTitle: 'ವೇಳಾಪಟ್ಟಿ ಅಳಿಸುವುದೇ?',
+    deleteScheduleConfirm: '{name} ಗಾಗಿ ಬೆಳವಣಿಗೆಯ ವೇಳಾಪಟ್ಟಿಯನ್ನು ಅಳಿಸುವುದೇ?',
+    saveScheduleToWorkspace: 'ಕಾರ್ಯಕ್ಷೇತ್ರಕ್ಕೆ ವೇಳಾಪಟ್ಟಿ ಉಳಿಸಿ',
+    savingSchedule: 'ಉಳಿಸಲಾಗುತ್ತಿದೆ…',
+    daysGrowth: 'ಒಟ್ಟು ಬೆಳವಣಿಗೆಯ ದಿನಗಳು',
+    cropMatured: 'ಬೆಳೆ ಪಕ್ವವಾಗಿದೆ',
+    sowingInDays: 'ಇನ್ನೂ ಬಿತ್ತನೆಗೆ ಬಾಕಿ ದಿನಗಳು',
+    stageLabel: 'ಹಂತ',
+    stageGermination: 'ಮೊಳಕೆಯೊಡೆಯುವಿಕೆ',
+    stageVegetative: 'ಸಸ್ಯಕ ಬೆಳವಣಿಗೆ',
+    stageFlowering: 'ಹೂಬಿಡುವಿಕೆ/ಕಾಯಿ',
+    stageHarvest: 'ಕೊಯ್ಲು',
+    voiceInputStart: 'ಧ್ವನಿ ಇನ್‌ಪುಟ್ ಪ್ರಾರಂಭಿಸಿ',
+    voiceInputStop: 'ಧ್ವನಿ ಇನ್‌ಪುಟ್ ನಿಲ್ಲಿಸಿ',
   },
   hi: {
     tagline: 'हर खेत की कहानी, एक ही डायरी में',
@@ -492,5 +586,36 @@ export const copy: Record<Language, Copy> = {
     workspaceNamePlaceholder: 'उदा. दक्षिण फ़ार्म / जैविक प्लॉट',
     defaultWorkspaceName: 'डिफ़ॉल्ट',
     exportSeasonReport: 'सीज़न रिपोर्ट निर्यात करें (PDF)',
+
+    cropStageCalendarTitle: 'स्वचालित फसल विकास कैलेंडर',
+    cropStageCalendarSubtitle: 'कार्यक्षेत्र-आधारित विकास चरण और कृषि संबंधी सुझाव',
+    cropInputLabel: 'फसल का नाम',
+    cropInputPlaceholder: 'अपनी फसल का नाम दर्ज करें (उदा. धान, गेहूं, कपास, मक्का…)',
+    sowingDateLabel: 'बुआई की तारीख (YYYY-MM-DD)',
+    quickPick: 'त्वरित चयन:',
+    trackedInWorkspace: 'कार्यक्षेत्र में ट्रैक की जा रही फसलें:',
+    newCropPlan: '＋ नई फसल',
+    growthSchedule: 'विकास अनुसूची',
+    activeNow: 'वर्तमान में सक्रिय',
+    stageCompleted: 'पूर्ण हुआ',
+    stageUpcoming: 'आगामी',
+    irrigation: 'सिंचाई',
+    fertilizerNutrition: 'उर्वरक एवं पोषण',
+    trackingActive: '✓ इस कार्यक्षेत्र में ट्रैकिंग सक्रिय है',
+    deleteSchedule: 'कैलेंडर हटाएं',
+    deleteScheduleTitle: 'कैलेंडर हटाएं?',
+    deleteScheduleConfirm: 'क्या आप {name} का विकास कैलेंडर हटाना चाहते हैं?',
+    saveScheduleToWorkspace: 'कैलेंडर कार्यक्षेत्र में सहेजें',
+    savingSchedule: 'सहेजा जा रहा है…',
+    daysGrowth: 'कुल विकास दिवस',
+    cropMatured: 'फसल परिपक्व हो गई',
+    sowingInDays: 'बुआई में शेष दिन',
+    stageLabel: 'चरण',
+    stageGermination: 'अंकुरण',
+    stageVegetative: 'वानस्पतिक वृद्धि',
+    stageFlowering: 'फूल/फल बनना',
+    stageHarvest: 'कटाई',
+    voiceInputStart: 'आवाज से इनपुट शुरू करें',
+    voiceInputStop: 'आवाज इनपुट रोकें',
   },
 };

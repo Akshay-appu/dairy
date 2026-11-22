@@ -21,13 +21,13 @@ export function ListCard({
       style={[shared.listCard, lg && shared.listCardLg]}
     >
       <View style={shared.listCardIcon}><Text>{icon}</Text></View>
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, minWidth: 0, flexShrink: 1 }}>
         <Text style={[shared.listCardTitle, lg && shared.listCardTitleLg]}>{title}</Text>
         <Text style={[shared.listCardMeta, lg && shared.listCardMetaLg]}>{meta}</Text>
         {!!note && <Text style={[shared.listCardNote, lg && shared.listCardNoteLg]}>{note}</Text>}
       </View>
       {!!onDelete && (
-        <TouchableOpacity onPress={onDelete} accessibilityLabel="Delete" hitSlop={8}>
+        <TouchableOpacity onPress={onDelete} accessibilityLabel="Delete" hitSlop={8} style={{ flexShrink: 0, marginLeft: 4 }}>
           <Text style={shared.deleteIcon}>⋯</Text>
         </TouchableOpacity>
       )}

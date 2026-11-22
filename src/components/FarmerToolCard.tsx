@@ -52,9 +52,9 @@ export function FarmerToolCard({
 
   return (
     <View style={[shared.tipCard, lg && shared.tipCardLg, { backgroundColor: '#FFFFFF', borderColor: '#D9E8DD' }]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <Text style={[shared.tipTitle, lg && shared.tipTitleLg, { fontSize: 16 }]}>🌱 {t.farmerTools}</Text>
-        <Text style={{ fontSize: 12, fontWeight: '700', color: GREEN }}>Interactive Hub</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+        <Text style={[shared.tipTitle, lg && shared.tipTitleLg, { fontSize: 16, flexShrink: 1, minWidth: 0 }]}>🌱 {t.farmerTools}</Text>
+        <Text style={{ fontSize: 12, fontWeight: '700', color: GREEN, flexShrink: 0 }}>Interactive Hub</Text>
       </View>
 
       <View style={shared.segmentRow}>
@@ -80,12 +80,12 @@ export function FarmerToolCard({
 
       {activeTab === 'weather' && (
         <View style={{ gap: 10 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: LIGHT_GREEN, padding: 12, borderRadius: 12 }}>
-            <View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: LIGHT_GREEN, padding: 12, borderRadius: 12, flexWrap: 'wrap', gap: 8 }}>
+            <View style={{ flex: 1, minWidth: 120, flexShrink: 1 }}>
               <Text style={{ fontSize: 15, fontWeight: '800', color: GREEN }}>{workspaceName}</Text>
               <Text style={{ fontSize: 12, color: '#4A6B53', marginTop: 2 }}>Active Plots: {plotsCount}</Text>
             </View>
-            <View style={{ alignItems: 'flex-end' }}>
+            <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
               <Text style={{ fontSize: 22, fontWeight: '800', color: GREEN }}>28°C</Text>
               <Text style={{ fontSize: 11, color: '#4A6B53' }}>Partly Cloudy</Text>
             </View>
@@ -102,8 +102,8 @@ export function FarmerToolCard({
       {activeTab === 'converter' && (
         <View style={{ gap: 10 }}>
           <Text style={{ fontSize: 12, color: '#66756B' }}>Convert land measurements dynamically across regional and standard units.</Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+            <View style={{ flex: 1, minWidth: 120 }}>
               <Text style={shared.fieldLabel}>Enter Area</Text>
               <TextInput
                 value={areaInput}
@@ -113,13 +113,13 @@ export function FarmerToolCard({
                 placeholder="1"
               />
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, minWidth: 140 }}>
               <Text style={shared.fieldLabel}>Select Unit</Text>
-              <View style={{ flexDirection: 'row', gap: 4, marginTop: 2 }}>
+              <View style={{ flexDirection: 'row', gap: 4, marginTop: 2, flexWrap: 'wrap' }}>
                 {(['acres', 'guntas', 'hectares'] as const).map(u => (
                   <TouchableOpacity
                     key={u}
-                    style={[shared.chip, areaUnit === u && shared.chipSelected, { flex: 1, alignItems: 'center', paddingVertical: 10 }]}
+                    style={[shared.chip, areaUnit === u && shared.chipSelected, { flex: 1, minWidth: 40, alignItems: 'center', paddingVertical: 10 }]}
                     onPress={() => setAreaUnit(u)}
                   >
                     <Text style={[shared.chipText, areaUnit === u && shared.chipTextSelected, { fontSize: 10 }]}>{u}</Text>
@@ -129,16 +129,16 @@ export function FarmerToolCard({
             </View>
           </View>
 
-          <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-            <View style={[shared.stat, { padding: 10 }]}>
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+            <View style={[shared.stat, { padding: 10, minWidth: 80, flex: 1 }]}>
               <Text style={{ fontSize: 10, color: '#66756B' }}>Acres</Text>
               <Text style={{ fontSize: 15, fontWeight: '800', color: GREEN, marginTop: 2 }}>{acres.toFixed(2)}</Text>
             </View>
-            <View style={[shared.stat, { padding: 10 }]}>
+            <View style={[shared.stat, { padding: 10, minWidth: 80, flex: 1 }]}>
               <Text style={{ fontSize: 10, color: '#66756B' }}>Guntas</Text>
               <Text style={{ fontSize: 15, fontWeight: '800', color: GREEN, marginTop: 2 }}>{guntas.toFixed(1)}</Text>
             </View>
-            <View style={[shared.stat, { padding: 10 }]}>
+            <View style={[shared.stat, { padding: 10, minWidth: 80, flex: 1 }]}>
               <Text style={{ fontSize: 10, color: '#66756B' }}>Hectares</Text>
               <Text style={{ fontSize: 15, fontWeight: '800', color: GREEN, marginTop: 2 }}>{hectares.toFixed(3)}</Text>
             </View>
@@ -149,12 +149,12 @@ export function FarmerToolCard({
       {activeTab === 'profit' && (
         <View style={{ gap: 10 }}>
           <Text style={{ fontSize: 12, color: '#66756B' }}>Calculate projected revenue, expenses, and net profit for your harvest.</Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+            <View style={{ flex: 1, minWidth: 120 }}>
               <Text style={shared.fieldLabel}>Expected Yield (Kg)</Text>
               <TextInput value={yieldInput} onChangeText={setYieldInput} keyboardType="numeric" style={shared.input} placeholder="1000" />
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, minWidth: 120 }}>
               <Text style={shared.fieldLabel}>Price per Kg (₹)</Text>
               <TextInput value={priceInput} onChangeText={setPriceInput} keyboardType="numeric" style={shared.input} placeholder="25" />
             </View>
@@ -165,18 +165,18 @@ export function FarmerToolCard({
           </View>
 
           <View style={{ backgroundColor: LIGHT_GREEN, borderRadius: 14, padding: 14, marginTop: 4, gap: 6 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={{ fontSize: 13, color: '#4A6B53', fontWeight: '600' }}>Projected Revenue:</Text>
-              <Text style={{ fontSize: 14, fontWeight: '800', color: GREEN }}>₹{projectedRevenue.toLocaleString('en-IN')}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
+              <Text style={{ fontSize: 13, color: '#4A6B53', fontWeight: '600', flexShrink: 1 }}>Projected Revenue:</Text>
+              <Text style={{ fontSize: 14, fontWeight: '800', color: GREEN, flexShrink: 0 }}>₹{projectedRevenue.toLocaleString('en-IN')}</Text>
             </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={{ fontSize: 13, color: '#4A6B53', fontWeight: '600' }}>Estimated Expenses:</Text>
-              <Text style={{ fontSize: 14, fontWeight: '800', color: DANGER }}>₹{estimatedExpenses.toLocaleString('en-IN')}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
+              <Text style={{ fontSize: 13, color: '#4A6B53', fontWeight: '600', flexShrink: 1 }}>Estimated Expenses:</Text>
+              <Text style={{ fontSize: 14, fontWeight: '800', color: DANGER, flexShrink: 0 }}>₹{estimatedExpenses.toLocaleString('en-IN')}</Text>
             </View>
             <View style={{ height: 1, backgroundColor: '#C8E6C9', marginVertical: 4 }} />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: 14, fontWeight: '800', color: '#183326' }}>Net Projected Profit:</Text>
-              <Text style={{ fontSize: 18, fontWeight: '900', color: isProfitable ? GREEN : DANGER }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
+              <Text style={{ fontSize: 14, fontWeight: '800', color: '#183326', flexShrink: 1 }}>Net Projected Profit:</Text>
+              <Text style={{ fontSize: 18, fontWeight: '900', color: isProfitable ? GREEN : DANGER, flexShrink: 0 }}>
                 {isProfitable ? '+' : ''}₹{netProfit.toLocaleString('en-IN')}
               </Text>
             </View>

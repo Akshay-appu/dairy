@@ -226,15 +226,15 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
     <View style={[shared.tipCard, lg && shared.tipCardLg, styles.container]}>
       {/* Header */}
       <View style={styles.headerRow}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
           <View style={styles.iconCircle}>
             <Text style={{ fontSize: 18 }}>📸</Text>
           </View>
-          <View>
-            <Text style={[shared.tipTitle, lg && shared.tipTitleLg, { color: INK }]}>
+          <View style={{ flex: 1, minWidth: 0, flexShrink: 1 }}>
+            <Text style={[shared.tipTitle, lg && shared.tipTitleLg, { color: INK, flexWrap: 'wrap' }]}>
               Receipt & Soil Report Vault
             </Text>
-            <Text style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>
+            <Text style={{ fontSize: 12, color: MUTED, marginTop: 2, flexWrap: 'wrap' }}>
               Workspace-scoped storage for bills, mandi slips & test reports
             </Text>
           </View>
@@ -537,11 +537,14 @@ const styles = StyleSheet.create({
   },
   actionsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
     marginBottom: 14,
   },
   actionBtn: {
     flex: 1,
+    minWidth: 140,
+    flexShrink: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

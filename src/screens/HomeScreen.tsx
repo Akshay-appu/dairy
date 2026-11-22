@@ -39,11 +39,11 @@ export function HomeScreen({
   return (
     <>
       <View style={[shared.welcome, lg && shared.welcomeLg]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-          <View style={{ backgroundColor: '#E8F5E9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginRight: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
+          <View style={{ backgroundColor: '#E8F5E9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginRight: 4, flexShrink: 0 }}>
             <Text style={{ fontSize: 12, fontWeight: '700', color: '#2E7D32' }}>🏢 {workspaceName || 'Workspace'}</Text>
           </View>
-          <Text style={[shared.date, lg && shared.dateLg, { marginBottom: 0 }]}>{dateLabel}</Text>
+          <Text style={[shared.date, lg && shared.dateLg, { marginBottom: 0, flexShrink: 1 }]}>{dateLabel}</Text>
         </View>
         <Text style={[shared.greeting, lg && shared.greetingLg]}>{t.greeting}</Text>
         <Text style={[shared.intro, lg && shared.introLg]}>{t.intro}</Text>
@@ -90,6 +90,7 @@ export function HomeScreen({
         db={db ?? null}
         workspaceId={workspaceId || 'default'}
         lg={lg}
+        t={t}
       />
 
       <ReceiptVault

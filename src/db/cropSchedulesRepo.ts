@@ -36,19 +36,21 @@ export async function addCropSchedule(
 ): Promise<CropSchedule> {
   const id = uuidv4();
   const now = new Date().toISOString();
+  const cleanName = input.cropName.trim() || 'Custom Crop';
+  const cleanDate = input.sowingDate.trim() || now.slice(0, 10);
   await db.runAsync(
     'INSERT INTO crop_schedules (id, workspaceId, cropName, sowingDate, createdAt) VALUES (?, ?, ?, ?, ?)',
     id,
     workspaceId,
-    input.cropName,
-    input.sowingDate,
+    cleanName,
+    cleanDate,
     now
   );
   return {
     id,
     workspaceId,
-    cropName: input.cropName,
-    sowingDate: input.sowingDate,
+    cropName: cleanName,
+    sowingDate: cleanDate,
     createdAt: now,
   };
 }
