@@ -1,6 +1,6 @@
 import {
   createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword,
-  signOut, GoogleAuthProvider, signInWithCredential, signInWithPopup, type User,
+  signOut, GoogleAuthProvider, signInWithCredential, signInWithPopup, updateProfile, type User,
 } from 'firebase/auth';
 import { useCallback, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
@@ -58,8 +58,11 @@ export function useAuth() {
     return auth;
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string) => {
-    await createUserWithEmailAndPassword(requireAuth(), email, password);
+  const signUp = useCallback(async (email: string, password: string, displayName?: string) => {
+    const cred = await createUserWithEmailAndPassword(requireAuth(), email, password);
+    if (displayName && cred.user) {
+      await updateProfile(cred.user, { displayName }).catch(() => {});
+    }
   }, [requireAuth]);
 
   const signIn = useCallback(async (email: string, password: string) => {

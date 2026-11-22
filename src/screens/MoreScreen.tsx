@@ -1,9 +1,11 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import * as SQLite from 'expo-sqlite';
 import { BackupCounts, BackupData } from '../db/backupRepo';
 import { Workspace } from '../db/workspacesRepo';
 import { useAuth } from '../hooks/useAuth';
 import { useSync } from '../hooks/useSync';
+import { useFarmProfile } from '../hooks/useFarmProfile';
 import { Copy, Language, languages } from '../i18n/copy';
 import { shared } from '../styles/shared';
 import { AccountSection } from './AccountSection';
@@ -13,7 +15,7 @@ import { WorkspaceSection } from './WorkspaceSection';
 export function MoreScreen({
   t, lg, language, onLanguageChange, auth, sync, onSignIn, onSignOutConfirm, onDeleteAccount, backup,
   workspaces, activeWorkspaceId, onSwitchWorkspace, onCreateWorkspace, onUpdateWorkspace, onDeleteWorkspace,
-  onError, onConfirmRestore,
+  onError, onConfirmRestore, db, profile,
 }: {
   t: Copy;
   lg: boolean;
@@ -36,6 +38,8 @@ export function MoreScreen({
   onDeleteWorkspace: (id: string) => Promise<void>;
   onError: (message: string) => void;
   onConfirmRestore: (data: BackupData) => void;
+  db?: SQLite.SQLiteDatabase | null;
+  profile?: ReturnType<typeof useFarmProfile>;
 }) {
   return (
     <>
@@ -45,6 +49,7 @@ export function MoreScreen({
       <AccountSection
         t={t} language={language} auth={auth} sync={sync}
         onSignIn={onSignIn} onSignOutConfirm={onSignOutConfirm} onDeleteAccount={onDeleteAccount}
+        db={db} profile={profile}
       />
 
       <WorkspaceSection

@@ -38,6 +38,7 @@ import { RecordsScreen } from './src/screens/RecordsScreen';
 import { MoreScreen } from './src/screens/MoreScreen';
 import { shared } from './src/styles/shared';
 import { GREEN } from './src/theme';
+import { setupNotificationHandler, setupNotificationChannels } from './src/services/notifications';
 
 type Tab = 'Home' | 'Diary' | 'Farm' | 'Records' | 'More';
 
@@ -107,6 +108,11 @@ function MainApp() {
     })();
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    setupNotificationHandler();
+    void setupNotificationChannels();
   }, []);
 
   useEffect(() => {
@@ -358,6 +364,8 @@ function MainApp() {
             onDeleteWorkspace={workspaces.deleteWorkspace}
             onError={message => showAlert('Save failed', message)}
             onConfirmRestore={confirmRestore}
+            db={db}
+            profile={profile}
           />
         )}
       </ScrollView>

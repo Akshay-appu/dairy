@@ -3,7 +3,8 @@ import {
   useCallback, useEffect, useRef, useState, type MutableRefObject,
 } from 'react';
 import { Platform } from 'react-native';
-import { db as firestore } from '../firebase/config';
+import { db as firestore, rtdb } from '../firebase/config';
+import { syncToRealtimeDatabase, pullFromRealtimeDatabase } from '../firebase/rtdbSync';
 import {
   ALL_ENTITY_SYNC_CONFIGS, pullEntity, pullProfile, pullWorkspaces, pushEntity, pushProfile, pushWorkspaces, processSyncQueue,
 } from '../firebase/sync';
@@ -23,30 +24,51 @@ export function useSync(
   const syncingRef = useRef(false);
 
   const syncNow = useCallback(async () => {
-    if (!db || !ownerId || !firestore) return;
+    if (!db || !ownerId) return;
+    if (!firestore && !rtdb) return;
     if (pausedRef.current) return;
     if (syncingRef.current) return;
     syncingRef.current = true;
     setStatus('syncing');
+    setErrorMessage('');
+    let syncedAny = false;
     try {
-      // Process any queued offline mutations first
-      await processSyncQueue(db, firestore, ownerId);
-
-      await pushWorkspaces(db, firestore, ownerId);
-      await pullWorkspaces(db, firestore, ownerId);
-
-      const workspaces = await workspacesRepo.listWorkspaces(db, ownerId);
-      const workspaceIds = workspaces.map(w => w.uuid ?? w.id);
-
-      for (const wsId of workspaceIds) {
-        for (const config of ALL_ENTITY_SYNC_CONFIGS) {
-          await pushEntity(db, firestore, ownerId, wsId, config);
+      if (rtdb) {
+        const rtdbRes = await syncToRealtimeDatabase(db, rtdb, ownerId);
+        if (rtdbRes.success) {
+          syncedAny = true;
+        } else if (rtdbRes.error && !firestore) {
+          throw new Error(rtdbRes.error);
         }
-        await pushProfile(db, firestore, ownerId, wsId);
-        for (const config of ALL_ENTITY_SYNC_CONFIGS) {
-          await pullEntity(db, firestore, ownerId, wsId, config);
+        await pullFromRealtimeDatabase(db, rtdb, ownerId).catch(() => {});
+      }
+
+      if (firestore) {
+        try {
+          // Process any queued offline mutations first
+          await processSyncQueue(db, firestore, ownerId);
+
+          await pushWorkspaces(db, firestore, ownerId);
+          await pullWorkspaces(db, firestore, ownerId);
+
+          const workspaces = await workspacesRepo.listWorkspaces(db, ownerId);
+          const workspaceIds = workspaces.map(w => w.uuid ?? w.id);
+
+          for (const wsId of workspaceIds) {
+            for (const config of ALL_ENTITY_SYNC_CONFIGS) {
+              await pushEntity(db, firestore, ownerId, wsId, config);
+            }
+            await pushProfile(db, firestore, ownerId, wsId);
+            for (const config of ALL_ENTITY_SYNC_CONFIGS) {
+              await pullEntity(db, firestore, ownerId, wsId, config);
+            }
+            await pullProfile(db, firestore, ownerId, wsId);
+          }
+          syncedAny = true;
+        } catch (fErr) {
+          console.warn('Firestore sync warning:', fErr);
+          if (!syncedAny) throw fErr;
         }
-        await pullProfile(db, firestore, ownerId, wsId);
       }
 
       if (typeof onSynced === 'function') {

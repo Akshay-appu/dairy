@@ -15,6 +15,10 @@ import {
   addCropSchedule,
   deleteCropSchedule,
 } from '../db/cropSchedulesRepo';
+import {
+  scheduleCropStageNotifications,
+  cancelCropStageNotifications,
+} from '../services/notifications';
 import { FormField } from './FormField';
 import { Copy, Language } from '../i18n/copy';
 import { useActiveLanguage } from '../i18n/LanguageContext';
@@ -483,6 +487,11 @@ export function CropStageCalendar({
   const [activeScheduleId, setActiveScheduleId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const profile = useMemo(
+    () => computeCropProfile(cropName, t, language),
+    [cropName, t, language]
+  );
+
   const loadSchedules = useCallback(async () => {
     if (!db) return;
     try {
@@ -547,6 +556,7 @@ export function CropStageCalendar({
         workspaceId
       );
       setActiveScheduleId(saved.id);
+      await scheduleCropStageNotifications(saved, profile, language);
       await loadSchedules();
     } catch (e) {
       console.warn('Failed to save schedule:', e);
@@ -559,6 +569,7 @@ export function CropStageCalendar({
     const doDelete = async () => {
       if (!db) return;
       try {
+        await cancelCropStageNotifications(id);
         await deleteCropSchedule(db, id, workspaceId);
         if (activeScheduleId === id) {
           setActiveScheduleId(null);
@@ -589,11 +600,6 @@ export function CropStageCalendar({
     setSowingDate(`${y}-${m}-${day}`);
     setActiveScheduleId(null);
   };
-
-  const profile = useMemo(
-    () => computeCropProfile(cropName, t, language),
-    [cropName, t, language]
-  );
 
   const daysElapsed = getDaysSinceSowing(sowingDate);
   const sowingParsed = parseLocalDate(sowingDate);

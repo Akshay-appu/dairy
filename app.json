@@ -40,7 +40,15 @@
           "cameraPermission": "Allow BhoomiShakti Diary to use the camera to capture receipts and soil reports."
         }
       ],
-      "expo-sharing"
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#1B5E20"
+        }
+      ],
+      "expo-sharing",
+      "expo-font"
     ],
     "extra": {
       "eas": {

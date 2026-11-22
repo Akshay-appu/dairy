@@ -129,6 +129,28 @@ export type Copy = {
   stageHarvest: string;
   voiceInputStart: string;
   voiceInputStop: string;
+
+  // Farmer Account, Cloud Sync & Notifications
+  farmerAccount: string;
+  createFarmerAccount: string;
+  villageOrFarm: string;
+  villageOrFarmPlaceholder: string;
+  farmerNamePlaceholderInput: string;
+  offlineNotice: string;
+  farmerAccountSubtitle: string;
+  syncingWithCloud: string;
+  syncedJustNow: string;
+  syncFailed: string;
+  notificationsTitle: string;
+  notificationsSubtitle: string;
+  dailyReminder: string;
+  dailyReminderSubtitle: string;
+  sendTestNotification: string;
+  sendingTestNotification: string;
+  testNotificationSent: string;
+  testNotificationFailed: string;
+  notificationPermissionDenied: string;
+  cropMilestonesActive: string;
 };
 
 export const copy: Record<Language, Copy> = {
@@ -293,6 +315,26 @@ export const copy: Record<Language, Copy> = {
     stageHarvest: 'Harvest',
     voiceInputStart: 'Start voice input',
     voiceInputStop: 'Stop voice input',
+    farmerAccount: 'Farmer Account & Cloud Sync',
+    createFarmerAccount: 'Create Farmer Account',
+    villageOrFarm: 'Village / Farm Name',
+    villageOrFarmPlaceholder: 'e.g. Rampur Farm, Mandya',
+    farmerNamePlaceholderInput: 'e.g. Ramesh Patil',
+    offlineNotice: 'Your diary works 100% offline. Data is saved safely in your phone’s local SQLite database and automatically syncs to the cloud when signed in.',
+    farmerAccountSubtitle: 'Back up your diary records, crop schedules, and farm data securely to the cloud.',
+    syncingWithCloud: 'Syncing your farm records to cloud…',
+    syncedJustNow: 'Synced just now',
+    syncFailed: 'Cloud sync could not complete. Your local SQLite records are safe.',
+    notificationsTitle: 'Farm Reminders & Notifications',
+    notificationsSubtitle: 'Automated morning alerts for crop stages and daily evening diary reminders.',
+    dailyReminder: 'Daily 7:00 PM Farm Diary Reminder',
+    dailyReminderSubtitle: 'Gentle reminder every evening at 7:00 PM to record your day’s activities, expenses, and harvests.',
+    sendTestNotification: 'Send Test Notification',
+    sendingTestNotification: 'Sending alert…',
+    testNotificationSent: 'Test notification sent! Check your notification bar.',
+    testNotificationFailed: 'Could not send notification. Please check app notification permissions.',
+    notificationPermissionDenied: 'Notification permission was not granted. Please enable notifications in your phone settings.',
+    cropMilestonesActive: 'Crop stage morning alerts scheduled at 7:00 AM on milestone dates.',
   },
   kn: {
     tagline: 'ಪ್ರತಿ ಹೊಲದ ಕಥೆ, ಒಂದೇ ಡೈರಿಯಲ್ಲಿ',
@@ -455,6 +497,26 @@ export const copy: Record<Language, Copy> = {
     stageHarvest: 'ಕೊಯ್ಲು',
     voiceInputStart: 'ಧ್ವನಿ ಇನ್‌ಪುಟ್ ಪ್ರಾರಂಭಿಸಿ',
     voiceInputStop: 'ಧ್ವನಿ ಇನ್‌ಪುಟ್ ನಿಲ್ಲಿಸಿ',
+    farmerAccount: 'ರೈತರ ಖಾತೆ ಮತ್ತು ಕ್ಲೌಡ್ ಸಿಂಕ್',
+    createFarmerAccount: 'ರೈತರ ಖಾತೆ ರಚಿಸಿ',
+    villageOrFarm: 'ಗ್ರಾಮ / ಹೊಲದ ಹೆಸರು',
+    villageOrFarmPlaceholder: 'ಉದಾ: ರಾಂಪುರ, ಮಂಡ್ಯ',
+    farmerNamePlaceholderInput: 'ಉದಾ: ರಮೇಶ್ ಪಾಟೀಲ್',
+    offlineNotice: 'ನಿಮ್ಮ ಡೈರಿ ಸಂಪೂರ್ಣವಾಗಿ ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ಕೆಲಸ ಮಾಡುತ್ತದೆ. ಡೇಟಾ ನಿಮ್ಮ ಫೋನಿನ SQLite ನಲ್ಲೇ ಸುರಕ್ಷಿತವಾಗಿರುತ್ತದೆ ಮತ್ತು ನೆಟ್‌ವರ್ಕ್ ಇದ್ದಾಗ ಕ್ಲೌಡ್‌ಗೆ ಸಿಂಕ್ ಆಗುತ್ತದೆ.',
+    farmerAccountSubtitle: 'ನಿಮ್ಮ ಡೈರಿ ದಾಖಲೆಗಳು, ಬೆಳೆ ವೇಳಾಪಟ್ಟಿ ಮತ್ತು ಕೃಷಿ ವಿವರಗಳನ್ನು ಕ್ಲೌಡ್‌ನಲ್ಲಿ ಸುರಕ್ಷಿತವಾಗಿರಿಸಿ.',
+    syncingWithCloud: 'ನಿಮ್ಮ ಕೃಷಿ ದಾಖಲೆಗಳನ್ನು ಕ್ಲೌಡ್‌ಗೆ ಸಿಂಕ್ ಮಾಡಲಾಗುತ್ತಿದೆ…',
+    syncedJustNow: 'ಈಗಷ್ಟೇ ಸಿಂಕ್ ಆಗಿದೆ',
+    syncFailed: 'ಕ್ಲೌಡ್ ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ. ನಿಮ್ಮ ಫೋನಿನ ಡೇಟಾ ಸಂಪೂರ್ಣ ಸುರಕ್ಷಿತವಾಗಿದೆ.',
+    notificationsTitle: 'ಕೃಷಿ ಜ್ಞಾಪನೆಗಳು ಮತ್ತು ಎಚ್ಚರಿಕೆಗಳು',
+    notificationsSubtitle: 'ಬೆಳೆ ಬೆಳವಣಿಗೆ ಹಂತದ ಬೆಳಗಿನ ಎಚ್ಚರಿಕೆಗಳು ಮತ್ತು ಪ್ರತಿದಿನ ಸಂಜೆಯ ಡೈರಿ ಜ್ಞಾಪನೆಗಳು.',
+    dailyReminder: 'ಪ್ರತಿದಿನ ಸಂಜೆ 7:00 ಗಂಟೆಯ ಡೈರಿ ಜ್ಞಾಪನೆ',
+    dailyReminderSubtitle: 'ದೈನಂದಿನ ಚಟುವಟಿಕೆಗಳು, ಖರ್ಚು-ವೆಚ್ಚ ಮತ್ತು ಇಳುವರಿ ದಾಖಲಿಸಲು ಪ್ರತಿದಿನ ಸಂಜೆ 7:00 ಗಂಟೆಗೆ ಜ್ಞಾಪನೆ.',
+    sendTestNotification: 'ಪರೀಕ್ಷಾ ಅಧಿಸೂಚನೆ ಕಳುಹಿಸಿ',
+    sendingTestNotification: 'ಎಚ್ಚರಿಕೆ ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ…',
+    testNotificationSent: 'ಪರೀಕ್ಷಾ ಅಧಿಸೂಚನೆ ಕಳುಹಿಸಲಾಗಿದೆ! ನಿಮ್ಮ ನೋಟಿಫಿಕೇಶನ್ ಬಾರ್ ಪರಿಶೀಲಿಸಿ.',
+    testNotificationFailed: 'ಅಧಿಸೂಚನೆ ಕಳುಹಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ. ದಯವಿಟ್ಟು ಅನುಮತಿಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.',
+    notificationPermissionDenied: 'ಅಧಿಸೂಚನೆ ಅನುಮತಿ ನೀಡಿಲ್ಲ. ದಯವಿಟ್ಟು ಫೋನ್ ಸೆಟ್ಟಿಂಗ್ಸ್‌ನಲ್ಲಿ ಸಕ್ರಿಯಗೊಳಿಸಿ.',
+    cropMilestonesActive: 'ಬೆಳೆ ಹಂತದ ಮೈಲಿಗಲ್ಲುಗಳಲ್ಲಿ ಬೆಳಿಗ್ಗೆ 7:00 ಗಂಟೆಗೆ ಎಚ್ಚರಿಕೆಗಳನ್ನು ನಿಗದಿಪಡಿಸಲಾಗಿದೆ.',
   },
   hi: {
     tagline: 'हर खेत की कहानी, एक ही डायरी में',
@@ -617,5 +679,25 @@ export const copy: Record<Language, Copy> = {
     stageHarvest: 'कटाई',
     voiceInputStart: 'आवाज से इनपुट शुरू करें',
     voiceInputStop: 'आवाज इनपुट रोकें',
+    farmerAccount: 'किसान खाता और क्लाउड सिंक',
+    createFarmerAccount: 'किसान खाता बनाएं',
+    villageOrFarm: 'गाँव / खेत का नाम',
+    villageOrFarmPlaceholder: 'उदा: रामपुर, मण्ड्या',
+    farmerNamePlaceholderInput: 'उदा: रमेश पाटिल',
+    offlineNotice: 'आपकी डायरी 100% ऑफ़लाइन काम करती है। डेटा आपके फ़ोन के SQLite में सुरक्षित रहता है और इंटरनेट होने पर क्लाउड से सिंक हो जाता है।',
+    farmerAccountSubtitle: 'अपनी डायरी की प्रविष्टियाँ, फसल कैलेंडर और कृषि डेटा को सुरक्षित क्लाउड पर बैकअप करें।',
+    syncingWithCloud: 'आपके कृषि रिकॉर्ड को क्लाउड से सिंक किया जा रहा है…',
+    syncedJustNow: 'अभी-अभी सिंक हुआ',
+    syncFailed: 'क्लाउड सिंक पूरा नहीं हो सका। आपका स्थानीय डेटा पूरी तरह सुरक्षित है।',
+    notificationsTitle: 'कृषि अनुस्मारक और सूचनाएं',
+    notificationsSubtitle: 'फसल अवस्था की सुबह की सूचनाएं और दैनिक शाम की डायरी याद दिलाने वाले अलर्ट।',
+    dailyReminder: 'दैनिक शाम 7:00 बजे डायरी अनुस्मारक',
+    dailyReminderSubtitle: 'दिनभर की गतिविधियों, खर्चों और उपज को दर्ज करने के लिए हर शाम 7:00 बजे सूचना।',
+    sendTestNotification: 'टेस्ट नोटिफिकेशन भेजें',
+    sendingTestNotification: 'अलर्ट भेजा जा रहा है…',
+    testNotificationSent: 'टेस्ट नोटिफिकेशन भेजा गया! अपना नोटिफिकेशन बार देखें।',
+    testNotificationFailed: 'नोटिफिकेशन नहीं भेजा जा सका। कृपया अनुमति की जांच करें।',
+    notificationPermissionDenied: 'नोटिफिकेशन अनुमति नहीं मिली। कृपया फ़ोन सेटिंग्स में इसे चालू करें।',
+    cropMilestonesActive: 'फसल अवस्था के महत्वपूर्ण दिनों पर सुबह 7:00 बजे सूचनाएं निर्धारित की गई हैं।',
   },
 };

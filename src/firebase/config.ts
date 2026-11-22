@@ -1,6 +1,7 @@
 import { getApps, initializeApp, type FirebaseApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth, initializeAuth, type Auth } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore, initializeFirestore, type Firestore } from 'firebase/firestore';
+import { connectDatabaseEmulator, getDatabase, type Database } from 'firebase/database';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -20,6 +21,7 @@ import { getReactNativePersistence } from '@firebase/auth';
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  databaseURL: process.env.EXPO_PUBLIC_FIREBASE_DATABASE_URL,
   projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
   storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
@@ -38,6 +40,7 @@ const useEmulator = process.env.EXPO_PUBLIC_USE_FIREBASE_EMULATOR === '1';
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
+let rtdb: Database | null = null;
 
 if (isFirebaseConfigured) {
   app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
@@ -54,13 +57,23 @@ if (isFirebaseConfigured) {
     ? getFirestore(app)
     : initializeFirestore(app, { experimentalForceLongPolling: true });
 
+  // Realtime Database initialization
+  try {
+    const dbUrl = process.env.EXPO_PUBLIC_FIREBASE_DATABASE_URL;
+    rtdb = dbUrl ? getDatabase(app, dbUrl) : getDatabase(app);
+  } catch (err) {
+    console.warn('Realtime Database initialization warning:', err);
+    rtdb = null;
+  }
+
   if (useEmulator) {
     // 10.0.2.2 is the Android emulator's alias for the host machine's
     // localhost; iOS simulator and web can both reach localhost directly.
     const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-    connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
-    connectFirestoreEmulator(db, host, 8080);
+    if (auth) connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
+    if (db) connectFirestoreEmulator(db, host, 8080);
+    if (rtdb) connectDatabaseEmulator(rtdb, host, 9000);
   }
 }
 
-export { app, auth, db };
+export { app, auth, db, rtdb };
