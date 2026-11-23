@@ -14,7 +14,7 @@ export function useEntityList<T extends { id: number }, Input>(
   workspaceId: string = 'default'
 ) {
   const [items, setItems] = useState<T[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!db) return;
@@ -27,7 +27,7 @@ export function useEntityList<T extends { id: number }, Input>(
     let alive = true;
     (async () => {
       if (!db) {
-        if (alive) setLoading(false);
+        if (alive) setHydrated(true);
         return;
       }
       try {
@@ -35,12 +35,14 @@ export function useEntityList<T extends { id: number }, Input>(
           const rows = await repo.list(db, ownerId, workspaceId);
           if (alive) {
             setItems(rows);
-            setLoading(false);
+            setHydrated(true);
           }
+        } else if (alive) {
+          setHydrated(true);
         }
       } catch (err) {
         console.warn('Failed to load entity list:', err);
-        if (alive) setLoading(false);
+        if (alive) setHydrated(true);
       }
     })();
     return () => { alive = false; };
@@ -68,5 +70,5 @@ export function useEntityList<T extends { id: number }, Input>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [db, ownerId, workspaceId, refresh]);
 
-  return { items, loading, add, update, remove, refresh };
+  return { items, loading: false, hydrated, add, update, remove, refresh };
 }

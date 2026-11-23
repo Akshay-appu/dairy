@@ -6,25 +6,25 @@ import { FarmProfile } from '../db/schema';
 
 export function useFarmProfile(db: SQLite.SQLiteDatabase | null, ready: boolean, ownerId: string | null, workspaceId: string = 'default') {
   const [profile, setProfile] = useState<FarmProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     if (!ready) return;
     let alive = true;
     (async () => {
       if (!db) {
-        if (alive) setLoading(false);
+        if (alive) setHydrated(true);
         return;
       }
       try {
         const row = await profileRepo.getProfile(db, ownerId, workspaceId);
         if (alive) {
           setProfile(row);
-          setLoading(false);
+          setHydrated(true);
         }
       } catch (err) {
         console.warn('Failed to load farm profile:', err);
-        if (alive) setLoading(false);
+        if (alive) setHydrated(true);
       }
     })();
     return () => { alive = false; };
@@ -41,5 +41,5 @@ export function useFarmProfile(db: SQLite.SQLiteDatabase | null, ready: boolean,
     setProfile(await profileRepo.getProfile(db, ownerId, workspaceId));
   }, [db, ownerId, workspaceId]);
 
-  return { profile, loading, save, refresh };
+  return { profile, loading: false, hydrated, save, refresh };
 }

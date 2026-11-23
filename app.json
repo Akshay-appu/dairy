@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "BhoomiShaktiDiary-App",
+    "name": "BS Diary",
     "slug": "BhoomiShaktiDiary-App",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -54,7 +54,16 @@
         }
       ],
       "expo-sharing",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF"
+        }
+      ]
     ],
     "extra": {
       "eas": {

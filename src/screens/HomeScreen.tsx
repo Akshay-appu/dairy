@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, DimensionValue, Text, TouchableOpacity, View } from 'react-native';
+import { DimensionValue, Text, TouchableOpacity, View } from 'react-native';
 import * as SQLite from 'expo-sqlite';
 import { GridList } from '../components/GridList';
 import { ListCard } from '../components/ListCard';
@@ -12,7 +12,6 @@ import { FarmerToolCard } from '../components/FarmerToolCard';
 import { Copy, Language } from '../i18n/copy';
 import { Entry, FarmProfile } from '../db/schema';
 import { shared } from '../styles/shared';
-import { GREEN } from '../theme';
 import { formatShortDate } from '../utils/format';
 
 export function HomeScreen({
@@ -23,7 +22,6 @@ export function HomeScreen({
   cardWidth,
   dateLabel,
   entries,
-  loading,
   plotsCount,
   cropsCount,
   workspaceName,
@@ -44,7 +42,6 @@ export function HomeScreen({
   cardWidth: DimensionValue;
   dateLabel: string;
   entries: Entry[];
-  loading: boolean;
   plotsCount: number;
   cropsCount: number;
   workspaceName: string;
@@ -102,9 +99,7 @@ export function HomeScreen({
       </View>
 
       <SectionTitle title={t.recentActivities} action={t.viewAll} onPress={onViewAll} lg={lg} />
-      {loading ? (
-        <ActivityIndicator color={GREEN} style={{ marginTop: 20 }} />
-      ) : entries.length ? (
+      {entries.length ? (
         <GridList
           items={entries.slice(0, 3)}
           gridColumns={gridColumns}

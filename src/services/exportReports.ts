@@ -209,7 +209,7 @@ function buildReportHtml(snapshot: FarmReportSnapshot, t: Copy): string {
 </head>
 <body>
   <div class="header">
-    <h1>BHOOMISHAKTI DIARY</h1>
+    <h1>BS DIARY · BHOOMISHAKTI</h1>
     <p>${escapeHtml(t.tagline)}</p>
   </div>
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, DimensionValue, Text, View } from 'react-native';
+import { DimensionValue, Text, View } from 'react-native';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
 import { EmptyState } from '../components/EmptyState';
 import { GridList } from '../components/GridList';
@@ -217,7 +217,7 @@ export function RecordsScreen({
             <View style={{ flex: 1 }}><PrimaryButton label={`＋ ${t.addExpense}`} onPress={() => openAddFinance('expense')} /></View>
             <View style={{ flex: 1 }}><PrimaryButton label={`＋ ${t.addIncome}`} onPress={() => openAddFinance('income')} /></View>
           </View>
-          {finance.loading ? <ActivityIndicator style={{ marginTop: 20 }} /> : finance.items.length ? (
+          {finance.items.length ? (
             <GridList
               items={finance.items}
               gridColumns={gridColumns}
@@ -243,7 +243,7 @@ export function RecordsScreen({
       {section === 'harvests' && (
         <>
           <PrimaryButton label={`＋ ${t.addHarvest}`} onPress={openAddHarvest} />
-          {harvests.loading ? <ActivityIndicator style={{ marginTop: 20 }} /> : harvests.items.length ? (
+          {harvests.items.length ? (
             <GridList
               items={harvests.items}
               gridColumns={gridColumns}

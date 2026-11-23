@@ -4,7 +4,7 @@ import { Entry } from '../db/schema';
 import { useEntityList } from './useEntityList';
 
 export function useActivities(db: SQLite.SQLiteDatabase | null, ready: boolean, ownerId: string | null, workspaceId: string = 'default') {
-  const { items, loading, add, update, remove, refresh } = useEntityList<Entry, activitiesRepo.ActivityInput>(
+  const { items, loading, hydrated, add, update, remove, refresh } = useEntityList<Entry, activitiesRepo.ActivityInput>(
     db, ready, ownerId,
     {
       list: activitiesRepo.listEntries,
@@ -14,5 +14,5 @@ export function useActivities(db: SQLite.SQLiteDatabase | null, ready: boolean, 
     },
     workspaceId
   );
-  return { entries: items, loading, add, update, remove, refresh };
+  return { entries: items, loading, hydrated, add, update, remove, refresh };
 }

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Image,
   Modal,
@@ -71,7 +70,6 @@ export function ReceiptVault({
   const locale = language === 'kn' ? 'kn-IN' : language === 'hi' ? 'hi-IN' : 'en-IN';
 
   const [documents, setDocuments] = useState<VaultDocument[]>([]);
-  const [loading, setLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'All' | VaultCategory>('All');
 
   // New document draft modal state
@@ -85,14 +83,11 @@ export function ReceiptVault({
 
   const loadDocuments = useCallback(async () => {
     if (!db) return;
-    setLoading(true);
     try {
       const list = await listVaultDocuments(db, workspaceId);
       setDocuments(list);
     } catch (e) {
       console.warn('Failed to load vault documents:', e);
-    } finally {
-      setLoading(false);
     }
   }, [db, workspaceId]);
 
@@ -107,8 +102,6 @@ export function ReceiptVault({
         }
       } catch (e) {
         console.warn('Failed to load vault documents:', e);
-      } finally {
-        if (alive) setLoading(false);
       }
     })();
     return () => { alive = false; };
@@ -345,9 +338,7 @@ export function ReceiptVault({
       </ScrollView>
 
       {/* Documents Grid / List */}
-      {loading ? (
-        <ActivityIndicator color={GREEN} style={{ marginVertical: 20 }} />
-      ) : filteredDocs.length === 0 ? (
+      {filteredDocs.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={{ fontSize: 30, marginBottom: 6 }}>📑</Text>
           <Text style={styles.emptyTitle}>{t.vaultEmptyTitle}</Text>

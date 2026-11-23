@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as SplashScreen from 'expo-splash-screen';
 import * as SQLite from 'expo-sqlite';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { AlertModal } from './src/components/AlertModal';
@@ -43,9 +44,15 @@ import { setupNotificationHandler, setupNotificationChannels } from './src/servi
 
 type Tab = 'Home' | 'Diary' | 'Farm' | 'Records' | 'More';
 
+if (Platform.OS !== 'web') {
+  void SplashScreen.preventAutoHideAsync().catch(() => {});
+}
+
 function MainApp() {
   const [db, setDb] = useState<SQLite.SQLiteDatabase | null>(null);
   const [dbReady, setDbReady] = useState(false);
+  const [bootTimedOut, setBootTimedOut] = useState(false);
+  const splashHiddenRef = useRef(false);
   const [tab, setTab] = useState<Tab>('Home');
   const [language, setLanguage] = useState<Language>('en');
   const [showAdd, setShowAdd] = useState(false);
@@ -116,6 +123,33 @@ function MainApp() {
     setupNotificationHandler();
     void setupNotificationChannels();
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    const timer = setTimeout(() => setBootTimedOut(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const isBootReady =
+    bootTimedOut ||
+    (dbReady &&
+      workspaces.hydrated &&
+      activities.hydrated &&
+      profile.hydrated &&
+      plots.hydrated &&
+      crops.hydrated &&
+      finance.hydrated &&
+      harvests.hydrated);
+
+  const hideSplashIfReady = useCallback(() => {
+    if (!isBootReady || splashHiddenRef.current || Platform.OS === 'web') return;
+    splashHiddenRef.current = true;
+    void SplashScreen.hideAsync().catch(() => {});
+  }, [isBootReady]);
+
+  useEffect(() => {
+    hideSplashIfReady();
+  }, [hideSplashIfReady]);
 
   useEffect(() => {
     if (!claimLocalData.pendingClaim) return;
@@ -240,9 +274,13 @@ function MainApp() {
   const insets = useSafeAreaInsets();
   const topInset = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0);
 
+  if (Platform.OS !== 'web' && !isBootReady) {
+    return null;
+  }
+
   return (
     <LanguageProvider language={language} setLanguage={setLanguage}>
-      <SafeAreaView edges={['left', 'right']} style={shared.safe}>
+      <SafeAreaView edges={['left', 'right']} style={shared.safe} onLayout={hideSplashIfReady}>
         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         <View style={[
           shared.header,
@@ -252,7 +290,7 @@ function MainApp() {
           }
         ]}>
           <View style={[shared.headerInner, { maxWidth: contentMaxWidth, paddingHorizontal: horizontalPadding }]}>
-            <View style={shared.brandMark} accessibilityLabel="BhoomiShakti Diary">
+            <View style={shared.brandMark} accessibilityLabel="BS Diary — BhoomiShakti">
               <MaterialCommunityIcons
                 name="sprout"
                 size={12}
@@ -267,8 +305,8 @@ function MainApp() {
               />
             </View>
             <View style={{ flex: 1, minWidth: 0, flexShrink: 1, marginRight: 8 }}>
-              <Text style={[shared.brand, lg && shared.brandLg]} numberOfLines={1}>BHOOMISHAKTI</Text>
-              <Text style={[shared.brandSub, lg && shared.brandSubLg]} numberOfLines={1} ellipsizeMode="tail">DIARY · {t.tagline}</Text>
+              <Text style={[shared.brand, lg && shared.brandLg]} numberOfLines={1}>BS DIARY</Text>
+              <Text style={[shared.brandSub, lg && shared.brandSubLg]} numberOfLines={1} ellipsizeMode="tail">BhoomiShakti · {t.tagline}</Text>
             </View>
             <TouchableOpacity
               style={shared.langButton}
@@ -300,7 +338,6 @@ function MainApp() {
             cardWidth={cardWidth}
             dateLabel={dateLabel}
             entries={activities.entries}
-            loading={activities.loading}
             plotsCount={plots.items.length}
             cropsCount={crops.items.length}
             workspaceName={workspaceName}
@@ -322,7 +359,6 @@ function MainApp() {
             gridColumns={gridColumns}
             cardWidth={cardWidth}
             entries={activities.entries}
-            loading={activities.loading}
             onAddPress={openAddActivity}
             onEditEntry={openEditActivity}
             onDeleteEntry={id => deleteActivity(id)}

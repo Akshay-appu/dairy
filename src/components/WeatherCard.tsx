@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   StyleSheet,
   Text,
   TextInput,
@@ -184,13 +183,6 @@ export function WeatherCard({
         </TouchableOpacity>
       </View>
 
-      {loading && !weather ? (
-        <View style={styles.loadingBox}>
-          <ActivityIndicator size="small" color={GREEN} />
-          <Text style={styles.loadingText}>{t.weatherUpdating}</Text>
-        </View>
-      ) : null}
-
       {weather && condition && advisory ? (
         <>
           {/* Hero Location & Temp */}
@@ -256,9 +248,10 @@ export function WeatherCard({
           {/* Footer timestamp & offline/fallback status */}
           <View style={styles.footerRow}>
             <Text style={styles.lastUpdatedText}>
-              {t.weatherLastUpdated}: {formatWeatherTimestamp(weather.fetchedAt, language)}
+              {loading
+                ? t.weatherUpdating
+                : `${t.weatherLastUpdated}: ${formatWeatherTimestamp(weather.fetchedAt, language)}`}
             </Text>
-            {loading && <ActivityIndicator size="small" color={GREEN} />}
             {isOfflineCache && (
               <View style={styles.offlinePill}>
                 <Text style={styles.offlinePillText}>{t.weatherOfflineCached}</Text>
@@ -270,7 +263,46 @@ export function WeatherCard({
             <Text style={styles.fallbackNote}>{t.weatherGpsFallbackNotice}</Text>
           )}
         </>
-      ) : null}
+      ) : (
+        <>
+          {/* Immediate static layout without spinner coils before first weather fetch */}
+          <View style={styles.heroCard}>
+            <View style={styles.heroLeft}>
+              <Text style={styles.locationTitle} numberOfLines={2}>
+                📍 {[farmProfile?.village, farmProfile?.district].filter(Boolean).join(', ') || workspaceName}
+              </Text>
+              <Text style={styles.workspaceMeta}>
+                {workspaceName} · {t.weatherActivePlots}: {plotsCount}
+              </Text>
+            </View>
+            <View style={styles.heroRight}>
+              <View style={styles.tempRow}>
+                <Text style={styles.weatherEmoji}>🌤️</Text>
+                <Text style={styles.tempValue}>—°C</Text>
+              </View>
+              <Text style={styles.conditionLabel}>{loading ? t.weatherUpdating : t.weatherPartlyCloudy}</Text>
+            </View>
+          </View>
+
+          <View style={styles.metricsRow}>
+            <View style={styles.metricTile}>
+              <Ionicons name="water-outline" size={16} color="#0284C7" />
+              <Text style={styles.metricLabel}>{t.weatherHumidity}</Text>
+              <Text style={styles.metricValue}>—</Text>
+            </View>
+            <View style={styles.metricTile}>
+              <Ionicons name="speedometer-outline" size={16} color="#059669" />
+              <Text style={styles.metricLabel}>{t.weatherWind}</Text>
+              <Text style={styles.metricValue}>—</Text>
+            </View>
+            <View style={styles.metricTile}>
+              <Ionicons name="rainy-outline" size={16} color="#2563EB" />
+              <Text style={styles.metricLabel}>{t.weatherRainChance}</Text>
+              <Text style={styles.metricValue}>—</Text>
+            </View>
+          </View>
+        </>
+      )}
 
       {!!errorMsg && (
         <View style={styles.errorBanner}>
@@ -332,20 +364,6 @@ const styles = StyleSheet.create({
     backgroundColor: LIGHT_GREEN,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  loadingBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 18,
-    backgroundColor: '#F8FCF8',
-    borderRadius: 12,
-  },
-  loadingText: {
-    fontSize: 12,
-    color: MUTED,
-    fontWeight: '600',
   },
   heroCard: {
     flexDirection: 'row',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, DimensionValue, Text } from 'react-native';
+import { DimensionValue, Text } from 'react-native';
 import { PrimaryButton } from '../components/Buttons';
 import { ChipRow } from '../components/ChipRow';
 import { EmptyState } from '../components/EmptyState';
@@ -167,33 +167,31 @@ export function FarmScreen({
       />
 
       {section === 'profile' && (
-        profile.loading ? <ActivityIndicator /> : (
-          <>
-            <Text style={shared.pageSubtitle}>{t.profileIntro}</Text>
-            <FormField label={t.farmName} value={profileDraft.farmName} onChangeText={v => setProfileDraft({ ...profileDraft, farmName: v })} placeholder={t.farmNamePlaceholder} />
-            <FormField label={t.farmerName} value={profileDraft.farmerName} onChangeText={v => setProfileDraft({ ...profileDraft, farmerName: v })} placeholder={t.farmerNamePlaceholder} />
-            <FormField label={t.village} value={profileDraft.village} onChangeText={v => setProfileDraft({ ...profileDraft, village: v })} placeholder={t.villagePlaceholder} />
-            <FormField label={t.district} value={profileDraft.district} onChangeText={v => setProfileDraft({ ...profileDraft, district: v })} placeholder={t.districtPlaceholder} />
-            <FormField label={t.stateField} value={profileDraft.state} onChangeText={v => setProfileDraft({ ...profileDraft, state: v })} placeholder={t.statePlaceholder} />
-            <FormField label={t.totalArea} value={profileDraft.totalArea} onChangeText={v => setProfileDraft({ ...profileDraft, totalArea: v })} placeholder="e.g. 5" keyboardType="decimal-pad" />
-            <Text style={shared.fieldLabel}>{t.unit}</Text>
-            <ChipRow
-              options={areaUnits.map(u => areaUnitLabels[language][u])}
-              value={areaUnitLabel(language, profileDraft.areaUnit)}
-              onChange={label => {
-                const unit = areaUnits.find(u => areaUnitLabels[language][u] === label) ?? profileDraft.areaUnit;
-                setProfileDraft({ ...profileDraft, areaUnit: unit });
-              }}
-            />
-            <PrimaryButton label={t.save} onPress={saveProfile} />
-          </>
-        )
+        <>
+          <Text style={shared.pageSubtitle}>{t.profileIntro}</Text>
+          <FormField label={t.farmName} value={profileDraft.farmName} onChangeText={v => setProfileDraft({ ...profileDraft, farmName: v })} placeholder={t.farmNamePlaceholder} />
+          <FormField label={t.farmerName} value={profileDraft.farmerName} onChangeText={v => setProfileDraft({ ...profileDraft, farmerName: v })} placeholder={t.farmerNamePlaceholder} />
+          <FormField label={t.village} value={profileDraft.village} onChangeText={v => setProfileDraft({ ...profileDraft, village: v })} placeholder={t.villagePlaceholder} />
+          <FormField label={t.district} value={profileDraft.district} onChangeText={v => setProfileDraft({ ...profileDraft, district: v })} placeholder={t.districtPlaceholder} />
+          <FormField label={t.stateField} value={profileDraft.state} onChangeText={v => setProfileDraft({ ...profileDraft, state: v })} placeholder={t.statePlaceholder} />
+          <FormField label={t.totalArea} value={profileDraft.totalArea} onChangeText={v => setProfileDraft({ ...profileDraft, totalArea: v })} placeholder="e.g. 5" keyboardType="decimal-pad" />
+          <Text style={shared.fieldLabel}>{t.unit}</Text>
+          <ChipRow
+            options={areaUnits.map(u => areaUnitLabels[language][u])}
+            value={areaUnitLabel(language, profileDraft.areaUnit)}
+            onChange={label => {
+              const unit = areaUnits.find(u => areaUnitLabels[language][u] === label) ?? profileDraft.areaUnit;
+              setProfileDraft({ ...profileDraft, areaUnit: unit });
+            }}
+          />
+          <PrimaryButton label={t.save} onPress={saveProfile} />
+        </>
       )}
 
       {section === 'plots' && (
         <>
           <PrimaryButton label={`＋ ${t.addPlot}`} onPress={openAddPlot} />
-          {plots.loading ? <ActivityIndicator style={{ marginTop: 20 }} /> : plots.items.length ? (
+          {plots.items.length ? (
             <GridList
               items={plots.items}
               gridColumns={gridColumns}
@@ -217,7 +215,7 @@ export function FarmScreen({
       {section === 'crops' && (
         <>
           <PrimaryButton label={`＋ ${t.addCrop}`} onPress={openAddCrop} />
-          {crops.loading ? <ActivityIndicator style={{ marginTop: 20 }} /> : crops.items.length ? (
+          {crops.items.length ? (
             <GridList
               items={crops.items}
               gridColumns={gridColumns}

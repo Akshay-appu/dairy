@@ -3,15 +3,27 @@ import { useCallback, useEffect, useState } from 'react';
 import * as workspacesRepo from '../db/workspacesRepo';
 import { Workspace, WorkspaceInput } from '../db/workspacesRepo';
 
+const DEFAULT_WORKSPACE: Workspace = {
+  id: 'default',
+  name: 'Default Workspace',
+  isDefault: 1,
+  createdAt: '',
+  updatedAt: '',
+  userId: null,
+  uuid: 'default',
+  deletedAt: null,
+  lastSyncedAt: null,
+};
+
 export function useWorkspaces(db: SQLite.SQLiteDatabase | null, ready: boolean, ownerId: string | null) {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([DEFAULT_WORKSPACE]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string>('default');
-  const [loading, setLoading] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!db) return;
     const list = await workspacesRepo.listWorkspaces(db, ownerId);
-    setWorkspaces(list);
+    setWorkspaces(list.length > 0 ? list : [DEFAULT_WORKSPACE]);
     if (list.length > 0 && !list.some(w => w.id === activeWorkspaceId)) {
       setActiveWorkspaceId('default');
     }
@@ -22,21 +34,21 @@ export function useWorkspaces(db: SQLite.SQLiteDatabase | null, ready: boolean, 
     let alive = true;
     (async () => {
       if (!db) {
-        if (alive) setLoading(false);
+        if (alive) setHydrated(true);
         return;
       }
       try {
         const list = await workspacesRepo.listWorkspaces(db, ownerId);
         if (alive) {
-          setWorkspaces(list);
+          setWorkspaces(list.length > 0 ? list : [DEFAULT_WORKSPACE]);
           if (list.length > 0 && !list.some(w => w.id === activeWorkspaceId)) {
             setActiveWorkspaceId('default');
           }
-          setLoading(false);
+          setHydrated(true);
         }
       } catch (err) {
         console.warn('Failed to load workspaces:', err);
-        if (alive) setLoading(false);
+        if (alive) setHydrated(true);
       }
     })();
     return () => { alive = false; };
@@ -71,7 +83,8 @@ export function useWorkspaces(db: SQLite.SQLiteDatabase | null, ready: boolean, 
   return {
     workspaces,
     activeWorkspaceId,
-    loading,
+    loading: false,
+    hydrated,
     switchWorkspace,
     createWorkspace,
     updateWorkspace,
