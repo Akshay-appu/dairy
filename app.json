@@ -43,7 +43,8 @@
         "expo-notifications",
         {
           "icon": "./assets/icon.png",
-          "color": "#1B5E20"
+          "color": "#1B5E20",
+          "sounds": ["./assets/sounds/farm_alarm.wav"]
         }
       ],
       [

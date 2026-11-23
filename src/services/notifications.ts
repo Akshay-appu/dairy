@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CropSchedule } from '../db/cropSchedulesRepo';
@@ -6,7 +6,13 @@ import { CropGrowthProfile } from '../data/cropProfiles';
 import { Language } from '../i18n/copy';
 
 const DAILY_REMINDER_KEY = '@bhoomi_daily_reminder_enabled';
-export const FARM_REMINDERS_CHANNEL_ID = 'farm-reminders';
+const MORNING_WEATHER_ALERT_KEY = '@bhoomi_morning_weather_alert_enabled';
+const ANDROID_PACKAGE_NAME = 'com.bhoomishakti.diary';
+
+export const FARM_ALARMS_CHANNEL_ID = 'farm-alarms-v2';
+export const FARM_REMINDERS_CHANNEL_ID = FARM_ALARMS_CHANNEL_ID;
+export const FARM_ALARM_SOUND = 'farm_alarm.wav';
+const ALARM_VIBRATION_PATTERN = [0, 400, 200, 400];
 
 export type BhoomiEmailEventType = 'account_created' | 'report_requested';
 
@@ -51,13 +57,13 @@ export function setupNotificationHandler(): void {
 export async function setupNotificationChannels(): Promise<void> {
   if (Platform.OS !== 'android') return;
   try {
-    await Notifications.setNotificationChannelAsync(FARM_REMINDERS_CHANNEL_ID, {
-      name: 'Farm Reminders',
-      description: 'Daily 7:00 PM farm diary reminders and morning crop stage milestone alerts',
+    await Notifications.setNotificationChannelAsync(FARM_ALARMS_CHANNEL_ID, {
+      name: 'Farm Alarms & Reminders',
+      description: 'Daily 7:00 PM diary alarms, 6:30 AM morning weather & spray alerts, and crop stage milestones',
       importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 300, 200, 300, 200, 300],
+      vibrationPattern: ALARM_VIBRATION_PATTERN,
       lightColor: '#1B5E20',
-      sound: 'default',
+      sound: FARM_ALARM_SOUND,
       enableLights: true,
       enableVibrate: true,
       showBadge: true,
@@ -73,7 +79,7 @@ export async function setupNotificationChannels(): Promise<void> {
       },
     });
   } catch (err) {
-    console.warn('Failed to set up farm-reminders notification channel:', err);
+    console.warn('Failed to set up farm-alarms-v2 notification channel:', err);
   }
 }
 
@@ -135,9 +141,9 @@ export async function setDailyReminderEnabled(
       content: {
         title,
         body,
-        sound: 'default',
+        sound: FARM_ALARM_SOUND,
         priority: Notifications.AndroidNotificationPriority.MAX,
-        vibrate: [0, 300, 200, 300],
+        vibrate: ALARM_VIBRATION_PATTERN,
         interruptionLevel: 'timeSensitive',
         color: '#1B5E20',
         data: { type: 'daily_diary_reminder' },
@@ -146,12 +152,129 @@ export async function setDailyReminderEnabled(
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: 19,
         minute: 0,
-        channelId: FARM_REMINDERS_CHANNEL_ID,
+        channelId: FARM_ALARMS_CHANNEL_ID,
       },
     });
     return true;
   } catch (err) {
     console.warn('Failed to toggle daily diary reminder:', err);
+    return false;
+  }
+}
+
+export async function isMorningWeatherAlertEnabled(): Promise<boolean> {
+  try {
+    const value = await AsyncStorage.getItem(MORNING_WEATHER_ALERT_KEY);
+    return value === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export async function setMorningWeatherAlertEnabled(
+  enabled: boolean,
+  title: string = '☀️ Morning Weather & Spray Alert',
+  body: string = 'Check local wind, rain risk, and today’s safe spraying window in BS Diary.'
+): Promise<boolean> {
+  try {
+    await AsyncStorage.setItem(MORNING_WEATHER_ALERT_KEY, enabled ? 'true' : 'false');
+    await Notifications.cancelScheduledNotificationAsync('morning-weather-spray-alert').catch(() => {});
+
+    if (!enabled) {
+      return true;
+    }
+
+    const granted = await requestNotificationPermissions();
+    if (!granted) {
+      await AsyncStorage.setItem(MORNING_WEATHER_ALERT_KEY, 'false');
+      return false;
+    }
+
+    await setupNotificationChannels();
+
+    await Notifications.scheduleNotificationAsync({
+      identifier: 'morning-weather-spray-alert',
+      content: {
+        title,
+        body,
+        sound: FARM_ALARM_SOUND,
+        priority: Notifications.AndroidNotificationPriority.MAX,
+        vibrate: ALARM_VIBRATION_PATTERN,
+        interruptionLevel: 'timeSensitive',
+        color: '#1B5E20',
+        data: { type: 'morning_weather_alert' },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour: 6,
+        minute: 30,
+        channelId: FARM_ALARMS_CHANNEL_ID,
+      },
+    });
+    return true;
+  } catch (err) {
+    console.warn('Failed to toggle morning weather alert:', err);
+    return false;
+  }
+}
+
+export async function openNotificationAlarmSettings(): Promise<boolean> {
+  if (Platform.OS === 'web') return false;
+  if (Platform.OS === 'android') {
+    await setupNotificationChannels();
+    try {
+      await Linking.sendIntent('android.settings.CHANNEL_NOTIFICATION_SETTINGS', [
+        { key: 'android.provider.extra.APP_PACKAGE', value: ANDROID_PACKAGE_NAME },
+        { key: 'android.provider.extra.CHANNEL_ID', value: FARM_ALARMS_CHANNEL_ID },
+      ]);
+      return true;
+    } catch {
+      try {
+        await Linking.openSettings();
+        return true;
+      } catch (err) {
+        console.warn('Failed to open notification alarm settings:', err);
+        return false;
+      }
+    }
+  }
+  try {
+    await Linking.openSettings();
+    return true;
+  } catch (err) {
+    console.warn('Failed to open notification settings:', err);
+    return false;
+  }
+}
+
+export async function previewFarmAlarmTone(
+  title: string = '🔔 BS Diary Alarm Tone',
+  body: string = 'Farm Chime alarm preview. You can pick any phone alarm tone in settings.'
+): Promise<boolean> {
+  if (Platform.OS === 'web') return false;
+  try {
+    const granted = await requestNotificationPermissions();
+    if (!granted) return false;
+
+    await setupNotificationChannels();
+
+    await Notifications.scheduleNotificationAsync({
+      identifier: 'farm-alarm-tone-preview',
+      content: {
+        title,
+        body,
+        sound: FARM_ALARM_SOUND,
+        priority: Notifications.AndroidNotificationPriority.MAX,
+        vibrate: ALARM_VIBRATION_PATTERN,
+        interruptionLevel: 'timeSensitive',
+        color: '#1B5E20',
+        data: { type: 'alarm_tone_preview' },
+      },
+      trigger: Platform.OS === 'android' ? { channelId: FARM_ALARMS_CHANNEL_ID } : null,
+    });
+    return true;
+  } catch (err) {
+    console.warn('Failed to preview farm alarm tone:', err);
     return false;
   }
 }
@@ -213,9 +336,9 @@ export async function scheduleCropStageNotifications(
           content: {
             title,
             body,
-            sound: 'default',
+            sound: FARM_ALARM_SOUND,
             priority: Notifications.AndroidNotificationPriority.MAX,
-            vibrate: [0, 300, 200, 300],
+            vibrate: ALARM_VIBRATION_PATTERN,
             interruptionLevel: 'timeSensitive',
             color: '#1B5E20',
             data: {
@@ -228,7 +351,7 @@ export async function scheduleCropStageNotifications(
           trigger: {
             type: Notifications.SchedulableTriggerInputTypes.DATE,
             date: stageDate,
-            channelId: FARM_REMINDERS_CHANNEL_ID,
+            channelId: FARM_ALARMS_CHANNEL_ID,
           },
         });
         scheduledCount += 1;

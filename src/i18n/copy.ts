@@ -155,6 +155,17 @@ export type Copy = {
   dailyReminderNotifBody: string;
   notificationPermissionDenied: string;
   cropMilestonesActive: string;
+  alarmToneTitle: string;
+  alarmToneSubtitle: string;
+  chooseAlarmTone: string;
+  previewAlarmTone: string;
+  alarmTonePreviewing: string;
+  alarmTonePreviewTitle: string;
+  alarmTonePreviewBody: string;
+  morningWeatherAlert: string;
+  morningWeatherAlertSubtitle: string;
+  morningWeatherAlertNotifTitle: string;
+  morningWeatherAlertNotifBody: string;
 
   // Crop Growth Calendar additions
   daysCultivatedLabel: string;
@@ -470,6 +481,17 @@ export const copy: Record<Language, Copy> = {
     dailyReminderNotifBody: 'Take a moment to record today’s farm activities, expenses, and harvests before resting.',
     notificationPermissionDenied: 'Notification permission was not granted. Please enable notifications in your phone settings.',
     cropMilestonesActive: 'Crop stage morning alerts scheduled at 7:00 AM on milestone dates.',
+    alarmToneTitle: 'Alarm Tone: Farm Chime',
+    alarmToneSubtitle: 'Tap Choose Alarm Tone to select your phone’s own loud alarm tone, or preview the built-in Farm Chime.',
+    chooseAlarmTone: 'Choose Alarm Tone',
+    previewAlarmTone: 'Preview Tone',
+    alarmTonePreviewing: 'Alarm tone preview triggered — check your sound and volume!',
+    alarmTonePreviewTitle: '🔔 BS Diary Alarm Tone',
+    alarmTonePreviewBody: 'Farm Chime alarm preview. Tap Choose Alarm Tone anytime to pick your device alarm sound.',
+    morningWeatherAlert: 'Morning Weather & Spray Alert (6:30 AM)',
+    morningWeatherAlertSubtitle: 'Daily 6:30 AM alert to check local wind, rain risk, and safe spraying conditions before field work.',
+    morningWeatherAlertNotifTitle: '☀️ Morning Weather & Spray Alert',
+    morningWeatherAlertNotifBody: 'Check wind speed, rain risk, and today’s safe spraying window in BS Diary before heading to your field.',
 
     daysCultivatedLabel: 'Days Already Cultivated',
     daysCultivatedPlaceholder: 'e.g. 45',
@@ -780,6 +802,17 @@ export const copy: Record<Language, Copy> = {
     dailyReminderNotifBody: 'ಇಂದಿನ ಕೃಷಿ ಚಟುವಟಿಕೆಗಳು, ಖರ್ಚು ಮತ್ತು ಕೊಯ್ಲನ್ನು ಡೈರಿಯಲ್ಲಿ ದಾಖಲಿಸಲು ಸ್ವಲ್ಪ ಸಮಯ ನೀಡಿ.',
     notificationPermissionDenied: 'ಅಧಿಸೂಚನೆ ಅನುಮತಿ ನೀಡಿಲ್ಲ. ದಯವಿಟ್ಟು ಫೋನ್ ಸೆಟ್ಟಿಂಗ್ಸ್‌ನಲ್ಲಿ ಸಕ್ರಿಯಗೊಳಿಸಿ.',
     cropMilestonesActive: 'ಬೆಳೆ ಹಂತದ ಮೈಲಿಗಲ್ಲುಗಳಲ್ಲಿ ಬೆಳಿಗ್ಗೆ 7:00 ಗಂಟೆಗೆ ಎಚ್ಚರಿಕೆಗಳನ್ನು ನಿಗದಿಪಡಿಸಲಾಗಿದೆ.',
+    alarmToneTitle: 'ಅಲಾರಾಂ ಶಬ್ದ: ಕೃಷಿ ಗಂಟೆ',
+    alarmToneSubtitle: 'ನಿಮ್ಮ ಫೋನ್‌ನ ಜೋರಾದ ಅಲಾರಾಂ ಶಬ್ದವನ್ನು ಆಯ್ಕೆ ಮಾಡಲು ಅಲಾರಾಂ ಶಬ್ದ ಆಯ್ಕೆ ಮಾಡಿ ಒತ್ತಿ, ಅಥವಾ ಇಲ್ಲಿ ಪೂರ್ವವೀಕ್ಷಿಸಿ.',
+    chooseAlarmTone: 'ಅಲಾರಾಂ ಶಬ್ದ ಆಯ್ಕೆ ಮಾಡಿ',
+    previewAlarmTone: 'ಶಬ್ದ ಆಲಿಸಿ',
+    alarmTonePreviewing: 'ಅಲಾರಾಂ ಶಬ್ದ ಪೂರ್ವವೀಕ್ಷಣೆ ಕಳುಹಿಸಲಾಗಿದೆ — ನಿಮ್ಮ ಫೋನ್ ಶಬ್ದವನ್ನು ಪರಿಶೀಲಿಸಿ!',
+    alarmTonePreviewTitle: '🔔 ಬಿಎಸ್ ಡೈರಿ ಅಲಾರಾಂ ಶಬ್ದ',
+    alarmTonePreviewBody: 'ಕೃಷಿ ಗಂಟೆ ಅಲಾರಾಂ ಪೂರ್ವವೀಕ್ಷಣೆ. ನಿಮ್ಮ ಫೋನ್ ಅಲಾರಾಂ ಶಬ್ದ ಬದಲಿಸಲು ಅಲಾರಾಂ ಶಬ್ದ ಆಯ್ಕೆ ಮಾಡಿ ಒತ್ತಿ.',
+    morningWeatherAlert: 'ಬೆಳಗಿನ ಹವಾಮಾನ ಮತ್ತು ಸಿಂಪಡಣೆ ಎಚ್ಚರಿಕೆ (ಬೆಳಿಗ್ಗೆ 6:30)',
+    morningWeatherAlertSubtitle: 'ಹೊಲದ ಕೆಲಸದ ಮೊದಲು ಗಾಳಿ, ಮಳೆ ಸಾಧ್ಯತೆ ಮತ್ತು ಸುರಕ್ಷಿತ ಸಿಂಪಡಣೆ ಸಮಯ ಪರಿಶೀಲಿಸಲು ಬೆಳಿಗ್ಗೆ 6:30 ಗಂಟೆಗೆ ಎಚ್ಚರಿಕೆ.',
+    morningWeatherAlertNotifTitle: '☀️ ಬೆಳಗಿನ ಹವಾಮಾನ ಮತ್ತು ಸಿಂಪಡಣೆ ಎಚ್ಚರಿಕೆ',
+    morningWeatherAlertNotifBody: 'ಹೊಲಕ್ಕೆ ಹೋಗುವ ಮೊದಲು ಬಿಎಸ್ ಡೈರಿಯಲ್ಲಿ ಇಂದಿನ ಗಾಳಿ, ಮಳೆ ಸಾಧ್ಯತೆ ಮತ್ತು ಸುರಕ್ಷಿತ ಸಿಂಪಡಣೆ ಸಮಯ ಪರಿಶೀಲಿಸಿ.',
 
     daysCultivatedLabel: 'ಈಗಾಗಲೇ ಬೆಳೆದ ದಿನಗಳು',
     daysCultivatedPlaceholder: 'ಉದಾ. 45',
@@ -1090,6 +1123,17 @@ export const copy: Record<Language, Copy> = {
     dailyReminderNotifBody: 'आज के कृषि कार्य, खर्च और कटाई का विवरण अपनी डायरी में दर्ज करना न भूलें।',
     notificationPermissionDenied: 'नोटिफिकेशन अनुमति नहीं मिली। कृपया फ़ोन सेटिंग्स में इसे चालू करें।',
     cropMilestonesActive: 'फसल अवस्था के महत्वपूर्ण दिनों पर सुबह 7:00 बजे सूचनाएं निर्धारित की गई हैं।',
+    alarmToneTitle: 'अलार्म टोन: फ़ार्म चाइम',
+    alarmToneSubtitle: 'अपने फ़ोन की तेज़ अलार्म टोन चुनने के लिए अलार्म टोन चुनें दबाएं, या अंतर्निहित फ़ार्म चाइम सुनें।',
+    chooseAlarmTone: 'अलार्म टोन चुनें',
+    previewAlarmTone: 'टोन सुनें',
+    alarmTonePreviewing: 'अलार्म टोन प्रीव्यू चालू किया गया — अपने फ़ोन की आवाज़ और वॉल्यूम जांचें!',
+    alarmTonePreviewTitle: '🔔 बीएस डायरी अलार्म टोन',
+    alarmTonePreviewBody: 'फ़ार्म चाइम अलार्म प्रीव्यू। अपने फ़ोन की अलार्म टोन बदलने के लिए अलार्म टोन चुनें पर टैप करें।',
+    morningWeatherAlert: 'सुबह मौसम और स्प्रे अलर्ट (सुबह 6:30 बजे)',
+    morningWeatherAlertSubtitle: 'खेत में जाने से पहले हवा, बारिश की संभावना और सुरक्षित स्प्रे समय जांचने के लिए रोज़ सुबह 6:30 बजे अलर्ट।',
+    morningWeatherAlertNotifTitle: '☀️ सुबह का मौसम और स्प्रे अलर्ट',
+    morningWeatherAlertNotifBody: 'खेत पर जाने से पहले बीएस डायरी में आज की हवा, बारिश और सुरक्षित स्प्रे समय जांचें।',
 
     daysCultivatedLabel: 'बुआई के बाद बीते दिन',
     daysCultivatedPlaceholder: 'उदा. 45',

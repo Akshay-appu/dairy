@@ -18,8 +18,12 @@ import { formatLongDate } from '../utils/format';
 import { GREEN, LIGHT_GREEN, DANGER, INK, MUTED } from '../theme';
 import {
   isDailyReminderEnabled,
+  isMorningWeatherAlertEnabled,
   notifyBhoomiEmailService,
+  openNotificationAlarmSettings,
+  previewFarmAlarmTone,
   setDailyReminderEnabled,
+  setMorningWeatherAlertEnabled,
 } from '../services/notifications';
 
 type AuthMode = 'signUp' | 'signIn';
@@ -57,16 +61,23 @@ export function AccountSection({
 
   // Notification & verification states
   const [dailyReminder, setDailyReminder] = useState(false);
+  const [morningWeatherAlert, setMorningWeatherAlert] = useState(false);
   const [notifStatus, setNotifStatus] = useState<string | null>(null);
+  const [notifStatusError, setNotifStatusError] = useState(false);
+  const [previewingTone, setPreviewingTone] = useState(false);
   const [verificationNotice, setVerificationNotice] = useState('');
   const [resendingVerification, setResendingVerification] = useState(false);
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      const enabled = await isDailyReminderEnabled();
+      const [dailyEnabled, morningEnabled] = await Promise.all([
+        isDailyReminderEnabled(),
+        isMorningWeatherAlertEnabled(),
+      ]);
       if (alive) {
-        setDailyReminder(enabled);
+        setDailyReminder(dailyEnabled);
+        setMorningWeatherAlert(morningEnabled);
       }
     })();
     return () => {
@@ -77,6 +88,7 @@ export function AccountSection({
   const handleToggleDailyReminder = async (value: boolean) => {
     setDailyReminder(value);
     setNotifStatus(null);
+    setNotifStatusError(false);
     const success = await setDailyReminderEnabled(
       value,
       t.dailyReminderNotifTitle,
@@ -85,6 +97,50 @@ export function AccountSection({
     if (!success && value) {
       setDailyReminder(false);
       setNotifStatus(t.notificationPermissionDenied);
+      setNotifStatusError(true);
+    }
+  };
+
+  const handleToggleMorningWeatherAlert = async (value: boolean) => {
+    setMorningWeatherAlert(value);
+    setNotifStatus(null);
+    setNotifStatusError(false);
+    const success = await setMorningWeatherAlertEnabled(
+      value,
+      t.morningWeatherAlertNotifTitle,
+      t.morningWeatherAlertNotifBody
+    );
+    if (!success && value) {
+      setMorningWeatherAlert(false);
+      setNotifStatus(t.notificationPermissionDenied);
+      setNotifStatusError(true);
+    }
+  };
+
+  const handleChooseAlarmTone = async () => {
+    setNotifStatus(null);
+    setNotifStatusError(false);
+    await openNotificationAlarmSettings();
+  };
+
+  const handlePreviewAlarmTone = async () => {
+    setPreviewingTone(true);
+    setNotifStatus(null);
+    setNotifStatusError(false);
+    try {
+      const ok = await previewFarmAlarmTone(
+        t.alarmTonePreviewTitle,
+        t.alarmTonePreviewBody
+      );
+      if (ok) {
+        setNotifStatus(t.alarmTonePreviewing);
+        setNotifStatusError(false);
+      } else {
+        setNotifStatus(t.notificationPermissionDenied);
+        setNotifStatusError(true);
+      }
+    } finally {
+      setPreviewingTone(false);
     }
   };
 
@@ -508,6 +564,57 @@ export function AccountSection({
           />
         </View>
 
+        {/* Alarm Tone Picker & Preview Banner */}
+        <View style={styles.alarmToneBanner}>
+          <View style={styles.alarmToneHeader}>
+            <Ionicons name="musical-notes-outline" size={18} color={GREEN} style={{ marginTop: 1 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.alarmToneTitle}>{t.alarmToneTitle}</Text>
+              <Text style={styles.alarmToneSubtitle}>{t.alarmToneSubtitle}</Text>
+            </View>
+          </View>
+          <View style={styles.alarmToneBtnRow}>
+            <TouchableOpacity
+              style={styles.chooseToneBtn}
+              onPress={handleChooseAlarmTone}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="settings-outline" size={15} color="#FFFFFF" />
+              <Text style={styles.chooseToneBtnText}>{t.chooseAlarmTone}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.previewToneBtn, previewingTone && styles.btnDisabled]}
+              onPress={handlePreviewAlarmTone}
+              disabled={previewingTone}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="volume-high-outline" size={15} color={GREEN} />
+              <Text style={styles.previewToneBtnText}>{t.previewAlarmTone}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        {/* Morning Weather & Spray Alert (6:30 AM) Toggle */}
+        <View style={styles.reminderRow}>
+          <View style={styles.reminderTextWrap}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="sunny-outline" size={18} color={GREEN} />
+              <Text style={styles.reminderTitle}>{t.morningWeatherAlert}</Text>
+            </View>
+            <Text style={styles.reminderSubtitle}>{t.morningWeatherAlertSubtitle}</Text>
+          </View>
+          <Switch
+            value={morningWeatherAlert}
+            onValueChange={handleToggleMorningWeatherAlert}
+            trackColor={{ false: '#CBD5E1', true: '#81C784' }}
+            thumbColor={morningWeatherAlert ? GREEN : '#F1F5F9'}
+          />
+        </View>
+
+        <View style={styles.divider} />
+
         {/* Crop Stage Milestone Morning Alerts Info */}
         <View style={styles.milestoneNoticeRow}>
           <Ionicons name="calendar-outline" size={18} color={GREEN} style={{ marginRight: 8, marginTop: 2 }} />
@@ -516,7 +623,9 @@ export function AccountSection({
 
         {notifStatus ? (
           <View style={styles.notifStatusWrap}>
-            <Text style={[styles.notifStatusText, { color: DANGER }]}>{notifStatus}</Text>
+            <Text style={[styles.notifStatusText, { color: notifStatusError ? DANGER : GREEN }]}>
+              {notifStatus}
+            </Text>
           </View>
         ) : null}
       </View>
@@ -926,6 +1035,67 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     flex: 1,
     flexWrap: 'wrap',
+  },
+  alarmToneBanner: {
+    backgroundColor: LIGHT_GREEN,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 10,
+  },
+  alarmToneHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  alarmToneTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1B5E20',
+  },
+  alarmToneSubtitle: {
+    fontSize: 12,
+    color: '#2E7D32',
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  alarmToneBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 10,
+    flexWrap: 'wrap',
+  },
+  chooseToneBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: GREEN,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  chooseToneBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  previewToneBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#A5D6A7',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  previewToneBtnText: {
+    color: GREEN,
+    fontSize: 12,
+    fontWeight: '700',
   },
   notifStatusWrap: {
     marginTop: 10,
