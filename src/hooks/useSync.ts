@@ -86,9 +86,11 @@ export function useSync(
   }, [db, ownerId]);
 
   useEffect(() => {
-    (async () => {
-      if (db && ownerId) await syncNow();
-    })();
+    if (!db || !ownerId) return;
+    const timer = setTimeout(() => {
+      void syncNow();
+    }, 1200);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [db, ownerId]);
 

@@ -47,6 +47,7 @@ type Tab = 'Home' | 'Diary' | 'Farm' | 'Records' | 'More';
 if (Platform.OS !== 'web') {
   void SplashScreen.preventAutoHideAsync().catch(() => {});
 }
+void openDatabase().catch(() => {});
 
 function MainApp() {
   const [db, setDb] = useState<SQLite.SQLiteDatabase | null>(null);
@@ -121,25 +122,21 @@ function MainApp() {
 
   useEffect(() => {
     setupNotificationHandler();
-    void setupNotificationChannels();
+    const channelTimer = setTimeout(() => {
+      void setupNotificationChannels();
+    }, 300);
+    return () => clearTimeout(channelTimer);
   }, []);
 
   useEffect(() => {
     if (Platform.OS === 'web') return;
-    const timer = setTimeout(() => setBootTimedOut(true), 3000);
+    const timer = setTimeout(() => setBootTimedOut(true), 1000);
     return () => clearTimeout(timer);
   }, []);
 
-  const isBootReady =
-    bootTimedOut ||
-    (dbReady &&
-      workspaces.hydrated &&
-      activities.hydrated &&
-      profile.hydrated &&
-      plots.hydrated &&
-      crops.hydrated &&
-      finance.hydrated &&
-      harvests.hydrated);
+  // Dismiss splash as soon as core SQLite schema is ready; entity lists, auth,
+  // and cloud sync populate asynchronously after HomeScreen renders.
+  const isBootReady = bootTimedOut || dbReady;
 
   const hideSplashIfReady = useCallback(() => {
     if (!isBootReady || splashHiddenRef.current || Platform.OS === 'web') return;

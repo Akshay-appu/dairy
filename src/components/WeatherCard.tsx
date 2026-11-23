@@ -89,34 +89,40 @@ export function WeatherCard({
 
   useEffect(() => {
     let alive = true;
+    let fetchTimer: ReturnType<typeof setTimeout> | null = null;
     (async () => {
       const cached = await loadCachedWeather();
       if (alive && cached) {
         setWeather(cached);
       }
-      try {
-        const res = await fetchLiveAreaWeather({
-          farmProfile,
-          workspaceName,
-        });
-        if (!alive) return;
-        setWeather(res.weather);
-        setIsOfflineCache(false);
-        setGpsFallbackNotice(res.gpsFallback);
-        setErrorMsg('');
-      } catch {
-        if (!alive) return;
-        if (cached) {
-          setIsOfflineCache(true);
-        } else {
-          setErrorMsg(t.weatherNoData);
-        }
-      } finally {
-        if (alive) setLoading(false);
-      }
+      fetchTimer = setTimeout(() => {
+        void (async () => {
+          try {
+            const res = await fetchLiveAreaWeather({
+              farmProfile,
+              workspaceName,
+            });
+            if (!alive) return;
+            setWeather(res.weather);
+            setIsOfflineCache(false);
+            setGpsFallbackNotice(res.gpsFallback);
+            setErrorMsg('');
+          } catch {
+            if (!alive) return;
+            if (cached) {
+              setIsOfflineCache(true);
+            } else {
+              setErrorMsg(t.weatherNoData);
+            }
+          } finally {
+            if (alive) setLoading(false);
+          }
+        })();
+      }, 400);
     })();
     return () => {
       alive = false;
+      if (fetchTimer) clearTimeout(fetchTimer);
     };
   }, [farmProfile, profileVillage, profileDistrict, profileState, workspaceName, t.weatherNoData]);
 
