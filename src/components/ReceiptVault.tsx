@@ -4,6 +4,7 @@ import {
   Alert,
   Image,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,6 +22,8 @@ import {
   addVaultDocument,
   deleteVaultDocument,
 } from '../db/vaultRepo';
+import { Copy, Language } from '../i18n/copy';
+import { useActiveLanguage } from '../i18n/LanguageContext';
 import { GREEN, LIGHT_GREEN, DANGER, INK, MUTED } from '../theme';
 import { shared } from '../styles/shared';
 import { uuidv4 } from '../utils/uuid';
@@ -30,16 +33,43 @@ export type ReceiptVaultProps = {
   db: SQLite.SQLiteDatabase | null;
   workspaceId: string;
   lg?: boolean;
+  t?: Copy;
+  language?: Language;
 };
 
-const CATEGORIES: { label: VaultCategory; icon: string; bg: string; text: string }[] = [
-  { label: 'Fertilizer Bill', icon: '🧪', bg: '#E8F5E9', text: '#2E7D32' },
-  { label: 'Mandi Slip', icon: '🌾', bg: '#FFF8E1', text: '#B78103' },
-  { label: 'Soil Report', icon: '🔬', bg: '#E1F5FE', text: '#0277BD' },
-  { label: 'Other', icon: '📄', bg: '#F1F3F4', text: '#5F6368' },
+const CATEGORIES: { key: VaultCategory; icon: string; bg: string; text: string }[] = [
+  { key: 'Fertilizer Bill', icon: '🧪', bg: '#E8F5E9', text: '#2E7D32' },
+  { key: 'Mandi Slip', icon: '🌾', bg: '#FFF8E1', text: '#B78103' },
+  { key: 'Soil Report', icon: '🔬', bg: '#E1F5FE', text: '#0277BD' },
+  { key: 'Other', icon: '📄', bg: '#F1F3F4', text: '#5F6368' },
 ];
 
-export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps) {
+function getVaultCategoryLabel(category: VaultCategory, t: Copy): string {
+  switch (category) {
+    case 'Fertilizer Bill':
+      return t.vaultCatFertilizerBill;
+    case 'Mandi Slip':
+      return t.vaultCatMandiSlip;
+    case 'Soil Report':
+      return t.vaultCatSoilReport;
+    case 'Other':
+    default:
+      return t.vaultCatOther;
+  }
+}
+
+export function ReceiptVault({
+  db,
+  workspaceId,
+  lg = false,
+  t: propT,
+  language: propLanguage,
+}: ReceiptVaultProps) {
+  const activeLang = useActiveLanguage();
+  const t = propT || activeLang.t;
+  const language = propLanguage || activeLang.language || 'en';
+  const locale = language === 'kn' ? 'kn-IN' : language === 'hi' ? 'hi-IN' : 'en-IN';
+
   const [documents, setDocuments] = useState<VaultDocument[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'All' | VaultCategory>('All');
@@ -88,10 +118,7 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
     try {
       const { granted } = await ImagePicker.requestCameraPermissionsAsync();
       if (!granted) {
-        Alert.alert(
-          'Permission Required',
-          'Camera access is required to capture photos of bills and soil reports.'
-        );
+        Alert.alert(t.vaultPermRequiredTitle, t.vaultCameraPermMsg);
         return;
       }
 
@@ -104,11 +131,11 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
         const picked = result.assets[0];
         setDraftUri(picked.uri);
         setDraftCategory('Fertilizer Bill');
-        setDraftTitle(`Fertilizer Bill - ${new Date().toLocaleDateString('en-IN')}`);
+        setDraftTitle(`${t.vaultCatFertilizerBill} - ${new Date().toLocaleDateString(locale)}`);
       }
     } catch (e) {
       console.error('Camera capture error:', e);
-      Alert.alert('Camera Error', 'Could not open camera. Please try again.');
+      Alert.alert(t.vaultCameraErrorTitle, t.vaultCameraErrorMsg);
     }
   };
 
@@ -116,10 +143,7 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
     try {
       const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!granted) {
-        Alert.alert(
-          'Permission Required',
-          'Gallery access is required to select photos of bills and soil reports.'
-        );
+        Alert.alert(t.vaultPermRequiredTitle, t.vaultGalleryPermMsg);
         return;
       }
 
@@ -132,11 +156,11 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
         const picked = result.assets[0];
         setDraftUri(picked.uri);
         setDraftCategory('Soil Report');
-        setDraftTitle(`Soil Report - ${new Date().toLocaleDateString('en-IN')}`);
+        setDraftTitle(`${t.vaultCatSoilReport} - ${new Date().toLocaleDateString(locale)}`);
       }
     } catch (e) {
       console.error('Gallery pick error:', e);
-      Alert.alert('Gallery Error', 'Could not open gallery. Please try again.');
+      Alert.alert(t.vaultGalleryErrorTitle, t.vaultGalleryErrorMsg);
     }
   };
 
@@ -144,17 +168,21 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
     if (!draftUri || !db) return;
     const cleanTitle = draftTitle.trim();
     if (!cleanTitle) {
-      Alert.alert('Title Required', 'Please enter a title or description for this document.');
+      Alert.alert(t.vaultTitleRequiredTitle, t.vaultTitleRequiredMsg);
       return;
     }
 
     setIsSaving(true);
     try {
-      // 1. Ensure persistent vault directory exists safely
       let destUri = draftUri;
       try {
         const docDir = FileSystem?.documentDirectory;
-        if (docDir && typeof FileSystem.getInfoAsync === 'function' && typeof FileSystem.makeDirectoryAsync === 'function' && typeof FileSystem.copyAsync === 'function') {
+        if (
+          docDir &&
+          typeof FileSystem.getInfoAsync === 'function' &&
+          typeof FileSystem.makeDirectoryAsync === 'function' &&
+          typeof FileSystem.copyAsync === 'function'
+        ) {
           const vaultDir = `${docDir}vault/`;
           const dirInfo = await FileSystem.getInfoAsync(vaultDir);
           if (!dirInfo.exists) {
@@ -170,7 +198,6 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
         destUri = draftUri;
       }
 
-      // 2. Save metadata to SQLite scoped to active workspace
       await addVaultDocument(
         db,
         {
@@ -186,34 +213,41 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
       await loadDocuments();
     } catch (e) {
       console.error('Failed to save document:', e);
-      Alert.alert('Save Error', 'Could not save the document to the vault. Please try again.');
+      Alert.alert(t.vaultSaveErrorTitle, t.vaultSaveErrorMsg);
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = (doc: VaultDocument) => {
+    const doDelete = async () => {
+      if (!db) return;
+      try {
+        await deleteVaultDocument(db, doc.id, workspaceId);
+        if (previewDoc?.id === doc.id) {
+          setPreviewDoc(null);
+        }
+        await loadDocuments();
+      } catch (e) {
+        console.warn('Failed to delete document:', e);
+      }
+    };
+
+    const confirmMsg = t.vaultDeleteConfirm.replace('{title}', doc.title);
+    if (Platform.OS === 'web') {
+      const confirmFn = (globalThis as { confirm?: (message: string) => boolean }).confirm;
+      if (confirmFn ? confirmFn(confirmMsg) : true) {
+        void doDelete();
+      }
+      return;
+    }
+
     Alert.alert(
-      'Delete Document',
-      `Delete "${doc.title}"? This will permanently remove the image and record.`,
+      t.vaultDeleteTitle,
+      confirmMsg,
       [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            if (!db) return;
-            try {
-              await deleteVaultDocument(db, doc.id, workspaceId);
-              if (previewDoc?.id === doc.id) {
-                setPreviewDoc(null);
-              }
-              await loadDocuments();
-            } catch (e) {
-              console.warn('Failed to delete document:', e);
-            }
-          },
-        },
+        { text: t.cancel, style: 'cancel' },
+        { text: t.delete, style: 'destructive', onPress: doDelete },
       ]
     );
   };
@@ -221,6 +255,9 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
   const filteredDocs = documents.filter(d =>
     activeFilter === 'All' ? true : d.category === activeFilter
   );
+
+  const activeFilterLabel =
+    activeFilter === 'All' ? t.vaultFilterAll : getVaultCategoryLabel(activeFilter, t);
 
   return (
     <View style={[shared.tipCard, lg && shared.tipCardLg, styles.container]}>
@@ -232,10 +269,10 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
           </View>
           <View style={{ flex: 1, minWidth: 0, flexShrink: 1 }}>
             <Text style={[shared.tipTitle, lg && shared.tipTitleLg, { color: INK, flexWrap: 'wrap' }]}>
-              Receipt & Soil Report Vault
+              {t.vaultTitle}
             </Text>
             <Text style={{ fontSize: 12, color: MUTED, marginTop: 2, flexWrap: 'wrap' }}>
-              Workspace-scoped storage for bills, mandi slips & test reports
+              {t.vaultSubtitle}
             </Text>
           </View>
         </View>
@@ -247,20 +284,20 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
           onPress={handleCapturePhoto}
           style={[styles.actionBtn, styles.cameraBtn]}
           accessibilityRole="button"
-          accessibilityLabel="Capture photo with camera"
+          accessibilityLabel={t.vaultTakePhoto}
         >
           <Text style={styles.actionBtnIcon}>📷</Text>
-          <Text style={styles.actionBtnTextPrimary}>Take Photo</Text>
+          <Text style={styles.actionBtnTextPrimary}>{t.vaultTakePhoto}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={handlePickFromGallery}
           style={[styles.actionBtn, styles.galleryBtn]}
           accessibilityRole="button"
-          accessibilityLabel="Upload from photo library"
+          accessibilityLabel={t.vaultUploadGallery}
         >
           <Text style={styles.actionBtnIcon}>🖼️</Text>
-          <Text style={styles.actionBtnTextSecondary}>Upload from Gallery</Text>
+          <Text style={styles.actionBtnTextSecondary}>{t.vaultUploadGallery}</Text>
         </TouchableOpacity>
       </View>
 
@@ -280,16 +317,17 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
               activeFilter === 'All' && styles.filterChipTextActive,
             ]}
           >
-            All ({documents.length})
+            {t.vaultFilterAll} ({documents.length})
           </Text>
         </TouchableOpacity>
         {CATEGORIES.map(cat => {
-          const count = documents.filter(d => d.category === cat.label).length;
-          const isSelected = activeFilter === cat.label;
+          const count = documents.filter(d => d.category === cat.key).length;
+          const isSelected = activeFilter === cat.key;
+          const catLabel = getVaultCategoryLabel(cat.key, t);
           return (
             <TouchableOpacity
-              key={cat.label}
-              onPress={() => setActiveFilter(cat.label)}
+              key={cat.key}
+              onPress={() => setActiveFilter(cat.key)}
               style={[styles.filterChip, isSelected && styles.filterChipActive]}
             >
               <Text style={{ fontSize: 13 }}>{cat.icon}</Text>
@@ -299,7 +337,7 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
                   isSelected && styles.filterChipTextActive,
                 ]}
               >
-                {cat.label} ({count})
+                {catLabel} ({count})
               </Text>
             </TouchableOpacity>
           );
@@ -312,17 +350,18 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
       ) : filteredDocs.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={{ fontSize: 30, marginBottom: 6 }}>📑</Text>
-          <Text style={styles.emptyTitle}>No documents saved</Text>
+          <Text style={styles.emptyTitle}>{t.vaultEmptyTitle}</Text>
           <Text style={styles.emptySubtitle}>
             {activeFilter === 'All'
-              ? 'Capture a fertilizer bill or soil report photo to securely archive it in this workspace.'
-              : `No documents under "${activeFilter}".`}
+              ? t.vaultEmptyAll
+              : t.vaultEmptyCategory.replace('{category}', activeFilterLabel)}
           </Text>
         </View>
       ) : (
         <View style={styles.docList}>
           {filteredDocs.map(doc => {
-            const catMeta = CATEGORIES.find(c => c.label === doc.category) || CATEGORIES[3];
+            const catMeta = CATEGORIES.find(c => c.key === doc.category) || CATEGORIES[3];
+            const catLabel = getVaultCategoryLabel(doc.category, t);
             return (
               <TouchableOpacity
                 key={doc.id}
@@ -330,14 +369,12 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
                 style={styles.docCard}
                 activeOpacity={0.7}
               >
-                {/* Thumbnail */}
                 <Image
                   source={{ uri: doc.localUri }}
                   style={styles.thumbnail}
                   resizeMode="cover"
                 />
 
-                {/* Info */}
                 <View style={styles.docInfo}>
                   <Text style={styles.docTitle} numberOfLines={2}>
                     {doc.title}
@@ -345,16 +382,15 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
                   <View style={styles.docMetaRow}>
                     <View style={[styles.categoryBadge, { backgroundColor: catMeta.bg }]}>
                       <Text style={[styles.categoryBadgeText, { color: catMeta.text }]}>
-                        {catMeta.icon} {doc.category}
+                        {catMeta.icon} {catLabel}
                       </Text>
                     </View>
                     <Text style={styles.docDate}>
-                      {formatShortDate(doc.capturedAt, 'en-IN')}
+                      {formatShortDate(doc.capturedAt, locale)}
                     </Text>
                   </View>
                 </View>
 
-                {/* Actions */}
                 <View style={styles.docActions}>
                   <TouchableOpacity
                     onPress={() => handleDelete(doc)}
@@ -380,7 +416,7 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
         <View style={styles.modalBackdrop}>
           <View style={styles.modalSheet}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Save Document to Vault</Text>
+              <Text style={styles.modalTitle}>{t.vaultSaveModalTitle}</Text>
               <TouchableOpacity
                 onPress={() => setDraftUri(null)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -399,27 +435,26 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
               </View>
             )}
 
-            <Text style={styles.fieldLabel}>Document Title *</Text>
+            <Text style={styles.fieldLabel}>{t.vaultDocTitleLabel}</Text>
             <TextInput
               value={draftTitle}
               onChangeText={setDraftTitle}
-              placeholder="e.g. Urea Bill - May 2026"
+              placeholder={t.vaultDocTitlePlaceholder}
               style={styles.titleInput}
               autoFocus
             />
 
-            <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Category *</Text>
+            <Text style={[styles.fieldLabel, { marginTop: 12 }]}>{t.vaultCategoryLabel}</Text>
             <View style={styles.categorySelectRow}>
               {CATEGORIES.map(cat => {
-                const isSelected = draftCategory === cat.label;
+                const isSelected = draftCategory === cat.key;
+                const catLabel = getVaultCategoryLabel(cat.key, t);
                 return (
                   <TouchableOpacity
-                    key={cat.label}
+                    key={cat.key}
                     onPress={() => {
-                      setDraftCategory(cat.label);
-                      if (draftTitle.includes('Bill') || draftTitle.includes('Slip') || draftTitle.includes('Report')) {
-                        setDraftTitle(`${cat.label} - ${new Date().toLocaleDateString('en-IN')}`);
-                      }
+                      setDraftCategory(cat.key);
+                      setDraftTitle(`${catLabel} - ${new Date().toLocaleDateString(locale)}`);
                     }}
                     style={[
                       styles.categoryOptionChip,
@@ -433,7 +468,7 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
                         isSelected && styles.categoryOptionTextSelected,
                       ]}
                     >
-                      {cat.label}
+                      {catLabel}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -446,7 +481,7 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
                 style={styles.cancelBtn}
                 disabled={isSaving}
               >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.cancelBtnText}>{t.cancel}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleSaveDraft}
@@ -454,7 +489,7 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
                 disabled={isSaving}
               >
                 <Text style={styles.saveBtnText}>
-                  {isSaving ? 'Saving…' : 'Save to Vault'}
+                  {isSaving ? t.vaultSavingBtn : t.vaultSaveBtn}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -471,14 +506,14 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
       >
         <View style={styles.fullscreenBackdrop}>
           <View style={styles.fullscreenContent}>
-            {/* Top Toolbar */}
             <View style={styles.fullscreenToolbar}>
               <View style={{ flex: 1, marginRight: 10 }}>
                 <Text style={styles.fullscreenTitle} numberOfLines={1}>
                   {previewDoc?.title}
                 </Text>
                 <Text style={styles.fullscreenSubtitle}>
-                  {previewDoc?.category} · {previewDoc ? formatShortDate(previewDoc.capturedAt, 'en-IN') : ''}
+                  {previewDoc ? getVaultCategoryLabel(previewDoc.category, t) : ''} ·{' '}
+                  {previewDoc ? formatShortDate(previewDoc.capturedAt, locale) : ''}
                 </Text>
               </View>
               <TouchableOpacity
@@ -497,7 +532,6 @@ export function ReceiptVault({ db, workspaceId, lg = false }: ReceiptVaultProps)
               </TouchableOpacity>
             </View>
 
-            {/* Main Image */}
             {previewDoc && (
               <Image
                 source={{ uri: previewDoc.localUri }}
@@ -657,6 +691,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flexWrap: 'wrap',
   },
   categoryBadge: {
     paddingHorizontal: 8,
@@ -798,13 +833,13 @@ const styles = StyleSheet.create({
   fullscreenContent: {
     flex: 1,
     paddingTop: 50,
-    paddingBottom: 30,
-    paddingHorizontal: 16,
+    paddingBottom: 24,
   },
   fullscreenToolbar: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    paddingHorizontal: 18,
+    paddingBottom: 14,
   },
   fullscreenTitle: {
     fontSize: 16,
@@ -813,13 +848,14 @@ const styles = StyleSheet.create({
   },
   fullscreenSubtitle: {
     fontSize: 12,
-    color: '#B0BEC5',
+    color: '#CBD5E1',
     marginTop: 2,
   },
   fullscreenIconBtn: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
     alignItems: 'center',
     justifyContent: 'center',
   },

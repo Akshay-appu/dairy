@@ -249,6 +249,7 @@ async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
       workspaceId TEXT NOT NULL,
       cropName TEXT NOT NULL,
       sowingDate TEXT NOT NULL,
+      totalDays INTEGER,
       createdAt TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_crop_schedules_workspace ON crop_schedules(workspaceId);
@@ -287,6 +288,7 @@ async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
   await addColumnIfMissing(database, 'crop_schedules', 'workspaceId', "workspaceId TEXT NOT NULL DEFAULT 'default'");
   await addColumnIfMissing(database, 'crop_schedules', 'cropName', "cropName TEXT NOT NULL DEFAULT ''");
   await addColumnIfMissing(database, 'crop_schedules', 'sowingDate', "sowingDate TEXT NOT NULL DEFAULT ''");
+  await addColumnIfMissing(database, 'crop_schedules', 'totalDays', 'totalDays INTEGER');
   await addColumnIfMissing(database, 'crop_schedules', 'createdAt', "createdAt TEXT NOT NULL DEFAULT ''");
 
   await addColumnIfMissing(database, 'vault_documents', 'workspaceId', "workspaceId TEXT NOT NULL DEFAULT 'default'");

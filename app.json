@@ -47,6 +47,12 @@
           "color": "#1B5E20"
         }
       ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow BhoomiShakti Diary to access your location for live local farm weather and spray advisories."
+        }
+      ],
       "expo-sharing",
       "expo-font"
     ],

@@ -9,16 +9,36 @@ import { Stat } from '../components/Stat';
 import { CropStageCalendar } from '../components/CropStageCalendar';
 import { ReceiptVault } from '../components/ReceiptVault';
 import { FarmerToolCard } from '../components/FarmerToolCard';
-import { Copy } from '../i18n/copy';
-import { Entry } from '../db/schema';
+import { Copy, Language } from '../i18n/copy';
+import { Entry, FarmProfile } from '../db/schema';
 import { shared } from '../styles/shared';
 import { GREEN } from '../theme';
 import { formatShortDate } from '../utils/format';
 
 export function HomeScreen({
-  t, lg, gridColumns, cardWidth, dateLabel, entries, loading, plotsCount, cropsCount, workspaceName, workspaceId, db, financeTotals, currentSeasonLabel, onAddPress, onDeleteEntry, onViewAll,
+  t,
+  language,
+  lg,
+  gridColumns,
+  cardWidth,
+  dateLabel,
+  entries,
+  loading,
+  plotsCount,
+  cropsCount,
+  workspaceName,
+  workspaceId,
+  db,
+  farmProfile,
+  financeTotals,
+  currentSeasonLabel,
+  onAddPress,
+  onDeleteEntry,
+  onViewAll,
+  onOpenExport,
 }: {
   t: Copy;
+  language: Language;
   lg: boolean;
   gridColumns: number;
   cardWidth: DimensionValue;
@@ -30,26 +50,43 @@ export function HomeScreen({
   workspaceName: string;
   workspaceId?: string;
   db?: SQLite.SQLiteDatabase | null;
+  farmProfile?: FarmProfile | null;
   financeTotals: { totalIncome: number; totalExpenses: number; netBalance: number };
   currentSeasonLabel: string;
   onAddPress: () => void;
   onDeleteEntry: (id: number) => void;
   onViewAll: () => void;
+  onOpenExport: () => void;
 }) {
+  const locale = language === 'kn' ? 'kn-IN' : language === 'hi' ? 'hi-IN' : 'en-IN';
+
   return (
     <>
       <View style={[shared.welcome, lg && shared.welcomeLg]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
           <View style={{ backgroundColor: '#E8F5E9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginRight: 4, flexShrink: 0 }}>
-            <Text style={{ fontSize: 12, fontWeight: '700', color: '#2E7D32' }}>🏢 {workspaceName || 'Workspace'}</Text>
+            <Text style={{ fontSize: 12, fontWeight: '700', color: '#2E7D32' }}>
+              🏢 {workspaceName || t.defaultWorkspaceName}
+            </Text>
           </View>
           <Text style={[shared.date, lg && shared.dateLg, { marginBottom: 0, flexShrink: 1 }]}>{dateLabel}</Text>
         </View>
         <Text style={[shared.greeting, lg && shared.greetingLg]}>{t.greeting}</Text>
         <Text style={[shared.intro, lg && shared.introLg]}>{t.intro}</Text>
-        <TouchableOpacity style={[shared.primaryButton, lg && shared.primaryButtonLg]} onPress={onAddPress}>
-          <Text style={[shared.primaryButtonText, lg && shared.primaryButtonTextLg]}>＋ {t.addActivity}</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+          <TouchableOpacity
+            style={[shared.primaryButton, lg && shared.primaryButtonLg, { flex: 1, minWidth: 150 }]}
+            onPress={onAddPress}
+          >
+            <Text style={[shared.primaryButtonText, lg && shared.primaryButtonTextLg]}>＋ {t.addActivity}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[shared.secondaryButton, { flex: 1, minWidth: 140 }]}
+            onPress={onOpenExport}
+          >
+            <Text style={shared.secondaryButtonText}>📄 {t.exportReportButton}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={shared.statsRow}>
@@ -75,7 +112,7 @@ export function HomeScreen({
           renderItem={entry => (
             <ListCard
               title={entry.title}
-              meta={`${entry.category} · ${formatShortDate(entry.createdAt, 'en-IN')}`}
+              meta={`${entry.category} · ${formatShortDate(entry.createdAt, locale)}`}
               note={entry.note}
               onDelete={() => onDeleteEntry(entry.id)}
               lg={lg}
@@ -91,19 +128,24 @@ export function HomeScreen({
         workspaceId={workspaceId || 'default'}
         lg={lg}
         t={t}
+        language={language}
       />
 
       <ReceiptVault
         db={db ?? null}
         workspaceId={workspaceId || 'default'}
         lg={lg}
+        t={t}
+        language={language}
       />
 
       <FarmerToolCard
         t={t}
+        language={language}
         lg={lg}
         workspaceName={workspaceName}
         plotsCount={plotsCount}
+        farmProfile={farmProfile}
       />
     </>
   );

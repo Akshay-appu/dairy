@@ -15,7 +15,7 @@ import { WorkspaceSection } from './WorkspaceSection';
 export function MoreScreen({
   t, lg, language, onLanguageChange, auth, sync, onSignIn, onSignOutConfirm, onDeleteAccount, backup,
   workspaces, activeWorkspaceId, onSwitchWorkspace, onCreateWorkspace, onUpdateWorkspace, onDeleteWorkspace,
-  onError, onConfirmRestore, db, profile,
+  onError, onConfirmRestore, onOpenExport, db, profile,
 }: {
   t: Copy;
   lg: boolean;
@@ -38,6 +38,7 @@ export function MoreScreen({
   onDeleteWorkspace: (id: string) => Promise<void>;
   onError: (message: string) => void;
   onConfirmRestore: (data: BackupData) => void;
+  onOpenExport: () => void;
   db?: SQLite.SQLiteDatabase | null;
   profile?: ReturnType<typeof useFarmProfile>;
 }) {
@@ -78,7 +79,13 @@ export function MoreScreen({
         <Text style={shared.tipTitle}>{t.privacyTitle}</Text>
         <Text style={shared.tipText}>{t.privacyText}</Text>
       </View>
-      <BackupSection t={t} backup={backup} onError={onError} onConfirmRestore={onConfirmRestore} />
+      <BackupSection
+        t={t}
+        backup={backup}
+        onOpenExport={onOpenExport}
+        onError={onError}
+        onConfirmRestore={onConfirmRestore}
+      />
     </>
   );
 }

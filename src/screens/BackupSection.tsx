@@ -1,39 +1,27 @@
 import React, { useState } from 'react';
-import { Platform, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 import { DangerButton, PrimaryButton, SecondaryButton } from '../components/Buttons';
 import { BackupCounts, BackupData } from '../db/backupRepo';
 import { Copy } from '../i18n/copy';
 import { shared } from '../styles/shared';
-import { shareBackupText, copyToClipboard } from '../utils/share';
 
 export function BackupSection({
-  t, backup, onError, onConfirmRestore,
+  t,
+  backup,
+  onOpenExport,
+  onError,
+  onConfirmRestore,
 }: {
   t: Copy;
   backup: {
-    exportBackup: () => Promise<string>;
     previewRestore: (text: string) => { data: BackupData; counts: BackupCounts };
   };
+  onOpenExport: () => void;
   onError: (message: string) => void;
   onConfirmRestore: (data: BackupData) => void;
 }) {
   const [pasted, setPasted] = useState('');
   const [preview, setPreview] = useState<{ data: BackupData; counts: BackupCounts } | null>(null);
-  const [copyStatus, setCopyStatus] = useState('');
-
-  const handleExport = async () => {
-    try {
-      const json = await backup.exportBackup();
-      const filename = `bhoomishakti-backup-${new Date().toISOString().slice(0, 10)}.json`;
-      await shareBackupText(filename, json);
-      if (Platform.OS === 'web') {
-        const copied = await copyToClipboard(json);
-        setCopyStatus(copied ? t.copied : '');
-      }
-    } catch (err) {
-      onError(err instanceof Error ? err.message : String(err));
-    }
-  };
 
   const handlePreview = () => {
     try {
@@ -49,8 +37,7 @@ export function BackupSection({
       <Text style={shared.tipTitle}>{t.backupRestore}</Text>
 
       <Text style={[shared.tipText, { marginTop: 10 }]}>{t.exportDescription}</Text>
-      <PrimaryButton label={t.shareBackup} onPress={handleExport} />
-      {!!copyStatus && <Text style={shared.statNote}>{copyStatus}</Text>}
+      <PrimaryButton label={t.shareBackup} onPress={onOpenExport} />
 
       <Text style={[shared.tipText, { marginTop: 18 }]}>{t.restoreDescription}</Text>
       <TextInput

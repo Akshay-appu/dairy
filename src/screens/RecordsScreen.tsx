@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, DimensionValue, Text, View } from 'react-native';
-import { PrimaryButton } from '../components/Buttons';
+import { PrimaryButton, SecondaryButton } from '../components/Buttons';
 import { EmptyState } from '../components/EmptyState';
 import { GridList } from '../components/GridList';
 import { ListCard } from '../components/ListCard';
@@ -32,7 +32,7 @@ const EMPTY_HARVEST: HarvestFormState = {
 export function RecordsScreen({
   t, language, lg, isMobile, gridColumns, cardWidth,
   activitiesCount, finance, harvests, crops, plots,
-  onDeleteFinanceConfirm, onDeleteHarvestConfirm, onError,
+  onDeleteFinanceConfirm, onDeleteHarvestConfirm, onError, onOpenExport,
 }: {
   t: Copy;
   language: Language;
@@ -56,6 +56,7 @@ export function RecordsScreen({
   onDeleteFinanceConfirm: (entry: FinanceEntry) => void;
   onDeleteHarvestConfirm: (harvest: Harvest) => void;
   onError: (message: string) => void;
+  onOpenExport: () => void;
 }) {
   const [section, setSection] = useState<RecordsSection>('overview');
 
@@ -180,6 +181,9 @@ export function RecordsScreen({
               note={harvestValue.missingPriceCount > 0 ? `${harvestValue.missingPriceCount} ${t.valueNotRecorded.toLowerCase()}` : undefined}
               lg={lg}
             />
+          </View>
+          <View style={{ marginBottom: 14 }}>
+            <SecondaryButton label={`📄 ${t.shareBackup}`} onPress={onOpenExport} />
           </View>
           <SectionTitle title={t.seasonalHistory} lg={lg} />
           {seasonalGroups.length ? (

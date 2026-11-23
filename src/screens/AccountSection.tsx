@@ -18,8 +18,8 @@ import { formatLongDate } from '../utils/format';
 import { GREEN, LIGHT_GREEN, DANGER, INK, MUTED } from '../theme';
 import {
   isDailyReminderEnabled,
+  notifyBhoomiEmailService,
   setDailyReminderEnabled,
-  sendTestNotification,
 } from '../services/notifications';
 
 type AuthMode = 'signUp' | 'signIn';
@@ -55,10 +55,11 @@ export function AccountSection({
   const [info, setInfo] = useState('');
   const [busy, setBusy] = useState(false);
 
-  // Notification states
+  // Notification & verification states
   const [dailyReminder, setDailyReminder] = useState(false);
   const [notifStatus, setNotifStatus] = useState<string | null>(null);
-  const [sendingTest, setSendingTest] = useState(false);
+  const [verificationNotice, setVerificationNotice] = useState('');
+  const [resendingVerification, setResendingVerification] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -76,40 +77,36 @@ export function AccountSection({
   const handleToggleDailyReminder = async (value: boolean) => {
     setDailyReminder(value);
     setNotifStatus(null);
-    const success = await setDailyReminderEnabled(value);
+    const success = await setDailyReminderEnabled(
+      value,
+      t.dailyReminderNotifTitle,
+      t.dailyReminderNotifBody
+    );
     if (!success && value) {
       setDailyReminder(false);
       setNotifStatus(t.notificationPermissionDenied);
     }
   };
 
-  const handleSendTestNotification = async () => {
-    setSendingTest(true);
-    setNotifStatus(null);
+  const handleResendVerification = async () => {
+    setResendingVerification(true);
+    setVerificationNotice('');
     try {
-      const success = await sendTestNotification(
-        '🌾 BhoomiShakti Farm Alert',
-        language === 'kn'
-          ? 'ಪರೀಕ್ಷಾ ಅಧಿಸೂಚನೆ ಯಶಸ್ವಿಯಾಗಿದೆ! ನಿಮ್ಮ ಕೃಷಿ ಎಚ್ಚರಿಕೆಗಳು ಸಕ್ರಿಯವಾಗಿವೆ.'
-          : language === 'hi'
-          ? 'टेस्ट नोटिफिकेशन सफल रहा! आपके कृषि अलर्ट सक्रिय हैं।'
-          : 'Test notification successful! Your mobile farm alerts and crop stage milestones are active.'
-      );
-      if (success) {
-        setNotifStatus(t.testNotificationSent);
-      } else {
-        setNotifStatus(t.notificationPermissionDenied);
+      const sent = await auth.resendEmailVerification();
+      if (sent) {
+        setVerificationNotice(t.verificationEmailSent);
       }
     } catch {
-      setNotifStatus(t.testNotificationFailed);
+      // Ignore rate-limit/transient failures cleanly
     } finally {
-      setSendingTest(false);
+      setResendingVerification(false);
     }
   };
 
   const handleSubmitAuth = useCallback(async () => {
     setError('');
     setInfo('');
+    setVerificationNotice('');
     const cleanEmail = email.trim();
     if (!cleanEmail || !password) {
       setError(t.authErrorInvalidEmail);
@@ -133,6 +130,14 @@ export function AccountSection({
             areaUnit: profile.profile?.areaUnit || 'acres',
           }).catch(() => {});
         }
+        void notifyBhoomiEmailService({
+          event: 'account_created',
+          email: cleanEmail,
+          farmerName: cleanName || undefined,
+          village: cleanVillage || undefined,
+          language,
+        });
+        setVerificationNotice(t.verificationEmailSent);
       } else {
         await auth.signIn(cleanEmail, password);
       }
@@ -145,7 +150,7 @@ export function AccountSection({
     } finally {
       setBusy(false);
     }
-  }, [auth, email, mode, name, password, profile, t, village]);
+  }, [auth, email, language, mode, name, password, profile, t, village]);
 
   const handleForgotPassword = async () => {
     setError('');
@@ -209,8 +214,48 @@ export function AccountSection({
                     {auth.user.email}
                   </Text>
                 </View>
+                {auth.user.email ? (
+                  <View style={styles.verificationRow}>
+                    <View
+                      style={[
+                        styles.verificationBadge,
+                        auth.user.emailVerified ? styles.verificationBadgeOk : styles.verificationBadgePending,
+                      ]}
+                    >
+                      <Ionicons
+                        name={auth.user.emailVerified ? 'checkmark-circle' : 'mail-unread-outline'}
+                        size={12}
+                        color={auth.user.emailVerified ? '#15803D' : '#B45309'}
+                      />
+                      <Text
+                        style={[
+                          styles.verificationBadgeText,
+                          auth.user.emailVerified ? styles.verificationBadgeTextOk : styles.verificationBadgeTextPending,
+                        ]}
+                      >
+                        {auth.user.emailVerified ? t.emailVerified : t.emailNotVerified}
+                      </Text>
+                    </View>
+                    {!auth.user.emailVerified && (
+                      <TouchableOpacity
+                        onPress={handleResendVerification}
+                        disabled={resendingVerification}
+                        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                      >
+                        <Text style={styles.resendLinkText}>{t.resendVerificationEmail}</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ) : null}
               </View>
             </View>
+
+            {!!verificationNotice && (
+              <View style={[styles.infoBox, { marginTop: 10 }]}>
+                <Ionicons name="mail-outline" size={16} color={GREEN} style={{ marginRight: 6 }} />
+                <Text style={styles.infoBoxText}>{verificationNotice}</Text>
+              </View>
+            )}
 
             {/* Sync Status Banner */}
             <View style={styles.syncStatusBox}>
@@ -233,7 +278,7 @@ export function AccountSection({
                 </View>
                 <View style={[styles.badgePill, sync.status === 'error' && styles.badgePillError]}>
                   <Text style={[styles.badgePillText, sync.status === 'error' && styles.badgePillTextError]}>
-                    {sync.status === 'syncing' ? 'Syncing…' : sync.status === 'error' ? 'Failed' : 'Active'}
+                    {sync.status === 'syncing' ? t.syncing : sync.status === 'error' ? t.syncStatusFailed : t.syncStatusActive}
                   </Text>
                 </View>
               </View>
@@ -463,39 +508,17 @@ export function AccountSection({
           />
         </View>
 
-        <View style={styles.divider} />
-
         {/* Crop Stage Milestone Morning Alerts Info */}
         <View style={styles.milestoneNoticeRow}>
           <Ionicons name="calendar-outline" size={18} color={GREEN} style={{ marginRight: 8, marginTop: 2 }} />
           <Text style={styles.milestoneNoticeText}>{t.cropMilestonesActive}</Text>
         </View>
 
-        <View style={styles.divider} />
-
-        {/* Send Test Notification Button */}
-        <View style={styles.testNotificationRow}>
-          <TouchableOpacity
-            style={[styles.testNotificationBtn, sendingTest && styles.btnDisabled]}
-            onPress={handleSendTestNotification}
-            disabled={sendingTest}
-          >
-            {sendingTest ? (
-              <ActivityIndicator size="small" color={GREEN} />
-            ) : (
-              <>
-                <Ionicons name="paper-plane-outline" size={16} color={GREEN} style={{ marginRight: 6 }} />
-                <Text style={styles.testNotificationBtnText}>{t.sendTestNotification}</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          {notifStatus ? (
-            <View style={styles.notifStatusWrap}>
-              <Text style={styles.notifStatusText}>{notifStatus}</Text>
-            </View>
-          ) : null}
-        </View>
+        {notifStatus ? (
+          <View style={styles.notifStatusWrap}>
+            <Text style={[styles.notifStatusText, { color: DANGER }]}>{notifStatus}</Text>
+          </View>
+        ) : null}
       </View>
     </View>
   );
@@ -599,6 +622,43 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: MUTED,
     flexShrink: 1,
+  },
+  verificationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 6,
+  },
+  verificationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  verificationBadgeOk: {
+    backgroundColor: '#DCFCE7',
+  },
+  verificationBadgePending: {
+    backgroundColor: '#FEF3C7',
+  },
+  verificationBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  verificationBadgeTextOk: {
+    color: '#15803D',
+  },
+  verificationBadgeTextPending: {
+    color: '#B45309',
+  },
+  resendLinkText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: GREEN,
+    textDecorationLine: 'underline',
   },
   syncStatusBox: {
     backgroundColor: '#F8FAFC',
@@ -867,28 +927,8 @@ const styles = StyleSheet.create({
     flex: 1,
     flexWrap: 'wrap',
   },
-  testNotificationRow: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  testNotificationBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: LIGHT_GREEN,
-    borderWidth: 1,
-    borderColor: '#A5D6A7',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  testNotificationBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: GREEN,
-  },
   notifStatusWrap: {
-    marginTop: 2,
+    marginTop: 10,
   },
   notifStatusText: {
     fontSize: 12,

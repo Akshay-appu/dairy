@@ -141,16 +141,147 @@ export type Copy = {
   syncingWithCloud: string;
   syncedJustNow: string;
   syncFailed: string;
+  syncStatusActive: string;
+  syncStatusFailed: string;
+  verificationEmailSent: string;
+  emailNotVerified: string;
+  emailVerified: string;
+  resendVerificationEmail: string;
   notificationsTitle: string;
   notificationsSubtitle: string;
   dailyReminder: string;
   dailyReminderSubtitle: string;
-  sendTestNotification: string;
-  sendingTestNotification: string;
-  testNotificationSent: string;
-  testNotificationFailed: string;
+  dailyReminderNotifTitle: string;
+  dailyReminderNotifBody: string;
   notificationPermissionDenied: string;
   cropMilestonesActive: string;
+
+  // Crop Growth Calendar additions
+  daysCultivatedLabel: string;
+  daysCultivatedPlaceholder: string;
+  totalCropDaysLabel: string;
+  totalCropDaysPlaceholder: string;
+  defaultDurationHint: string;
+  monthsApprox: string;
+  popularCropsLabel: string;
+  bsjdkSystemLabel: string;
+  dayWord: string;
+  dayShort: string;
+  daysRangeLabel: string;
+  daysUnit: string;
+  customCropDefault: string;
+
+  // Farmer Tools & Weather & Receipt Vault (EN/KN/HI)
+  interactiveHub: string;
+  toolWeather: string;
+  toolLandUnit: string;
+  toolProfitPlanner: string;
+  weatherHumidity: string;
+  weatherWind: string;
+  weatherRainChance: string;
+  weatherHighLow: string;
+  weatherKmhUnit: string;
+  weatherActivePlots: string;
+  weatherSprayAdvisoryTitle: string;
+  weatherIrrigationAdvisoryTitle: string;
+  weatherUpdating: string;
+  weatherRefresh: string;
+  weatherUseGps: string;
+  weatherSearchPlaceholder: string;
+  weatherSearchBtn: string;
+  weatherLastUpdated: string;
+  weatherOfflineCached: string;
+  weatherNoData: string;
+  weatherGpsFallbackNotice: string;
+  weatherLocationNotFound: string;
+  weatherClear: string;
+  weatherMainlyClear: string;
+  weatherPartlyCloudy: string;
+  weatherOvercast: string;
+  weatherFoggy: string;
+  weatherDrizzle: string;
+  weatherRain: string;
+  weatherHeavyRain: string;
+  weatherShowers: string;
+  weatherThunderstorm: string;
+  weatherSprayAvoidRain: string;
+  weatherSprayAvoidWind: string;
+  weatherSprayHotDry: string;
+  weatherSprayHighHumidity: string;
+  weatherSprayOptimal: string;
+  weatherIrrigRainExpected: string;
+  weatherIrrigWindy: string;
+  weatherIrrigHotDry: string;
+  weatherIrrigHighHumidity: string;
+  weatherIrrigOptimal: string;
+  landConverterDesc: string;
+  enterArea: string;
+  selectUnit: string;
+  profitPlannerDesc: string;
+  expectedYieldKg: string;
+  pricePerKg: string;
+  estimatedExpensesLabel: string;
+  projectedRevenue: string;
+  estimatedExpensesSummary: string;
+  netProjectedProfit: string;
+  netProjectedLoss: string;
+  profitMargin: string;
+  vaultTitle: string;
+  vaultSubtitle: string;
+  vaultTakePhoto: string;
+  vaultUploadGallery: string;
+  vaultFilterAll: string;
+  vaultCatFertilizerBill: string;
+  vaultCatMandiSlip: string;
+  vaultCatSoilReport: string;
+  vaultCatOther: string;
+  vaultEmptyTitle: string;
+  vaultEmptyAll: string;
+  vaultEmptyCategory: string;
+  vaultSaveModalTitle: string;
+  vaultDocTitleLabel: string;
+  vaultDocTitlePlaceholder: string;
+  vaultCategoryLabel: string;
+  vaultSaveBtn: string;
+  vaultSavingBtn: string;
+  vaultPermRequiredTitle: string;
+  vaultCameraPermMsg: string;
+  vaultGalleryPermMsg: string;
+  vaultCameraErrorTitle: string;
+  vaultCameraErrorMsg: string;
+  vaultGalleryErrorTitle: string;
+  vaultGalleryErrorMsg: string;
+  vaultTitleRequiredTitle: string;
+  vaultTitleRequiredMsg: string;
+  vaultSaveErrorTitle: string;
+  vaultSaveErrorMsg: string;
+  vaultDeleteTitle: string;
+  vaultDeleteConfirm: string;
+
+  // Export & Share Reports (PDF & Excel/CSV)
+  exportShareReportTitle: string;
+  exportShareReportSubtitle: string;
+  exportReportButton: string;
+  exportPdfReport: string;
+  exportPdfReportDesc: string;
+  exportCsvReport: string;
+  exportCsvReportDesc: string;
+  exportGeneratingPdf: string;
+  exportGeneratingCsv: string;
+  exportSuccessPdf: string;
+  exportSuccessCsv: string;
+  exportErrorGeneric: string;
+  exportSharingUnavailable: string;
+  sharePdfDialogTitle: string;
+  shareCsvDialogTitle: string;
+  reportSummaryHeading: string;
+  reportFinanceHeading: string;
+  reportHarvestsHeading: string;
+  reportActivitiesHeading: string;
+  reportCropSchedulesHeading: string;
+  reportGeneratedOn: string;
+  reportNoRecords: string;
+  reportWorkspaceLabel: string;
 };
 
 export const copy: Record<Language, Copy> = {
@@ -214,10 +345,10 @@ export const copy: Record<Language, Copy> = {
     recordsOverviewTab: 'Overview', financeTab: 'Expenses & Income', harvestsTab: 'Harvests',
     totalActivities: 'Total activities', seasonalHistory: 'Seasonal history', noDataYet: 'No data yet',
 
-    backupRestore: 'Backup & Restore',
-    exportData: 'Export backup',
-    exportDescription: 'Creates a copy of all your farm data as text, so you can save it somewhere safe or move it to another device.',
-    shareBackup: 'Share backup', copyToClipboard: 'Copy to clipboard', copied: 'Copied to clipboard.',
+    backupRestore: 'Export Reports & Restore',
+    exportData: 'Export & Share Report',
+    exportDescription: 'Generate and share a formatted PDF report or Excel (.csv) spreadsheet of your farm summary, activities, expenses, harvests, and crop schedules.',
+    shareBackup: 'Export & Share Report (PDF / Excel)', copyToClipboard: 'Copy to clipboard', copied: 'Copied to clipboard.',
     restoreData: 'Restore from backup',
     restoreDescription: 'Paste a previously exported backup below to preview it before restoring.',
     pasteBackupPlaceholder: 'Paste backup text here…',
@@ -325,16 +456,144 @@ export const copy: Record<Language, Copy> = {
     syncingWithCloud: 'Syncing your farm records to cloud…',
     syncedJustNow: 'Synced just now',
     syncFailed: 'Cloud sync could not complete. Your local SQLite records are safe.',
+    syncStatusActive: 'Active',
+    syncStatusFailed: 'Failed',
+    verificationEmailSent: 'Verification email sent! Check your inbox to verify your account.',
+    emailNotVerified: 'Email not yet verified',
+    emailVerified: 'Verified',
+    resendVerificationEmail: 'Resend verification email',
     notificationsTitle: 'Farm Reminders & Notifications',
     notificationsSubtitle: 'Automated morning alerts for crop stages and daily evening diary reminders.',
     dailyReminder: 'Daily 7:00 PM Farm Diary Reminder',
     dailyReminderSubtitle: 'Gentle reminder every evening at 7:00 PM to record your day’s activities, expenses, and harvests.',
-    sendTestNotification: 'Send Test Notification',
-    sendingTestNotification: 'Sending alert…',
-    testNotificationSent: 'Test notification sent! Check your notification bar.',
-    testNotificationFailed: 'Could not send notification. Please check app notification permissions.',
+    dailyReminderNotifTitle: 'Daily Farm Diary Reminder',
+    dailyReminderNotifBody: 'Take a moment to record today’s farm activities, expenses, and harvests before resting.',
     notificationPermissionDenied: 'Notification permission was not granted. Please enable notifications in your phone settings.',
     cropMilestonesActive: 'Crop stage morning alerts scheduled at 7:00 AM on milestone dates.',
+
+    daysCultivatedLabel: 'Days Already Cultivated',
+    daysCultivatedPlaceholder: 'e.g. 45',
+    totalCropDaysLabel: 'Total Crop Growth Days',
+    totalCropDaysPlaceholder: 'e.g. 150 (5+ months)',
+    defaultDurationHint: 'Default: {days} days',
+    monthsApprox: '~{months} mo',
+    popularCropsLabel: 'Popular Crops:',
+    bsjdkSystemLabel: 'BSJDK Nutrition & Care',
+    dayWord: 'Day',
+    dayShort: 'd',
+    daysRangeLabel: 'Days',
+    daysUnit: 'days',
+    customCropDefault: 'Custom Crop',
+
+    interactiveHub: 'Interactive Hub',
+    toolWeather: 'Weather',
+    toolLandUnit: 'Land Unit',
+    toolProfitPlanner: 'Profit Planner',
+    weatherHumidity: 'Humidity',
+    weatherWind: 'Wind',
+    weatherRainChance: 'Rain Chance',
+    weatherHighLow: 'H {high}° / L {low}°',
+    weatherKmhUnit: 'km/h',
+    weatherActivePlots: 'Active Plots',
+    weatherSprayAdvisoryTitle: 'Spray & Field Advisory',
+    weatherIrrigationAdvisoryTitle: 'Irrigation Advisory',
+    weatherUpdating: 'Updating live weather…',
+    weatherRefresh: 'Refresh',
+    weatherUseGps: 'Use GPS',
+    weatherSearchPlaceholder: 'Village / District (e.g. Mandya)',
+    weatherSearchBtn: 'Check',
+    weatherLastUpdated: 'Last updated',
+    weatherOfflineCached: 'Offline — showing saved weather',
+    weatherNoData: 'Connect to the internet or enter your village/district to fetch live weather.',
+    weatherGpsFallbackNotice: 'Location permission denied — showing weather for your farm area.',
+    weatherLocationNotFound: 'Could not find weather for that area. Try district name.',
+    weatherClear: 'Clear Sky',
+    weatherMainlyClear: 'Mainly Clear',
+    weatherPartlyCloudy: 'Partly Cloudy',
+    weatherOvercast: 'Overcast',
+    weatherFoggy: 'Fog / Mist',
+    weatherDrizzle: 'Light Drizzle',
+    weatherRain: 'Rain',
+    weatherHeavyRain: 'Heavy Rain',
+    weatherShowers: 'Rain Showers',
+    weatherThunderstorm: 'Thunderstorm',
+    weatherSprayAvoidRain: 'Avoid spraying BSJDK foliar sprays, bio-inputs, or crop protectants today due to rain or high rain probability.',
+    weatherSprayAvoidWind: 'Winds are brisk (≥18 km/h) — avoid foliar spraying to prevent spray drift. Wait for calm early morning or evening hours.',
+    weatherSprayHotDry: 'Hot and dry conditions — avoid midday spraying to prevent leaf scorch and evaporation. Spray early morning before 9 AM.',
+    weatherSprayHighHumidity: 'High humidity (≥85%) — inspect dense crop canopies for fungal leaf spots and ensure good airflow.',
+    weatherSprayOptimal: 'Calm wind and favorable conditions — good window for BSJDK JeevaDhara foliar sprays and weeding.',
+    weatherIrrigRainExpected: 'Rain is expected or ongoing — pause scheduled irrigation and ensure field drainage channels are clear.',
+    weatherIrrigWindy: 'Moderately windy — irrigate via drip or furrow in early morning to reduce evaporation loss.',
+    weatherIrrigHotDry: 'High heat & evaporation — provide light, timely evening or early-morning irrigation and retain soil mulch.',
+    weatherIrrigHighHumidity: 'Moisture is elevated — reduce irrigation frequency and avoid waterlogging around roots.',
+    weatherIrrigOptimal: 'Balanced weather — continue stage-wise irrigation and BSJDK soil moisture mulching as scheduled.',
+    landConverterDesc: 'Convert land measurements dynamically across regional and standard units.',
+    enterArea: 'Enter Area',
+    selectUnit: 'Select Unit',
+    profitPlannerDesc: 'Calculate projected revenue, expenses, and net profit for your harvest.',
+    expectedYieldKg: 'Expected Yield (Kg)',
+    pricePerKg: 'Price per Kg (₹)',
+    estimatedExpensesLabel: 'Estimated Expenses (₹)',
+    projectedRevenue: 'Projected Revenue',
+    estimatedExpensesSummary: 'Estimated Expenses',
+    netProjectedProfit: 'Net Projected Profit',
+    netProjectedLoss: 'Net Projected Loss',
+    profitMargin: 'Margin',
+    vaultTitle: 'Receipt & Soil Report Vault',
+    vaultSubtitle: 'Workspace-scoped storage for bills, mandi slips & test reports',
+    vaultTakePhoto: 'Take Photo',
+    vaultUploadGallery: 'Upload from Gallery',
+    vaultFilterAll: 'All',
+    vaultCatFertilizerBill: 'Fertilizer Bill',
+    vaultCatMandiSlip: 'Mandi Slip',
+    vaultCatSoilReport: 'Soil Report',
+    vaultCatOther: 'Other',
+    vaultEmptyTitle: 'No documents saved',
+    vaultEmptyAll: 'Capture an input bill or soil report photo to securely archive it in this workspace.',
+    vaultEmptyCategory: 'No documents under "{category}".',
+    vaultSaveModalTitle: 'Save Document to Vault',
+    vaultDocTitleLabel: 'Document Title *',
+    vaultDocTitlePlaceholder: 'e.g. BSJDK / Input Bill - May 2026',
+    vaultCategoryLabel: 'Category *',
+    vaultSaveBtn: 'Save to Vault',
+    vaultSavingBtn: 'Saving…',
+    vaultPermRequiredTitle: 'Permission Required',
+    vaultCameraPermMsg: 'Camera access is required to capture photos of bills and soil reports.',
+    vaultGalleryPermMsg: 'Gallery access is required to select photos of bills and soil reports.',
+    vaultCameraErrorTitle: 'Camera Error',
+    vaultCameraErrorMsg: 'Could not open camera. Please try again.',
+    vaultGalleryErrorTitle: 'Gallery Error',
+    vaultGalleryErrorMsg: 'Could not open gallery. Please try again.',
+    vaultTitleRequiredTitle: 'Title Required',
+    vaultTitleRequiredMsg: 'Please enter a title or description for this document.',
+    vaultSaveErrorTitle: 'Save Error',
+    vaultSaveErrorMsg: 'Could not save the document to the vault. Please try again.',
+    vaultDeleteTitle: 'Delete Document',
+    vaultDeleteConfirm: 'Delete "{title}"? This will permanently remove the image and record.',
+
+    exportShareReportTitle: 'Export & Share Farm Report',
+    exportShareReportSubtitle: 'Share clean daily or season farm reports via WhatsApp, Email, or Google Drive.',
+    exportReportButton: 'Export Report',
+    exportPdfReport: 'Export PDF Report',
+    exportPdfReportDesc: 'Formatted summary with income, expenses, daily activities, harvests & crop stages.',
+    exportCsvReport: 'Export Excel (.csv) Sheet',
+    exportCsvReportDesc: 'Spreadsheet compatible with Microsoft Excel and Google Sheets.',
+    exportGeneratingPdf: 'Generating PDF report…',
+    exportGeneratingCsv: 'Generating Excel (.csv) sheet…',
+    exportSuccessPdf: 'PDF report ready to share.',
+    exportSuccessCsv: 'Excel (.csv) sheet ready to share.',
+    exportErrorGeneric: 'Could not export report. Please try again.',
+    exportSharingUnavailable: 'File sharing is not supported on this device.',
+    sharePdfDialogTitle: 'Share BhoomiShakti Diary PDF Report',
+    shareCsvDialogTitle: 'Share BhoomiShakti Diary Excel (.csv) Sheet',
+    reportSummaryHeading: 'Farm Overview & Financial Summary',
+    reportFinanceHeading: 'Income & Expenses',
+    reportHarvestsHeading: 'Harvest Records',
+    reportActivitiesHeading: 'Daily Farm Activities',
+    reportCropSchedulesHeading: 'Automated Crop Growth Schedules',
+    reportGeneratedOn: 'Generated on',
+    reportNoRecords: 'No records recorded yet.',
+    reportWorkspaceLabel: 'Workspace',
   },
   kn: {
     tagline: 'ಪ್ರತಿ ಹೊಲದ ಕಥೆ, ಒಂದೇ ಡೈರಿಯಲ್ಲಿ',
@@ -396,10 +655,10 @@ export const copy: Record<Language, Copy> = {
     recordsOverviewTab: 'ಸಾರಾಂಶ', financeTab: 'ಖರ್ಚು ಮತ್ತು ಆದಾಯ', harvestsTab: 'ಕೊಯ್ಲುಗಳು',
     totalActivities: 'ಒಟ್ಟು ಚಟುವಟಿಕೆಗಳು', seasonalHistory: 'ಋತುವಿನ ಇತಿಹಾಸ', noDataYet: 'ಇನ್ನೂ ಡೇಟಾ ಇಲ್ಲ',
 
-    backupRestore: 'ಬ್ಯಾಕಪ್ ಮತ್ತು ಮರುಸ್ಥಾಪನೆ',
-    exportData: 'ಬ್ಯಾಕಪ್ ರಫ್ತು ಮಾಡಿ',
-    exportDescription: 'ನಿಮ್ಮ ಎಲ್ಲಾ ಹೊಲದ ಡೇಟಾದ ಪ್ರತಿಯನ್ನು ಪಠ್ಯವಾಗಿ ರಚಿಸುತ್ತದೆ, ಇದರಿಂದ ನೀವು ಅದನ್ನು ಸುರಕ್ಷಿತವಾಗಿ ಉಳಿಸಬಹುದು ಅಥವಾ ಇನ್ನೊಂದು ಸಾಧನಕ್ಕೆ ವರ್ಗಾಯಿಸಬಹುದು.',
-    shareBackup: 'ಬ್ಯಾಕಪ್ ಹಂಚಿಕೊಳ್ಳಿ', copyToClipboard: 'ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ಗೆ ನಕಲಿಸಿ', copied: 'ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ಗೆ ನಕಲಿಸಲಾಗಿದೆ.',
+    backupRestore: 'ವರದಿ ರಫ್ತು ಮತ್ತು ಮರುಸ್ಥಾಪನೆ',
+    exportData: 'ವರದಿ ರಫ್ತು ಮಾಡಿ ಮತ್ತು ಹಂಚಿಕೊಳ್ಳಿ',
+    exportDescription: 'ನಿಮ್ಮ ಹೊಲದ ಸಾರಾಂಶ, ಚಟುವಟಿಕೆಗಳು, ಖರ್ಚು-ಆದಾಯ, ಕೊಯ್ಲು ಮತ್ತು ಬೆಳೆ ವೇಳಾಪಟ್ಟಿಗಳ PDF ವರದಿ ಅಥವಾ Excel (.csv) ಶೀಟ್ ರಚಿಸಿ ಹಂಚಿಕೊಳ್ಳಿ.',
+    shareBackup: 'ವರದಿ ರಫ್ತು ಮತ್ತು ಹಂಚಿಕೆ (PDF / Excel)', copyToClipboard: 'ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ಗೆ ನಕಲಿಸಿ', copied: 'ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ಗೆ ನಕಲಿಸಲಾಗಿದೆ.',
     restoreData: 'ಬ್ಯಾಕಪ್‌ನಿಂದ ಮರುಸ್ಥಾಪಿಸಿ',
     restoreDescription: 'ಮರುಸ್ಥಾಪಿಸುವ ಮೊದಲು ಪೂರ್ವವೀಕ್ಷಿಸಲು ಹಿಂದೆ ರಫ್ತು ಮಾಡಿದ ಬ್ಯಾಕಪ್ ಅನ್ನು ಕೆಳಗೆ ಅಂಟಿಸಿ.',
     pasteBackupPlaceholder: 'ಬ್ಯಾಕಪ್ ಪಠ್ಯವನ್ನು ಇಲ್ಲಿ ಅಂಟಿಸಿ…',
@@ -507,16 +766,144 @@ export const copy: Record<Language, Copy> = {
     syncingWithCloud: 'ನಿಮ್ಮ ಕೃಷಿ ದಾಖಲೆಗಳನ್ನು ಕ್ಲೌಡ್‌ಗೆ ಸಿಂಕ್ ಮಾಡಲಾಗುತ್ತಿದೆ…',
     syncedJustNow: 'ಈಗಷ್ಟೇ ಸಿಂಕ್ ಆಗಿದೆ',
     syncFailed: 'ಕ್ಲೌಡ್ ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ. ನಿಮ್ಮ ಫೋನಿನ ಡೇಟಾ ಸಂಪೂರ್ಣ ಸುರಕ್ಷಿತವಾಗಿದೆ.',
+    syncStatusActive: 'ಸಕ್ರಿಯ',
+    syncStatusFailed: 'ವಿಫಲವಾಗಿದೆ',
+    verificationEmailSent: 'ದೃಢೀಕರಣ ಇಮೇಲ್ ಕಳುಹಿಸಲಾಗಿದೆ! ನಿಮ್ಮ ಖಾತೆಯನ್ನು ದೃಢೀಕರಿಸಲು ಇನ್‌ಬಾಕ್ಸ್ ಪರಿಶೀಲಿಸಿ.',
+    emailNotVerified: 'ಇಮೇಲ್ ಇನ್ನೂ ದೃಢೀಕರಿಸಿಲ್ಲ',
+    emailVerified: 'ದೃಢೀಕರಿಸಲಾಗಿದೆ',
+    resendVerificationEmail: 'ದೃಢೀಕರಣ ಇಮೇಲ್ ಮತ್ತೆ ಕಳುಹಿಸಿ',
     notificationsTitle: 'ಕೃಷಿ ಜ್ಞಾಪನೆಗಳು ಮತ್ತು ಎಚ್ಚರಿಕೆಗಳು',
     notificationsSubtitle: 'ಬೆಳೆ ಬೆಳವಣಿಗೆ ಹಂತದ ಬೆಳಗಿನ ಎಚ್ಚರಿಕೆಗಳು ಮತ್ತು ಪ್ರತಿದಿನ ಸಂಜೆಯ ಡೈರಿ ಜ್ಞಾಪನೆಗಳು.',
     dailyReminder: 'ಪ್ರತಿದಿನ ಸಂಜೆ 7:00 ಗಂಟೆಯ ಡೈರಿ ಜ್ಞಾಪನೆ',
     dailyReminderSubtitle: 'ದೈನಂದಿನ ಚಟುವಟಿಕೆಗಳು, ಖರ್ಚು-ವೆಚ್ಚ ಮತ್ತು ಇಳುವರಿ ದಾಖಲಿಸಲು ಪ್ರತಿದಿನ ಸಂಜೆ 7:00 ಗಂಟೆಗೆ ಜ್ಞಾಪನೆ.',
-    sendTestNotification: 'ಪರೀಕ್ಷಾ ಅಧಿಸೂಚನೆ ಕಳುಹಿಸಿ',
-    sendingTestNotification: 'ಎಚ್ಚರಿಕೆ ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ…',
-    testNotificationSent: 'ಪರೀಕ್ಷಾ ಅಧಿಸೂಚನೆ ಕಳುಹಿಸಲಾಗಿದೆ! ನಿಮ್ಮ ನೋಟಿಫಿಕೇಶನ್ ಬಾರ್ ಪರಿಶೀಲಿಸಿ.',
-    testNotificationFailed: 'ಅಧಿಸೂಚನೆ ಕಳುಹಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ. ದಯವಿಟ್ಟು ಅನುಮತಿಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.',
+    dailyReminderNotifTitle: 'ದೈನಂದಿನ ಕೃಷಿ ಡೈರಿ ಜ್ಞಾಪನೆ',
+    dailyReminderNotifBody: 'ಇಂದಿನ ಕೃಷಿ ಚಟುವಟಿಕೆಗಳು, ಖರ್ಚು ಮತ್ತು ಕೊಯ್ಲನ್ನು ಡೈರಿಯಲ್ಲಿ ದಾಖಲಿಸಲು ಸ್ವಲ್ಪ ಸಮಯ ನೀಡಿ.',
     notificationPermissionDenied: 'ಅಧಿಸೂಚನೆ ಅನುಮತಿ ನೀಡಿಲ್ಲ. ದಯವಿಟ್ಟು ಫೋನ್ ಸೆಟ್ಟಿಂಗ್ಸ್‌ನಲ್ಲಿ ಸಕ್ರಿಯಗೊಳಿಸಿ.',
     cropMilestonesActive: 'ಬೆಳೆ ಹಂತದ ಮೈಲಿಗಲ್ಲುಗಳಲ್ಲಿ ಬೆಳಿಗ್ಗೆ 7:00 ಗಂಟೆಗೆ ಎಚ್ಚರಿಕೆಗಳನ್ನು ನಿಗದಿಪಡಿಸಲಾಗಿದೆ.',
+
+    daysCultivatedLabel: 'ಈಗಾಗಲೇ ಬೆಳೆದ ದಿನಗಳು',
+    daysCultivatedPlaceholder: 'ಉದಾ. 45',
+    totalCropDaysLabel: 'ಒಟ್ಟು ಬೆಳೆ ಬೆಳವಣಿಗೆಯ ದಿನಗಳು',
+    totalCropDaysPlaceholder: 'ಉದಾ. 150 (5+ ತಿಂಗಳು)',
+    defaultDurationHint: 'ಸಾಮಾನ್ಯ ಅವಧಿ: {days} ದಿನಗಳು',
+    monthsApprox: '~{months} ತಿಂಗಳು',
+    popularCropsLabel: 'ಪ್ರಮುಖ ಬೆಳೆಗಳು:',
+    bsjdkSystemLabel: 'ಬಿಎಸ್‌ಜೆಡಿಕೆ ಪೋಷಣೆ ಮತ್ತು ಆರೈಕೆ',
+    dayWord: 'ದಿನ',
+    dayShort: 'ದಿನ',
+    daysRangeLabel: 'ದಿನಗಳು',
+    daysUnit: 'ದಿನಗಳು',
+    customCropDefault: 'ಇತರೆ ಬೆಳೆ',
+
+    interactiveHub: 'ರೈತ ಕೇಂದ್ರ',
+    toolWeather: 'ಹವಾಮಾನ',
+    toolLandUnit: 'ಭೂಮಿ ಅಳತೆ',
+    toolProfitPlanner: 'ಲಾಭ ಯೋಜನೆ',
+    weatherHumidity: 'ಆರ್ದ್ರತೆ',
+    weatherWind: 'ಗಾಳಿ ವೇಗ',
+    weatherRainChance: 'ಮಳೆ ಸಾಧ್ಯತೆ',
+    weatherHighLow: 'ಗರಿಷ್ಠ {high}° / ಕನಿಷ್ಠ {low}°',
+    weatherKmhUnit: 'ಕಿಮೀ/ಗಂ',
+    weatherActivePlots: 'ಸಕ್ರಿಯ ಹೊಲಗಳು',
+    weatherSprayAdvisoryTitle: 'ಸಿಂಪಡಣೆ ಮತ್ತು ಕೃಷಿ ಸಲಹೆ',
+    weatherIrrigationAdvisoryTitle: 'ನೀರಾವರಿ ಸಲಹೆ',
+    weatherUpdating: 'ತಾಜಾ ಹವಾಮಾನ ಪಡೆಯಲಾಗುತ್ತಿದೆ…',
+    weatherRefresh: 'ನವೀಕರಿಸಿ',
+    weatherUseGps: 'ಜಿಪಿಎಸ್ ಬಳಸಿ',
+    weatherSearchPlaceholder: 'ಗ್ರಾಮ / ಜಿಲ್ಲೆ (ಉದಾ. ಮಂಡ್ಯ)',
+    weatherSearchBtn: 'ಹುಡುಕಿ',
+    weatherLastUpdated: 'ಕೊನೆಯ ನವೀಕರಣ',
+    weatherOfflineCached: 'ಆಫ್‌ಲೈನ್ — ಉಳಿಸಿದ ಹವಾಮಾನ',
+    weatherNoData: 'ತಾಜಾ ಹವಾಮಾನ ಪಡೆಯಲು ಇಂಟರ್ನೆಟ್ ಸಂಪರ್ಕಿಸಿ ಅಥವಾ ನಿಮ್ಮ ಗ್ರಾಮ/ಜಿಲ್ಲೆಯನ್ನು ನಮೂದಿಸಿ.',
+    weatherGpsFallbackNotice: 'ಸ್ಥಳ ಅನುಮತಿ ನೀಡಿಲ್ಲ — ನಿಮ್ಮ ಹೊಲದ ಪ್ರದೇಶದ ಹವಾಮಾನ ತೋರಿಸಲಾಗುತ್ತಿದೆ.',
+    weatherLocationNotFound: 'ಆ ಪ್ರದೇಶದ ಹವಾಮಾನ ಸಿಗಲಿಲ್ಲ. ಜಿಲ್ಲೆಯ ಹೆಸರನ್ನು ಪ್ರಯತ್ನಿಸಿ.',
+    weatherClear: 'ಸ್ಪಷ್ಟ ಆಕಾಶ',
+    weatherMainlyClear: 'ಬಹುತೇಕ ಸ್ಪಷ್ಟ',
+    weatherPartlyCloudy: 'ಭಾಗಶಃ ಮೋಡ',
+    weatherOvercast: 'ಮೋಡ ಕವಿದ ವಾತಾವರಣ',
+    weatherFoggy: 'ಮಂಜು / ಇಬ್ಬನಿ',
+    weatherDrizzle: 'ತುಂತುರು ಮಳೆ',
+    weatherRain: 'ಮಳೆ',
+    weatherHeavyRain: 'ಭಾರಿ ಮಳೆ',
+    weatherShowers: 'ಮಳೆ ಹನಿಗಳು',
+    weatherThunderstorm: 'ಗುಡುಗು ಸಹಿತ ಮಳೆ',
+    weatherSprayAvoidRain: 'ಮಳೆ ಅಥವಾ ಮಳೆಯ ಸಾಧ್ಯತೆ ಇರುವುದರಿಂದ ಇಂದು ಬಿಎಸ್‌ಜೆಡಿಕೆ ಎಲೆ ಸಿಂಪಡಣೆ ಅಥವಾ ಜೈವಿಕ ದ್ರಾವಣ ಸಿಂಪಡಿಸಬೇಡಿ.',
+    weatherSprayAvoidWind: 'ಗಾಳಿ ವೇಗ ಹೆಚ್ಚಾಗಿದೆ (≥18 ಕಿಮೀ/ಗಂ) — ಸಿಂಪಡಣೆ ಹರಡುವುದನ್ನು ತಡೆಯಲು ಈಗ ಸಿಂಪಡಿಸಬೇಡಿ. ಬೆಳಗಿನ ಜಾವ ಅಥವಾ ಸಂಜೆ ಕಾಯಿರಿ.',
+    weatherSprayHotDry: 'ಬಿಸಿಲು ಮತ್ತು ಶುಷ್ಕ ಹವಾಮಾನವಿದೆ — ಎಲೆ ಸುಡುವುದನ್ನು ತಡೆಯಲು ಮಧ್ಯಾಹ್ನ ಸಿಂಪಡಿಸಬೇಡಿ. ಬೆಳಿಗ್ಗೆ 9 ಗಂಟೆಯ ಮೊದಲು ಸಿಂಪಡಿಸಿ.',
+    weatherSprayHighHumidity: 'ಅಧಿಕ ಆರ್ದ್ರತೆ (≥85%) — ದಟ್ಟವಾದ ಬೆಳೆಗಳಲ್ಲಿ ಶಿಲೀಂಧ್ರ ರೋಗಗಳಿಗಾಗಿ ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಗಾಳಿಯಾಡುವಂತೆ ನೋಡಿಕೊಳ್ಳಿ.',
+    weatherSprayOptimal: 'ಶಾಂತ ಗಾಳಿ ಮತ್ತು ಅನುಕೂಲಕರ ಹವಾಮಾನ — ಬಿಎಸ್‌ಜೆಡಿಕೆ ಜೀವಧಾರಾ ಎಲೆ ಸಿಂಪಡಣೆ ಮತ್ತು ಕಳೆ ತೆಗೆಯಲು ಉತ್ತಮ ಸಮಯ.',
+    weatherIrrigRainExpected: 'ಮಳೆ ಬರುವ ಸಾಧ್ಯತೆ ಇದೆ ಅಥವಾ ಬೀಳುತ್ತಿದೆ — ನಿಗದಿತ ನೀರಾವರಿ ನಿಲ್ಲಿಸಿ ಮತ್ತು ಹೊಲದ ನೀರು ಬಸಿಯುವ ಕಾಲುವೆಗಳನ್ನು ಸ್ವಚ್ಛಗೊಳಿಸಿ.',
+    weatherIrrigWindy: 'ಸಾಧಾರಣ ಗಾಳಿ ಬೀಸುತ್ತಿದೆ — ಆವಿಯಾಗುವುದನ್ನು ತಡೆಯಲು ಬೆಳಗಿನ ಜಾವ ಹನಿ ಅಥವಾ ಸಾಲು ನೀರಾವರಿ ನೀಡಿ.',
+    weatherIrrigHotDry: 'ಅಧಿಕ ಬಿಸಿಲು ಮತ್ತು ಆವಿಯಾಗುವಿಕೆ — ಸಂಜೆ ಅಥವಾ ಬೆಳಿಗ್ಗೆ ಲಘು ನೀರಾವರಿ ನೀಡಿ ಮತ್ತು ಮಣ್ಣಿನ ಹೊದಿಕೆ (ಮಲ್ಚಿಂಗ್) ಕಾಪಾಡಿ.',
+    weatherIrrigHighHumidity: 'ತೇವಾಂಶ ಹೆಚ್ಚಾಗಿದೆ — ನೀರಾವರಿ ಅಂತರವನ್ನು ಕಡಿಮೆ ಮಾಡಿ ಮತ್ತು ಬೇರುಗಳ ಬಳಿ ನೀರು ನಿಲ್ಲದಂತೆ ನೋಡಿಕೊಳ್ಳಿ.',
+    weatherIrrigOptimal: 'ಸಮತೋಲಿತ ಹವಾಮಾನ — ವೇಳಾಪಟ್ಟಿಯಂತೆ ಹಂತವಾರು ನೀರಾವರಿ ಮತ್ತು ಬಿಎಸ್‌ಜೆಡಿಕೆ ಮಣ್ಣಿನ ತೇವಾಂಶ ರಕ್ಷಣೆ ಮುಂದುವರಿಸಿ.',
+    landConverterDesc: 'ಸ್ಥಳೀಯ ಮತ್ತು ಪ್ರಮಾಣಿತ ಘಟಕಗಳ ನಡುವೆ ಭೂಮಿ ಅಳತೆಯನ್ನು ತಕ್ಷಣ ಪರಿವರ್ತಿಸಿ.',
+    enterArea: 'ವಿಸ್ತೀರ್ಣ ನಮೂದಿಸಿ',
+    selectUnit: 'ಘಟಕ ಆಯ್ಕೆಮಾಡಿ',
+    profitPlannerDesc: 'ನಿಮ್ಮ ಕೊಯ್ಲಿನ ನಿರೀಕ್ಷಿತ ಆದಾಯ, ಖರ್ಚು ಮತ್ತು ನಿವ್ವಳ ಲಾಭವನ್ನು ಲೆಕ್ಕಹಾಕಿ.',
+    expectedYieldKg: 'ನಿರೀಕ್ಷಿತ ಇಳುವರಿ (ಕೆ.ಜಿ.)',
+    pricePerKg: 'ಪ್ರತಿ ಕೆ.ಜಿ. ದರ (₹)',
+    estimatedExpensesLabel: 'ಅಂದಾಜು ಖರ್ಚು (₹)',
+    projectedRevenue: 'ನಿರೀಕ್ಷಿತ ಆದಾಯ',
+    estimatedExpensesSummary: 'ಅಂದಾಜು ಖರ್ಚು',
+    netProjectedProfit: 'ನಿರೀಕ್ಷಿತ ನಿವ್ವಳ ಲಾಭ',
+    netProjectedLoss: 'ನಿರೀಕ್ಷಿತ ನಿವ್ವಳ ನಷ್ಟ',
+    profitMargin: 'ಲಾಭದ ಪ್ರಮಾಣ',
+    vaultTitle: 'ರಸೀದಿ ಮತ್ತು ಮಣ್ಣು ವರದಿ ವಾಲ್ಟ್',
+    vaultSubtitle: 'ಬಿಲ್ಲುಗಳು, ಮಂಡಿ ಚೀಟಿಗಳು ಮತ್ತು ಪರೀಕ್ಷಾ ವರದಿಗಳ ಕಾರ್ಯಕ್ಷೇತ್ರ-ಆಧಾರಿತ ಸಂಗ್ರಹ',
+    vaultTakePhoto: 'ಫೋಟೋ ತೆಗೆಯಿರಿ',
+    vaultUploadGallery: 'ಗ್ಯಾಲರಿಯಿಂದ ಅಪ್‌ಲೋಡ್',
+    vaultFilterAll: 'ಎಲ್ಲಾ',
+    vaultCatFertilizerBill: 'ಗೊಬ್ಬರ ಬಿಲ್',
+    vaultCatMandiSlip: 'ಮಂಡಿ ಚೀಟಿ',
+    vaultCatSoilReport: 'ಮಣ್ಣು ವರದಿ',
+    vaultCatOther: 'ಇತರೆ',
+    vaultEmptyTitle: 'ಯಾವುದೇ ದಾಖಲೆಗಳಿಲ್ಲ',
+    vaultEmptyAll: 'ಈ ಕಾರ್ಯಕ್ಷೇತ್ರದಲ್ಲಿ ಸುರಕ್ಷಿತವಾಗಿ ಸಂಗ್ರಹಿಸಲು ಗೊಬ್ಬರ ಬಿಲ್ ಅಥವಾ ಮಣ್ಣು ವರದಿಯ ಫೋಟೋ ತೆಗೆಯಿರಿ.',
+    vaultEmptyCategory: '"{category}" ವಿಭಾಗದಲ್ಲಿ ಯಾವುದೇ ದಾಖಲೆಗಳಿಲ್ಲ.',
+    vaultSaveModalTitle: 'ವಾಲ್ಟ್‌ಗೆ ದಾಖಲೆ ಉಳಿಸಿ',
+    vaultDocTitleLabel: 'ದಾಖಲೆಯ ಶೀರ್ಷಿಕೆ *',
+    vaultDocTitlePlaceholder: 'ಉದಾ. ಬಿಎಸ್‌ಜೆಡಿಕೆ / ಕೃಷಿ ಬಿಲ್ - ಮೇ 2026',
+    vaultCategoryLabel: 'ವರ್ಗ *',
+    vaultSaveBtn: 'ವಾಲ್ಟ್‌ಗೆ ಉಳಿಸಿ',
+    vaultSavingBtn: 'ಉಳಿಸಲಾಗುತ್ತಿದೆ…',
+    vaultPermRequiredTitle: 'ಅನುಮತಿ ಅಗತ್ಯವಿದೆ',
+    vaultCameraPermMsg: 'ಬಿಲ್ಲುಗಳು ಮತ್ತು ಮಣ್ಣು ವರದಿಗಳ ಫೋಟೋ ತೆಗೆಯಲು ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ಅಗತ್ಯವಿದೆ.',
+    vaultGalleryPermMsg: 'ಬಿಲ್ಲುಗಳು ಮತ್ತು ಮಣ್ಣು ವರದಿಗಳ ಫೋಟೋ ಆಯ್ಕೆಮಾಡಲು ಗ್ಯಾಲರಿ ಅನುಮತಿ ಅಗತ್ಯವಿದೆ.',
+    vaultCameraErrorTitle: 'ಕ್ಯಾಮೆರಾ ದೋಷ',
+    vaultCameraErrorMsg: 'ಕ್ಯಾಮೆರಾ ತೆರೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+    vaultGalleryErrorTitle: 'ಗ್ಯಾಲರಿ ದೋಷ',
+    vaultGalleryErrorMsg: 'ಗ್ಯಾಲರಿ ತೆರೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+    vaultTitleRequiredTitle: 'ಶೀರ್ಷಿಕೆ ಅಗತ್ಯವಿದೆ',
+    vaultTitleRequiredMsg: 'ದಯವಿಟ್ಟು ಈ ದಾಖಲೆಗೆ ಶೀರ್ಷಿಕೆ ಅಥವಾ ವಿವರಣೆಯನ್ನು ನಮೂದಿಸಿ.',
+    vaultSaveErrorTitle: 'ಉಳಿಸುವಲ್ಲಿ ದೋಷ',
+    vaultSaveErrorMsg: 'ವಾಲ್ಟ್‌ಗೆ ದಾಖಲೆ ಉಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+    vaultDeleteTitle: 'ದಾಖಲೆ ಅಳಿಸಿ',
+    vaultDeleteConfirm: '"{title}" ಅನ್ನು ಅಳಿಸಬೇಕೇ? ಇದು ಚಿತ್ರ ಮತ್ತು ದಾಖಲೆಯನ್ನು ಶಾಶ್ವತವಾಗಿ ತೆಗೆದುಹಾಕುತ್ತದೆ.',
+
+    exportShareReportTitle: 'ಕೃಷಿ ವರದಿ ರಫ್ತು ಮತ್ತು ಹಂಚಿಕೆ',
+    exportShareReportSubtitle: 'WhatsApp, ಇಮೇಲ್ ಅಥವಾ Google Drive ಮೂಲಕ ದೈನಂದಿನ ಅಥವಾ ಋತುವಿನ ವರದಿಯನ್ನು ಹಂಚಿಕೊಳ್ಳಿ.',
+    exportReportButton: 'ವರದಿ ರಫ್ತು ಮಾಡಿ',
+    exportPdfReport: 'PDF ವರದಿ ರಫ್ತು ಮಾಡಿ',
+    exportPdfReportDesc: 'ಆದಾಯ, ಖರ್ಚು, ದೈನಂದಿನ ಚಟುವಟಿಕೆಗಳು, ಕೊಯ್ಲು ಮತ್ತು ಬೆಳೆ ಹಂತಗಳ ವಿವರವಾದ PDF ವರದಿ.',
+    exportCsvReport: 'Excel (.csv) ಶೀಟ್ ರಫ್ತು ಮಾಡಿ',
+    exportCsvReportDesc: 'Microsoft Excel ಮತ್ತು Google Sheets ನಲ್ಲಿ ತೆರೆಯಬಹುದಾದ ಸ್ಪ್ರೆಡ್‌ಶೀಟ್.',
+    exportGeneratingPdf: 'PDF ವರದಿ ಸಿದ್ಧವಾಗುತ್ತಿದೆ…',
+    exportGeneratingCsv: 'Excel (.csv) ಶೀಟ್ ಸಿದ್ಧವಾಗುತ್ತಿದೆ…',
+    exportSuccessPdf: 'PDF ವರದಿ ಹಂಚಿಕೊಳ್ಳಲು ಸಿದ್ಧವಾಗಿದೆ.',
+    exportSuccessCsv: 'Excel (.csv) ಶೀಟ್ ಹಂಚಿಕೊಳ್ಳಲು ಸಿದ್ಧವಾಗಿದೆ.',
+    exportErrorGeneric: 'ವರದಿಯನ್ನು ರಫ್ತು ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+    exportSharingUnavailable: 'ಈ ಸಾಧನದಲ್ಲಿ ಫೈಲ್ ಹಂಚಿಕೆ ಲಭ್ಯವಿಲ್ಲ.',
+    sharePdfDialogTitle: 'ಭೂಮಿಶಕ್ತಿ ಡೈರಿ PDF ವರದಿ ಹಂಚಿಕೊಳ್ಳಿ',
+    shareCsvDialogTitle: 'ಭೂಮಿಶಕ್ತಿ ಡೈರಿ Excel (.csv) ಶೀಟ್ ಹಂಚಿಕೊಳ್ಳಿ',
+    reportSummaryHeading: 'ಹೊಲದ ಸಾರಾಂಶ ಮತ್ತು ಆರ್ಥಿಕ ವಿವರ',
+    reportFinanceHeading: 'ಆದಾಯ ಮತ್ತು ಖರ್ಚುಗಳು',
+    reportHarvestsHeading: 'ಕೊಯ್ಲು ದಾಖಲೆಗಳು',
+    reportActivitiesHeading: 'ದೈನಂದಿನ ಕೃಷಿ ಚಟುವಟಿಕೆಗಳು',
+    reportCropSchedulesHeading: 'ಸ್ವಯಂಚಾಲಿತ ಬೆಳೆ ಬೆಳವಣಿಗೆ ವೇಳಾಪಟ್ಟಿ',
+    reportGeneratedOn: 'ರಚಿಸಿದ ದಿನಾಂಕ',
+    reportNoRecords: 'ಇನ್ನೂ ಯಾವುದೇ ದಾಖಲೆಗಳಿಲ್ಲ.',
+    reportWorkspaceLabel: 'ಕಾರ್ಯಕ್ಷೇತ್ರ',
   },
   hi: {
     tagline: 'हर खेत की कहानी, एक ही डायरी में',
@@ -578,10 +965,10 @@ export const copy: Record<Language, Copy> = {
     recordsOverviewTab: 'सारांश', financeTab: 'खर्च और आय', harvestsTab: 'कटाई',
     totalActivities: 'कुल गतिविधियाँ', seasonalHistory: 'सीज़न इतिहास', noDataYet: 'अभी कोई डेटा नहीं',
 
-    backupRestore: 'बैकअप और पुनर्स्थापना',
-    exportData: 'बैकअप निर्यात करें',
-    exportDescription: 'आपके सभी खेती डेटा की एक प्रति टेक्स्ट के रूप में बनाता है, ताकि आप इसे सुरक्षित रख सकें या किसी अन्य डिवाइस पर ले जा सकें।',
-    shareBackup: 'बैकअप साझा करें', copyToClipboard: 'क्लिपबोर्ड पर कॉपी करें', copied: 'क्लिपबोर्ड पर कॉपी हो गया।',
+    backupRestore: 'रिपोर्ट निर्यात और पुनर्स्थापना',
+    exportData: 'रिपोर्ट निर्यात और साझा करें',
+    exportDescription: 'अपने खेत का सारांश, दैनिक कार्य, खर्च-आय, कटाई और फसल कैलेंडर की फ़ॉर्मेटेड PDF रिपोर्ट या Excel (.csv) शीट बनाएं और साझा करें।',
+    shareBackup: 'रिपोर्ट निर्यात और साझा करें (PDF / Excel)', copyToClipboard: 'क्लिपबोर्ड पर कॉपी करें', copied: 'क्लिपबोर्ड पर कॉपी हो गया।',
     restoreData: 'बैकअप से पुनर्स्थापित करें',
     restoreDescription: 'पुनर्स्थापित करने से पहले पूर्वावलोकन के लिए नीचे पहले से निर्यात किया गया बैकअप पेस्ट करें।',
     pasteBackupPlaceholder: 'बैकअप टेक्स्ट यहाँ पेस्ट करें…',
@@ -689,15 +1076,143 @@ export const copy: Record<Language, Copy> = {
     syncingWithCloud: 'आपके कृषि रिकॉर्ड को क्लाउड से सिंक किया जा रहा है…',
     syncedJustNow: 'अभी-अभी सिंक हुआ',
     syncFailed: 'क्लाउड सिंक पूरा नहीं हो सका। आपका स्थानीय डेटा पूरी तरह सुरक्षित है।',
+    syncStatusActive: 'सक्रिय',
+    syncStatusFailed: 'विफल',
+    verificationEmailSent: 'सत्यापन ईमेल भेज दिया गया है! अपना खाता सत्यापित करने के लिए इनबॉक्स जांचें।',
+    emailNotVerified: 'ईमेल अभी सत्यापित नहीं है',
+    emailVerified: 'सत्यापित',
+    resendVerificationEmail: 'सत्यापन ईमेल फिर से भेजें',
     notificationsTitle: 'कृषि अनुस्मारक और सूचनाएं',
     notificationsSubtitle: 'फसल अवस्था की सुबह की सूचनाएं और दैनिक शाम की डायरी याद दिलाने वाले अलर्ट।',
     dailyReminder: 'दैनिक शाम 7:00 बजे डायरी अनुस्मारक',
     dailyReminderSubtitle: 'दिनभर की गतिविधियों, खर्चों और उपज को दर्ज करने के लिए हर शाम 7:00 बजे सूचना।',
-    sendTestNotification: 'टेस्ट नोटिफिकेशन भेजें',
-    sendingTestNotification: 'अलर्ट भेजा जा रहा है…',
-    testNotificationSent: 'टेस्ट नोटिफिकेशन भेजा गया! अपना नोटिफिकेशन बार देखें।',
-    testNotificationFailed: 'नोटिफिकेशन नहीं भेजा जा सका। कृपया अनुमति की जांच करें।',
+    dailyReminderNotifTitle: 'दैनिक कृषि डायरी अनुस्मारक',
+    dailyReminderNotifBody: 'आज के कृषि कार्य, खर्च और कटाई का विवरण अपनी डायरी में दर्ज करना न भूलें।',
     notificationPermissionDenied: 'नोटिफिकेशन अनुमति नहीं मिली। कृपया फ़ोन सेटिंग्स में इसे चालू करें।',
     cropMilestonesActive: 'फसल अवस्था के महत्वपूर्ण दिनों पर सुबह 7:00 बजे सूचनाएं निर्धारित की गई हैं।',
+
+    daysCultivatedLabel: 'बुआई के बाद बीते दिन',
+    daysCultivatedPlaceholder: 'उदा. 45',
+    totalCropDaysLabel: 'कुल फसल अवधि (दिन)',
+    totalCropDaysPlaceholder: 'उदा. 150 (5+ माह)',
+    defaultDurationHint: 'सामान्य अवधि: {days} दिन',
+    monthsApprox: '~{months} माह',
+    popularCropsLabel: 'प्रमुख फसलें:',
+    bsjdkSystemLabel: 'BSJDK पोषण एवं देखभाल',
+    dayWord: 'दिन',
+    dayShort: 'दि',
+    daysRangeLabel: 'दिन',
+    daysUnit: 'दिन',
+    customCropDefault: 'अन्य फसल',
+
+    interactiveHub: 'किसान केंद्र',
+    toolWeather: 'मौसम',
+    toolLandUnit: 'भूमि इकाई',
+    toolProfitPlanner: 'लाभ योजना',
+    weatherHumidity: 'नमी',
+    weatherWind: 'हवा गति',
+    weatherRainChance: 'बारिश संभावना',
+    weatherHighLow: 'अधिकतम {high}° / न्यूनतम {low}°',
+    weatherKmhUnit: 'किमी/घं',
+    weatherActivePlots: 'सक्रिय खेत',
+    weatherSprayAdvisoryTitle: 'छिड़काव एवं कृषि सलाह',
+    weatherIrrigationAdvisoryTitle: 'सिंचाई सलाह',
+    weatherUpdating: 'ताज़ा मौसम प्राप्त किया जा रहा है…',
+    weatherRefresh: 'रिफ़्रेश करें',
+    weatherUseGps: 'GPS उपयोग करें',
+    weatherSearchPlaceholder: 'गाँव / ज़िला (जैसे मण्ड्या)',
+    weatherSearchBtn: 'खोजें',
+    weatherLastUpdated: 'आख़िरी अपडेट',
+    weatherOfflineCached: 'ऑफ़लाइन — सहेजा गया मौसम',
+    weatherNoData: 'ताज़ा मौसम देखने के लिए इंटरनेट से जुड़ें या अपना गाँव/ज़िला दर्ज करें।',
+    weatherGpsFallbackNotice: 'लोकेशन अनुमति नहीं मिली — आपके खेत के क्षेत्र का मौसम दिखाया जा रहा है।',
+    weatherLocationNotFound: 'उस क्षेत्र का मौसम नहीं मिला। ज़िले का नाम लिखकर देखें।',
+    weatherClear: 'साफ़ आसमान',
+    weatherMainlyClear: 'लगभग साफ़',
+    weatherPartlyCloudy: 'आंशिक बादल',
+    weatherOvercast: 'घने बादल',
+    weatherFoggy: 'कोहरा / धुंध',
+    weatherDrizzle: 'हल्की बूंदाबांदी',
+    weatherRain: 'बारिश',
+    weatherHeavyRain: 'तेज़ बारिश',
+    weatherShowers: 'बौछारें',
+    weatherThunderstorm: 'आंधी-तूफ़ान',
+    weatherSprayAvoidRain: 'बारिश या बारिश की उच्च संभावना के कारण आज BSJDK पत्तियों पर छिड़काव या जैव-घोल न छिड़कें।',
+    weatherSprayAvoidWind: 'हवा तेज़ है (≥18 किमी/घं) — छिड़काव बहने से बचाने के लिए अभी स्प्रे न करें। शांत सुबह या शाम की प्रतीक्षा करें।',
+    weatherSprayHotDry: 'गर्म और शुष्क मौसम है — पत्तियों को झुलसने से बचाने के लिए दोपहर में छिड़काव न करें। सुबह 9 बजे से पहले करें।',
+    weatherSprayHighHumidity: 'अधिक नमी (≥85%) — घनी फसलों में फफूंद रोग की जांच करें और हवा का प्रवाह बनाए रखें।',
+    weatherSprayOptimal: 'शांत हवा और अनुकूल मौसम — BSJDK जीवधारा पर्ण छिड़काव और निराई-गुड़ाई के लिए उत्तम समय है।',
+    weatherIrrigRainExpected: 'बारिश की संभावना है या हो रही है — निर्धारित सिंचाई रोक दें और खेत से पानी निकलने की नालियां साफ़ रखें।',
+    weatherIrrigWindy: 'हवा मध्यम तेज़ है — वाष्पीकरण कम करने के लिए सुबह जल्दी टपक या नाली से सिंचाई करें।',
+    weatherIrrigHotDry: 'तेज़ गर्मी और वाष्पीकरण — शाम या सुबह हल्की सिंचाई दें और मिट्टी में मल्चिंग बनाए रखें।',
+    weatherIrrigHighHumidity: 'नमी अधिक है — सिंचाई का अंतराल बढ़ाएं और जड़ों के पास जलभराव न होने दें।',
+    weatherIrrigOptimal: 'संतुलित मौसम — तय अनुसूची के अनुसार चरणबद्ध सिंचाई और BSJDK नमी संरक्षण जारी रखें।',
+    landConverterDesc: 'क्षेत्रीय और मानक इकाइयों के बीच भूमि माप को तुरंत बदलें।',
+    enterArea: 'क्षेत्रफल दर्ज करें',
+    selectUnit: 'इकाई चुनें',
+    profitPlannerDesc: 'अपनी उपज से अनुमानित आय, खर्च और शुद्ध लाभ की गणना करें।',
+    expectedYieldKg: 'अनुमानित उपज (किलो)',
+    pricePerKg: 'प्रति किलो मूल्य (₹)',
+    estimatedExpensesLabel: 'अनुमानित खर्च (₹)',
+    projectedRevenue: 'अनुमानित आय',
+    estimatedExpensesSummary: 'अनुमानित खर्च',
+    netProjectedProfit: 'अनुमानित शुद्ध लाभ',
+    netProjectedLoss: 'अनुमानित शुद्ध हानि',
+    profitMargin: 'लाभ प्रतिशत',
+    vaultTitle: 'रसीद और मिट्टी रिपोर्ट वॉल्ट',
+    vaultSubtitle: 'बिल, मंडी पर्ची और मिट्टी जांच रिपोर्ट का कार्यक्षेत्र-आधारित संग्रह',
+    vaultTakePhoto: 'फ़ोटो खींचें',
+    vaultUploadGallery: 'गैलरी से चुनें',
+    vaultFilterAll: 'सभी',
+    vaultCatFertilizerBill: 'खाद बिल',
+    vaultCatMandiSlip: 'मंडी पर्ची',
+    vaultCatSoilReport: 'मिट्टी रिपोर्ट',
+    vaultCatOther: 'अन्य',
+    vaultEmptyTitle: 'कोई दस्तावेज़ सहेजा नहीं गया',
+    vaultEmptyAll: 'इस कार्यक्षेत्र में सुरक्षित रखने के लिए खाद बिल या मिट्टी रिपोर्ट की फ़ोटो लें।',
+    vaultEmptyCategory: '"{category}" श्रेणी में कोई दस्तावेज़ नहीं है।',
+    vaultSaveModalTitle: 'वॉल्ट में दस्तावेज़ सहेजें',
+    vaultDocTitleLabel: 'दस्तावेज़ का शीर्षक *',
+    vaultDocTitlePlaceholder: 'उदा. BSJDK / कृषि बिल - मई 2026',
+    vaultCategoryLabel: 'श्रेणी *',
+    vaultSaveBtn: 'वॉल्ट में सहेजें',
+    vaultSavingBtn: 'सहेजा जा रहा है…',
+    vaultPermRequiredTitle: 'अनुमति आवश्यक है',
+    vaultCameraPermMsg: 'बिल और मिट्टी रिपोर्ट की फ़ोटो लेने के लिए कैमरा अनुमति आवश्यक है।',
+    vaultGalleryPermMsg: 'बिल और मिट्टी रिपोर्ट चुनने के लिए गैलरी अनुमति आवश्यक है।',
+    vaultCameraErrorTitle: 'कैमरा त्रुटि',
+    vaultCameraErrorMsg: 'कैमरा नहीं खुल सका। कृपया फिर से प्रयास करें।',
+    vaultGalleryErrorTitle: 'गैलरी त्रुटि',
+    vaultGalleryErrorMsg: 'गैलरी नहीं खुल सकी। कृपया फिर से प्रयास करें।',
+    vaultTitleRequiredTitle: 'शीर्षक आवश्यक है',
+    vaultTitleRequiredMsg: 'कृपया इस दस्तावेज़ के लिए शीर्षक या विवरण दर्ज करें।',
+    vaultSaveErrorTitle: 'सहेजने में त्रुटि',
+    vaultSaveErrorMsg: 'दस्तावेज़ वॉल्ट में सहेजा नहीं जा सका। कृपया फिर से प्रयास करें।',
+    vaultDeleteTitle: 'दस्तावेज़ हटाएं',
+    vaultDeleteConfirm: 'क्या आप "{title}" को हटाना चाहते हैं? इससे फ़ोटो और रिकॉर्ड स्थायी रूप से हट जाएंगे।',
+
+    exportShareReportTitle: 'कृषि रिपोर्ट निर्यात एवं साझा करें',
+    exportShareReportSubtitle: 'WhatsApp, ईमेल या Google Drive पर दैनिक या सीज़न की रिपोर्ट साझा करें।',
+    exportReportButton: 'रिपोर्ट निर्यात करें',
+    exportPdfReport: 'PDF रिपोर्ट निर्यात करें',
+    exportPdfReportDesc: 'आय, खर्च, दैनिक कार्य, कटाई और फसल अवस्थाओं की सुंदर PDF रिपोर्ट।',
+    exportCsvReport: 'Excel (.csv) शीट निर्यात करें',
+    exportCsvReportDesc: 'Microsoft Excel और Google Sheets में खुलने वाली स्प्रेडशीट।',
+    exportGeneratingPdf: 'PDF रिपोर्ट तैयार हो रही है…',
+    exportGeneratingCsv: 'Excel (.csv) शीट तैयार हो रही है…',
+    exportSuccessPdf: 'PDF रिपोर्ट साझा करने के लिए तैयार है।',
+    exportSuccessCsv: 'Excel (.csv) शीट साझा करने के लिए तैयार है।',
+    exportErrorGeneric: 'रिपोर्ट निर्यात नहीं हो सकी। कृपया फिर से प्रयास करें।',
+    exportSharingUnavailable: 'इस डिवाइस पर फ़ाइल साझा करने की सुविधा उपलब्ध नहीं है।',
+    sharePdfDialogTitle: 'भूमि शक्ति डायरी PDF रिपोर्ट साझा करें',
+    shareCsvDialogTitle: 'भूमि शक्ति डायरी Excel (.csv) शीट साझा करें',
+    reportSummaryHeading: 'खेत सारांश एवं वित्तीय विवरण',
+    reportFinanceHeading: 'आय और खर्च',
+    reportHarvestsHeading: 'कटाई रिकॉर्ड',
+    reportActivitiesHeading: 'दैनिक कृषि गतिविधियाँ',
+    reportCropSchedulesHeading: 'स्वचालित फसल विकास अनुसूची',
+    reportGeneratedOn: 'निर्माण तिथि',
+    reportNoRecords: 'अभी कोई रिकॉर्ड दर्ज नहीं है।',
+    reportWorkspaceLabel: 'कार्यक्षेत्र',
   },
 };

@@ -1,13 +1,15 @@
-import { Platform, Share } from 'react-native';
+import { Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 
-// Zero new dependencies: web uses the Blob/anchor download + Clipboard DOM
-// APIs directly; native uses React Native's own Share module (core RN, not
-// an Expo package) to open the OS share sheet.
-
-export function downloadTextFile(filename: string, contents: string): void {
+export function downloadTextFile(
+  filename: string,
+  contents: string,
+  mimeType: string = 'application/json'
+): void {
   const doc = (globalThis as { document?: Document }).document;
   if (!doc) return;
-  const blob = new Blob([contents], { type: 'application/json' });
+  const blob = new Blob([contents], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const anchor = doc.createElement('a');
   anchor.href = url;
@@ -27,8 +29,28 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 
 export async function shareBackupText(filename: string, text: string): Promise<void> {
   if (Platform.OS === 'web') {
-    downloadTextFile(filename, text);
+    downloadTextFile(filename, text, 'application/json');
     return;
   }
-  await Share.share({ message: text });
+
+  const baseDir = FileSystem.cacheDirectory ?? FileSystem.documentDirectory;
+  if (!baseDir) {
+    throw new Error('Device storage directory is unavailable.');
+  }
+  const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const fileUri = `${baseDir}${safeName}`;
+  await FileSystem.writeAsStringAsync(fileUri, text, {
+    encoding: FileSystem.EncodingType.UTF8,
+  });
+
+  const canShare = await Sharing.isAvailableAsync();
+  if (!canShare) {
+    throw new Error('Sharing is not available on this device.');
+  }
+
+  await Sharing.shareAsync(fileUri, {
+    mimeType: 'application/json',
+    dialogTitle: safeName,
+    UTI: 'public.json',
+  });
 }

@@ -26,6 +26,7 @@ import { useAccountDeletion } from './src/hooks/useAccountDeletion';
 import { useWorkspaces } from './src/hooks/useWorkspaces';
 import { AuthScreen } from './src/screens/AuthScreen';
 import { DeleteAccountModal } from './src/screens/DeleteAccountModal';
+import { ExportReportModal } from './src/components/ExportReportModal';
 import { openDatabase, Crop, Entry, FinanceEntry, Harvest, Plot } from './src/db/schema';
 import { BackupData } from './src/db/backupRepo';
 import { copy, Language, languages } from './src/i18n/copy';
@@ -56,6 +57,7 @@ function MainApp() {
   const [activityCropId, setActivityCropId] = useState<number | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const { isMobile, lg, horizontalPadding, gridColumns, cardWidth, contentMaxWidth } = useResponsive();
   const { webAlert, setWebAlert, showAlert } = useCrossPlatformAlert();
@@ -250,7 +252,20 @@ function MainApp() {
           }
         ]}>
           <View style={[shared.headerInner, { maxWidth: contentMaxWidth, paddingHorizontal: horizontalPadding }]}>
-            <View style={shared.brandMark}><Text style={shared.brandLeaf}>✦</Text></View>
+            <View style={shared.brandMark} accessibilityLabel="BhoomiShakti Diary">
+              <MaterialCommunityIcons
+                name="sprout"
+                size={12}
+                color="#C8F7C5"
+                style={shared.brandSproutAccent}
+              />
+              <MaterialCommunityIcons
+                name="book-open-page-variant"
+                size={22}
+                color="#FFFFFF"
+                style={shared.brandBookIcon}
+              />
+            </View>
             <View style={{ flex: 1, minWidth: 0, flexShrink: 1, marginRight: 8 }}>
               <Text style={[shared.brand, lg && shared.brandLg]} numberOfLines={1}>BHOOMISHAKTI</Text>
               <Text style={[shared.brandSub, lg && shared.brandSubLg]} numberOfLines={1} ellipsizeMode="tail">DIARY · {t.tagline}</Text>
@@ -279,6 +294,7 @@ function MainApp() {
         {tab === 'Home' && (
           <HomeScreen
             t={t}
+            language={language}
             lg={lg}
             gridColumns={gridColumns}
             cardWidth={cardWidth}
@@ -290,11 +306,13 @@ function MainApp() {
             workspaceName={workspaceName}
             workspaceId={activeWsId}
             db={db}
+            farmProfile={profile.profile}
             financeTotals={{ totalIncome, totalExpenses, netBalance }}
             currentSeasonLabel={crops.items.length ? seasonLabel(language, crops.items[0].season) : ''}
             onAddPress={openAddActivity}
             onDeleteEntry={id => deleteActivity(id)}
             onViewAll={() => setTab('Diary')}
+            onOpenExport={() => setShowExportModal(true)}
           />
         )}
         {tab === 'Diary' && (
@@ -342,6 +360,7 @@ function MainApp() {
             onDeleteFinanceConfirm={deleteFinanceConfirm}
             onDeleteHarvestConfirm={deleteHarvestConfirm}
             onError={message => showAlert('Save failed', message)}
+            onOpenExport={() => setShowExportModal(true)}
           />
         )}
         {tab === 'More' && (
@@ -364,6 +383,7 @@ function MainApp() {
             onDeleteWorkspace={workspaces.deleteWorkspace}
             onError={message => showAlert('Save failed', message)}
             onConfirmRestore={confirmRestore}
+            onOpenExport={() => setShowExportModal(true)}
             db={db}
             profile={profile}
           />
@@ -434,6 +454,24 @@ function MainApp() {
         deletion={accountDeletion}
         backup={backup}
         onClose={() => setShowDeleteAccount(false)}
+      />
+
+      <ExportReportModal
+        visible={showExportModal}
+        isMobile={isMobile}
+        t={t}
+        language={language}
+        db={db}
+        ownerId={ownerId}
+        workspaceId={activeWsId}
+        workspaceName={workspaceName}
+        userEmail={auth.user?.email ?? null}
+        counts={{
+          activities: activities.entries.length,
+          finance: finance.items.length,
+          harvests: harvests.items.length,
+        }}
+        onClose={() => setShowExportModal(false)}
       />
 
       <AlertModal alert={webAlert} onClose={() => setWebAlert(null)} />

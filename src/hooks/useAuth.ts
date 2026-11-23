@@ -1,6 +1,7 @@
 import {
-  createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword,
-  signOut, GoogleAuthProvider, signInWithCredential, signInWithPopup, updateProfile, type User,
+  createUserWithEmailAndPassword, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail,
+  signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithCredential, signInWithPopup,
+  updateProfile, type User,
 } from 'firebase/auth';
 import { useCallback, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
@@ -63,6 +64,29 @@ export function useAuth() {
     if (displayName && cred.user) {
       await updateProfile(cred.user, { displayName }).catch(() => {});
     }
+    if (cred.user) {
+      // Trigger Firebase verification email (configurable under bhoomishakti.in in Firebase Console);
+      // fall back to default verification link if custom domain isn't yet allowlisted.
+      await sendEmailVerification(cred.user, {
+        url: 'https://bhoomishakti.in',
+        handleCodeInApp: false,
+      }).catch(() => sendEmailVerification(cred.user).catch(() => {}));
+    }
+  }, [requireAuth]);
+
+  const resendEmailVerification = useCallback(async (): Promise<boolean> => {
+    const currentUser = requireAuth().currentUser;
+    if (!currentUser || currentUser.emailVerified) return false;
+    try {
+      await sendEmailVerification(currentUser, {
+        url: 'https://bhoomishakti.in',
+        handleCodeInApp: false,
+      });
+      return true;
+    } catch {
+      await sendEmailVerification(currentUser);
+      return true;
+    }
   }, [requireAuth]);
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -92,6 +116,7 @@ export function useAuth() {
 
   return {
     user, loading, isFirebaseConfigured,
-    signUp, signIn, signOutUser, resetPassword, signInWithGoogleWeb, signInWithGoogleIdToken,
+    signUp, signIn, signOutUser, resetPassword, resendEmailVerification,
+    signInWithGoogleWeb, signInWithGoogleIdToken,
   };
 }

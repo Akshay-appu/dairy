@@ -5,6 +5,7 @@ import { FormField } from '../components/FormField';
 import { FormModal } from '../components/FormModal';
 import { authErrorKey, useAuth } from '../hooks/useAuth';
 import { Copy } from '../i18n/copy';
+import { notifyBhoomiEmailService } from '../services/notifications';
 import { shared } from '../styles/shared';
 
 type Mode = 'signIn' | 'signUp';
@@ -40,7 +41,12 @@ export function AuthScreen({
     setBusy(true);
     try {
       if (mode === 'signUp') {
-        await auth.signUp(email.trim(), password);
+        const cleanEmail = email.trim();
+        await auth.signUp(cleanEmail, password);
+        void notifyBhoomiEmailService({
+          event: 'account_created',
+          email: cleanEmail,
+        });
       } else {
         await auth.signIn(email.trim(), password);
       }

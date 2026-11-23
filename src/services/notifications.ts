@@ -2,11 +2,31 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CropSchedule } from '../db/cropSchedulesRepo';
-import { CropGrowthProfile } from '../components/CropStageCalendar';
+import { CropGrowthProfile } from '../data/cropProfiles';
 import { Language } from '../i18n/copy';
 
 const DAILY_REMINDER_KEY = '@bhoomi_daily_reminder_enabled';
 export const FARM_REMINDERS_CHANNEL_ID = 'farm-reminders';
+
+export type BhoomiEmailEventType = 'account_created' | 'report_requested';
+
+export type BhoomiEmailNotifyPayload = {
+  event: BhoomiEmailEventType;
+  email: string;
+  farmerName?: string;
+  village?: string;
+  workspaceName?: string;
+  reportFormat?: 'pdf' | 'csv';
+  language?: Language;
+  timestamp?: string;
+};
+
+export type BhoomiEmailNotifyResult = {
+  sent: boolean;
+  skipped?: boolean;
+  statusCode?: number;
+  reason?: string;
+};
 
 let isHandlerConfigured = false;
 
@@ -15,11 +35,11 @@ export function setupNotificationHandler(): void {
   try {
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
-        shouldShowAlert: true,
         shouldShowBanner: true,
         shouldShowList: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
+        priority: Notifications.AndroidNotificationPriority.MAX,
       }),
     });
     isHandlerConfigured = true;
@@ -33,12 +53,24 @@ export async function setupNotificationChannels(): Promise<void> {
   try {
     await Notifications.setNotificationChannelAsync(FARM_REMINDERS_CHANNEL_ID, {
       name: 'Farm Reminders',
-      importance: Notifications.AndroidImportance.HIGH,
-      vibrationPattern: [0, 250, 250, 250],
+      description: 'Daily 7:00 PM farm diary reminders and morning crop stage milestone alerts',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 300, 200, 300, 200, 300],
       lightColor: '#1B5E20',
       sound: 'default',
+      enableLights: true,
       enableVibrate: true,
       showBadge: true,
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: false,
+      audioAttributes: {
+        usage: Notifications.AndroidAudioUsage.ALARM,
+        contentType: Notifications.AndroidAudioContentType.SONIFICATION,
+        flags: {
+          enforceAudibility: true,
+          requestHardwareAudioVideoSynchronization: false,
+        },
+      },
     });
   } catch (err) {
     console.warn('Failed to set up farm-reminders notification channel:', err);
@@ -68,33 +100,6 @@ export async function requestNotificationPermissions(): Promise<boolean> {
   }
 }
 
-export async function sendTestNotification(
-  title: string = '🌾 BhoomiShakti Farm Alert',
-  body: string = 'Test notification successful! Your mobile farm alerts and crop stage milestones are active.'
-): Promise<boolean> {
-  try {
-    const granted = await requestNotificationPermissions();
-    if (!granted && Platform.OS !== 'web') {
-      return false;
-    }
-    await setupNotificationChannels();
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title,
-        body,
-        sound: 'default',
-        color: '#1B5E20',
-        data: { type: 'test_alert', timestamp: Date.now() },
-      },
-      trigger: null,
-    });
-    return true;
-  } catch (err) {
-    console.warn('Failed to send test notification:', err);
-    return false;
-  }
-}
-
 export async function isDailyReminderEnabled(): Promise<boolean> {
   try {
     const value = await AsyncStorage.getItem(DAILY_REMINDER_KEY);
@@ -119,6 +124,7 @@ export async function setDailyReminderEnabled(
 
     const granted = await requestNotificationPermissions();
     if (!granted) {
+      await AsyncStorage.setItem(DAILY_REMINDER_KEY, 'false');
       return false;
     }
 
@@ -130,6 +136,9 @@ export async function setDailyReminderEnabled(
         title,
         body,
         sound: 'default',
+        priority: Notifications.AndroidNotificationPriority.MAX,
+        vibrate: [0, 300, 200, 300],
+        interruptionLevel: 'timeSensitive',
         color: '#1B5E20',
         data: { type: 'daily_diary_reminder' },
       },
@@ -197,7 +206,7 @@ export async function scheduleCropStageNotifications(
           ? `${profile.emoji} ${schedule.cropName}: ${stage.name} प्रारंभ`
           : `${profile.emoji} ${schedule.cropName}: Stage ${stage.stageNumber} Milestone (${stage.name})`;
 
-        const body = `💧 ${stage.irrigationReminder} | 🌾 ${stage.fertilizerReminder}`;
+        const body = `💧 ${stage.irrigationReminder} | 🌱 ${stage.fertilizerReminder}`;
 
         await Notifications.scheduleNotificationAsync({
           identifier,
@@ -205,6 +214,9 @@ export async function scheduleCropStageNotifications(
             title,
             body,
             sound: 'default',
+            priority: Notifications.AndroidNotificationPriority.MAX,
+            vibrate: [0, 300, 200, 300],
+            interruptionLevel: 'timeSensitive',
             color: '#1B5E20',
             data: {
               type: 'crop_stage_milestone',
@@ -237,5 +249,60 @@ export async function cancelCropStageNotifications(scheduleId: string): Promise<
     }
   } catch (err) {
     console.warn(`Failed to cancel notifications for schedule ${scheduleId}:`, err);
+  }
+}
+
+/**
+ * Optional webhook integration to notify bhoomishakti.in mail services when a
+ * farmer creates an account or exports/requests an email report.
+ * Never throws so offline or unconfigured environments remain unaffected.
+ */
+export async function notifyBhoomiEmailService(
+  payload: BhoomiEmailNotifyPayload
+): Promise<BhoomiEmailNotifyResult> {
+  const webhookUrl = process.env.EXPO_PUBLIC_EMAIL_NOTIFY_WEBHOOK_URL?.trim();
+  if (!webhookUrl) {
+    return { sent: false, skipped: true, reason: 'webhook_not_configured' };
+  }
+  if (!/^https?:\/\//i.test(webhookUrl)) {
+    return { sent: false, skipped: true, reason: 'invalid_webhook_url' };
+  }
+  const cleanEmail = payload.email.trim();
+  if (!cleanEmail) {
+    return { sent: false, skipped: true, reason: 'missing_email' };
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        ...payload,
+        email: cleanEmail,
+        source: 'bhoomishakti-diary-app',
+        domain: 'bhoomishakti.in',
+        timestamp: payload.timestamp ?? new Date().toISOString(),
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      return {
+        sent: false,
+        statusCode: response.status,
+        reason: `http_${response.status}`,
+      };
+    }
+    return { sent: true, statusCode: response.status };
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    return { sent: false, reason };
+  } finally {
+    clearTimeout(timer);
   }
 }

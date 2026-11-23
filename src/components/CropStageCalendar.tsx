@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -16,6 +18,14 @@ import {
   deleteCropSchedule,
 } from '../db/cropSchedulesRepo';
 import {
+  computeCropProfile,
+  CropGrowthProfile,
+  getCropEmoji,
+  POPULAR_CROP_PRESETS,
+  StageCategory,
+  StageDefinition,
+} from '../data/cropProfiles';
+import {
   scheduleCropStageNotifications,
   cancelCropStageNotifications,
 } from '../services/notifications';
@@ -25,28 +35,20 @@ import { useActiveLanguage } from '../i18n/LanguageContext';
 import { GREEN, LIGHT_GREEN, DANGER, INK, MUTED } from '../theme';
 import { shared } from '../styles/shared';
 
-export type StageCategory = 'Germination' | 'Vegetative' | 'Flowering/Fruiting' | 'Harvest';
-
-export interface StageDefinition {
-  stageNumber: number;
-  name: string;
-  category: StageCategory;
-  startDay: number;
-  endDay: number;
-  irrigationReminder: string;
-  fertilizerReminder: string;
-}
-
-export interface CropGrowthProfile {
-  crop: string;
-  emoji: string;
-  label: string;
-  totalDays: number;
-  stages: StageDefinition[];
-}
+export type { StageCategory, StageDefinition, CropGrowthProfile };
+export { computeCropProfile };
 
 function getTodayIso(): string {
   const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function isoDateDaysAgo(daysAgo: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
@@ -64,6 +66,16 @@ function parseLocalDate(dateStr: string): Date {
     }
   }
   return new Date();
+}
+
+function isStrictIsoDate(dateStr: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr.trim());
+  if (!m) return false;
+  const y = Number(m[1]);
+  const mo = Number(m[2]) - 1;
+  const d = Number(m[3]);
+  const parsed = new Date(y, mo, d);
+  return parsed.getFullYear() === y && parsed.getMonth() === mo && parsed.getDate() === d;
 }
 
 function addDays(baseDate: Date, days: number): Date {
@@ -88,365 +100,12 @@ function getDaysSinceSowing(sowingDateStr: string): number {
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 }
 
-function getCropEmoji(name: string): string {
-  const lower = name.toLowerCase().trim();
-  if (lower.includes('paddy') || lower.includes('rice') || lower.includes('ಭತ್ತ') || lower.includes('धान') || lower.includes('चावल')) return '🌾';
-  if (lower.includes('wheat') || lower.includes('ಗೋಧಿ') || lower.includes('गेहूं')) return '🌿';
-  if (lower.includes('cotton') || lower.includes('ಹತ್ತಿ') || lower.includes('कपास')) return '☁️';
-  if (lower.includes('tomato') || lower.includes('ಟೊಮ್ಯಾಟೊ') || lower.includes('टमाटर')) return '🍅';
-  if (lower.includes('ragi') || lower.includes('ರಾಗಿ') || lower.includes('रागी') || lower.includes('millet')) return '🥣';
-  if (lower.includes('maize') || lower.includes('corn') || lower.includes('ಮೆಕ್ಕೆಜೋಳ') || lower.includes('मक्का')) return '🌽';
-  if (lower.includes('chilli') || lower.includes('chili') || lower.includes('ಮೆಣಸಿನಕಾಯಿ') || lower.includes('मिर्च')) return '🌶️';
-  if (lower.includes('sugarcane') || lower.includes('ಕಬ್ಬು') || lower.includes('गन्ना')) return '🎋';
-  if (lower.includes('onion') || lower.includes('ಈರುಳ್ಳಿ') || lower.includes('प्याज')) return '🧅';
-  if (lower.includes('potato') || lower.includes('ಆಲೂಗಡ್ಡೆ') || lower.includes('आलू')) return '🥔';
-  if (lower.includes('pulse') || lower.includes('soy') || lower.includes('ದಾಳ') || lower.includes('दाल') || lower.includes('ಗ್ರಾಮ')) return '🌱';
-  if (lower.includes('mango') || lower.includes('ಮಾವಿನ') || lower.includes('आम')) return '🥭';
-  return '🌱';
-}
-
-function getPaddyProfile(displayName: string, language: Language): CropGrowthProfile {
-  return {
-    crop: displayName,
-    emoji: '🌾',
-    label: displayName,
-    totalDays: 130,
-    stages: [
-      {
-        stageNumber: 1,
-        name: language === 'kn' ? 'ಮೊಳಕೆಯೊಡೆಯುವಿಕೆ ಮತ್ತು ಸಸಿ ಮಡಿ' : language === 'hi' ? 'अंकुरण एवं नर्सरी' : 'Germination & Seedling',
-        category: 'Germination',
-        startDay: 0,
-        endDay: 20,
-        irrigationReminder: language === 'kn'
-          ? 'ನರ್ಸರಿಯಲ್ಲಿ ಆಳವಿಲ್ಲದ 2-3 ಸೆಂ.ಮೀ ನೀರನ್ನು ಕಾಪಾಡಿಕೊಳ್ಳಿ. ಸಸಿ ಮುಳುಗದಂತೆ ಅಥವಾ ಒಣಗದಂತೆ ನೋಡಿಕೊಳ್ಳಿ.'
-          : language === 'hi'
-          ? 'नर्सरी में 2-3 सेमी उथला पानी बनाए रखें। सूखा पड़ने या डूबने से बचाएं।'
-          : 'Maintain shallow water (2-3 cm) in nursery bed. Prevent drying or submergence.',
-        fertilizerReminder: language === 'kn'
-          ? 'ನಾಟಿಯ ಸಮಯದಲ್ಲಿ ಶಿಫಾರಸು ಮಾಡಿದ ಡಿಎಪಿ/ಎನ್‌ಪಿಕೆ ಮತ್ತು ಸತುವಿನ ಸಲ್ಫೇಟ್ (25 ಕೆಜಿ/ಹೆಕ್ಟೇರ್) ನೀಡಿ.'
-          : language === 'hi'
-          ? 'रोपाई के समय डीएपी/एनपीके का बेसल डोज + जिंक सल्फेट (25 किग्रा/हेक्टेयर) डालें।'
-          : 'Basal dose of DAP/NPK + Zinc Sulphate (25 kg/ha) during transplanting.',
-      },
-      {
-        stageNumber: 2,
-        name: language === 'kn' ? 'ತೆಂಡೆ ಹೊಡೆಯುವಿಕೆ ಮತ್ತು ಸಸ್ಯಕ ಬೆಳವಣಿಗೆ' : language === 'hi' ? 'कल्ले निकलना एवं वानस्पतिक वृद्धि' : 'Tillering & Vegetative',
-        category: 'Vegetative',
-        startDay: 21,
-        endDay: 55,
-        irrigationReminder: language === 'kn'
-          ? 'ಹೊಲದಲ್ಲಿ 3-5 ಸೆಂ.ಮೀ ನೀರನ್ನು ಕಾಪಾಡಿಕೊಳ್ಳಿ; ಪರ್ಯಾಯವಾಗಿ ಒಣಗಿಸುವ ಮತ್ತು ನೀರುಣಿಸುವ ವಿಧಾನವನ್ನು ಅಳವಡಿಸಿ.'
-          : language === 'hi'
-          ? 'खेत में 3-5 सेमी पानी का स्तर रखें; बारी-बारी से गीला और सूखा करने की विधि अपनाएं।'
-          : 'Maintain 3-5 cm standing water layer; adopt alternate wetting and drying.',
-        fertilizerReminder: language === 'kn'
-          ? 'ಸಕ್ರಿಯ ತೆಂಡೆ ಹಂತದಲ್ಲಿ (ದಿನ 25-30) ಯೂರಿಯಾದೊಂದಿಗೆ ಮೊದಲ ಮೇಲುಗೊಬ್ಬರ ನೀಡಿ.'
-          : language === 'hi'
-          ? 'सक्रिय कल्ले फूटने के समय (दिन 25-30) यूरिया की पहली टॉप-ड्रेसिंग करें।'
-          : 'First top dressing with Urea (Nitrogen) at active tillering (Day 25-30).',
-      },
-      {
-        stageNumber: 3,
-        name: language === 'kn' ? 'ತೆನೆ ಬರುವುದು ಮತ್ತು ಹೂವಾಡುವ ಹಂತ' : language === 'hi' ? 'बाली निकलना एवं फूल आना' : 'Panicle & Flowering',
-        category: 'Flowering/Fruiting',
-        startDay: 56,
-        endDay: 95,
-        irrigationReminder: language === 'kn'
-          ? 'ಅತ್ಯಂತ ನಿರ್ಣಾಯಕ ಹಂತ! ಮಣ್ಣು ಒಣಗದಂತೆ ನಿರಂತರವಾಗಿ 5 ಸೆಂ.ಮೀ ನೀರನ್ನು ನಿಲ್ಲಿಸಿ.'
-          : language === 'hi'
-          ? 'अति महत्वपूर्ण अवस्था! मिट्टी सूखने न दें, 5 सेमी पानी का स्तर लगातार बनाए रखें।'
-          : 'Critical water stage! Never let soil dry out. Keep 5 cm continuous water.',
-        fertilizerReminder: language === 'kn'
-          ? 'ಕಾಳು ಗಟ್ಟಿಯಾಗಿ ತುಂಬಿಕೊಳ್ಳಲು ಪೊಟ್ಯಾಶ್ ಗೊಬ್ಬರವನ್ನು (MOP) ನೀಡಿ.'
-          : language === 'hi'
-          ? 'दाने के अच्छे भराव के लिए पोटाश (MOP) का छिड़काव/प्रयोग करें।'
-          : 'Apply Muriate of Potash (MOP) to maximize grain filling and reduce lodging.',
-      },
-      {
-        stageNumber: 4,
-        name: language === 'kn' ? 'ಕಾಳು ಪಕ್ವತೆ ಮತ್ತು ಕೊಯ್ಲು' : language === 'hi' ? 'दाना पकना एवं कटाई' : 'Grain Ripening & Harvest',
-        category: 'Harvest',
-        startDay: 96,
-        endDay: 130,
-        irrigationReminder: language === 'kn'
-          ? 'ಕೊಯ್ಲಿಗೆ 10-14 ದಿನಗಳ ಮೊದಲು ಹೊಲದಲ್ಲಿನ ನೀರನ್ನು ಸಂಪೂರ್ಣವಾಗಿ ಬಸಿದುಬಿಡಿ.'
-          : language === 'hi'
-          ? 'कटाई से 10-14 दिन पहले खेत से पानी पूरी तरह निकाल दें।'
-          : 'Drain standing water completely 10-14 days before harvest.',
-        fertilizerReminder: language === 'kn'
-          ? 'ಎಲ್ಲಾ ರಸಗೊಬ್ಬರಗಳನ್ನು ನಿಲ್ಲಿಸಿ. ಶೇ. 85-90 ರಷ್ಟು ತೆನೆಗಳು ಬಂಗಾರದ ಬಣ್ಣಕ್ಕೆ ತಿರುಗಿದಾಗ ಕೊಯ್ಲು ಮಾಡಿ.'
-          : language === 'hi'
-          ? 'उर्वरक बंद करें। 85-90% बालियां सुनहरी होने पर कटाई करें।'
-          : 'Stop all fertilizers. Harvest when 85-90% panicles turn golden straw color.',
-      },
-    ],
-  };
-}
-
-function getWheatProfile(displayName: string, language: Language): CropGrowthProfile {
-  return {
-    crop: displayName,
-    emoji: '🌿',
-    label: displayName,
-    totalDays: 120,
-    stages: [
-      {
-        stageNumber: 1,
-        name: language === 'kn' ? 'ಮೊಳಕೆ ಮತ್ತು ಕಿರೀಟ ಬೇರು ಹಂತ (CRI)' : language === 'hi' ? 'अंकुरण एवं ताज जड़ अवस्था (CRI)' : 'Germination & Crown Root (CRI)',
-        category: 'Germination',
-        startDay: 0,
-        endDay: 21,
-        irrigationReminder: language === 'kn'
-          ? 'ಕಿರೀಟ ಬೇರು ಹಂತದಲ್ಲಿ (ದಿನ 20-22) ಮೊದಲ ನೀರಾವರಿ ನೀಡುವುದು ಅತಿ ಮುಖ್ಯ. ತಡಮಾಡಬೇಡಿ.'
-          : language === 'hi'
-          ? 'ताज जड़ अवस्था (दिन 20-22) पर पहली सिंचाई अत्यंत आवश्यक है, देरी न करें।'
-          : 'Most critical irrigation at Crown Root Initiation (Day 20-22). Do not delay.',
-        fertilizerReminder: language === 'kn'
-          ? 'ಬಿತ್ತನೆ ಸಮಯದಲ್ಲಿ ಶಿಫಾರಸು ಮಾಡಿದ ಪೂರ್ಣ ರಂಜಕ ಮತ್ತು ಪೊಟ್ಯಾಶ್ ಹಾಗೂ 1/3 ಸಾರಜನಕ ನೀಡಿ.'
-          : language === 'hi'
-          ? 'बुआई के समय फास्फोरस व पोटाश की पूरी मात्रा + 1/3 नाइट्रोजन का प्रयोग करें।'
-          : 'Full basal dose of P & K + 1/3rd Nitrogen at sowing.',
-      },
-      {
-        stageNumber: 2,
-        name: language === 'kn' ? 'ತೆಂಡೆ ಮತ್ತು ಗಿಣ್ಣು ಬೆಳವಣಿಗೆ' : language === 'hi' ? 'कल्ले निकलना एवं गांठ बनना' : 'Tillering & Jointing',
-        category: 'Vegetative',
-        startDay: 22,
-        endDay: 60,
-        irrigationReminder: language === 'kn'
-          ? 'ತೆಂಡೆ ಹಂತದಲ್ಲಿ (ದಿನ 40-45) ಎರಡನೇ ಮತ್ತು ಗಿಣ್ಣು ಹಂತದಲ್ಲಿ (ದಿನ 60) ಮೂರನೇ ನೀರಾವರಿ ನೀಡಿ.'
-          : language === 'hi'
-          ? 'कल्ले फूटते समय (दिन 40-45) दूसरी और गांठ बनते समय (दिन 60) तीसरी सिंचाई करें।'
-          : 'Second irrigation at tillering (Day 40-45) and third at jointing (Day 60).',
-        fertilizerReminder: language === 'kn'
-          ? 'ಎರಡನೇ ನೀರಾವರಿಗೆ ಮುನ್ನ ಯೂರಿಯಾದ ಮೊದಲ ಮೇಲುಗೊಬ್ಬರ ನೀಡಿ.'
-          : language === 'hi'
-          ? 'दूसरी सिंचाई से पहले यूरिया की पहली टॉप-ड्रेसिंग करें।'
-          : 'Apply first top dressing of Urea before second irrigation.',
-      },
-      {
-        stageNumber: 3,
-        name: language === 'kn' ? 'ತೆನೆ ಹೊರಬರುವುದು ಮತ್ತು ಹೂವಾಡುವಿಕೆ' : language === 'hi' ? 'बाली निकलना एवं फूल आना' : 'Heading & Flowering',
-        category: 'Flowering/Fruiting',
-        startDay: 61,
-        endDay: 90,
-        irrigationReminder: language === 'kn'
-          ? 'ಹೂವಾಡುವ ಹಂತದಲ್ಲಿ ಶಾಂತ ವಾತಾವರಣವಿರುವಾಗ ನೀರುಣಿಸಿ, ಬೆಳೆ ಮಲಗದಂತೆ ಎಚ್ಚರವಹಿಸಿ.'
-          : language === 'hi'
-          ? 'फूल आते समय शांत दिनों में हल्की सिंचाई करें ताकि फसल गिरे नहीं।'
-          : 'Irrigate at flowering/boot stage on calm days to prevent lodging.',
-        fertilizerReminder: language === 'kn'
-          ? 'ಕಾಳು ದಪ್ಪವಾಗಲು 13:0:45 ಪೊಟ್ಯಾಸಿಯಮ್ ನೈಟ್ರೇಟ್ ದ್ರಾವಣವನ್ನು ಸಿಂಪಡಿಸಿ.'
-          : language === 'hi'
-          ? 'मोटे दानों के लिए 13:0:45 (पोटेशियम नाइट्रेट) का पर्णीय छिड़काव करें।'
-          : 'Foliar spray of 13:0:45 (Potassium Nitrate) to ensure bold grain development.',
-      },
-      {
-        stageNumber: 4,
-        name: language === 'kn' ? 'ಕಾಳು ಗಟ್ಟಿಯಾಗುವುದು ಮತ್ತು ಕೊಯ್ಲು' : language === 'hi' ? 'दाना भरना एवं कटाई' : 'Grain Filling & Harvest',
-        category: 'Harvest',
-        startDay: 91,
-        endDay: 120,
-        irrigationReminder: language === 'kn'
-          ? 'ಕಾಳು ಗಟ್ಟಿಯಾಗಲು ಅಂತಿಮ ಲಘು ನೀರಾವರಿ ನೀಡಿ; ಕೊಯ್ಲಿಗೆ 10 ದಿನ ಮೊದಲು ನಿಲ್ಲಿಸಿ.'
-          : language === 'hi'
-          ? 'दाना भरते समय अंतिम हल्की सिंचाई करें; कटाई से 10 दिन पहले पानी बंद करें।'
-          : 'Terminal light irrigation at dough stage; cease water 10 days before harvest.',
-        fertilizerReminder: language === 'kn'
-          ? 'ಕಾಳುಗಳಲ್ಲಿ ಶೇ. 12-14 ತೇವಾಂಶವಿದ್ದಾಗ ಕೊಯ್ಲು ಮಾಡಿ ಒಣಗಿಸಿ.'
-          : language === 'hi'
-          ? 'दानों में 12-14% नमी रहने पर कटाई करें और सुखाएं।'
-          : 'Harvest when grains resist fingernail denting and dry to 12% moisture.',
-      },
-    ],
-  };
-}
-
-function getCottonProfile(displayName: string, language: Language): CropGrowthProfile {
-  return {
-    crop: displayName,
-    emoji: '☁️',
-    label: displayName,
-    totalDays: 160,
-    stages: [
-      {
-        stageNumber: 1,
-        name: language === 'kn' ? 'ಮೊಳಕೆ ಮತ್ತು ಆರಂಭಿಕ ಬೆಳವಣಿಗೆ' : language === 'hi' ? 'अंकुरण एवं प्रारंभिक विकास' : 'Germination & Seedling',
-        category: 'Germination',
-        startDay: 0,
-        endDay: 30,
-        irrigationReminder: language === 'kn'
-          ? 'ಬೀಜ ಮೊಳಕೆಯೊಡೆಯಲು ಲಘು ನೀರು ನೀಡಿ, ನೀರು ನಿಲ್ಲದಂತೆ ಎಚ್ಚರವಹಿಸಿ.'
-          : language === 'hi'
-          ? 'अंकुरण के लिए हल्की सिंचाई करें, खेत में पानी रुकने न दें।'
-          : 'Light irrigations; prevent soil crusting and stagnant water near tap roots.',
-        fertilizerReminder: language === 'kn'
-          ? 'ಸಾಲುಗಳಲ್ಲಿ ಬಿತ್ತನೆ ಮಾಡುವಾಗ ಸಾವಯವ ಗೊಬ್ಬರ ಮತ್ತು ಮೂಲ ಎನ್‌ಪಿಕೆ ನೀಡಿ.'
-          : language === 'hi'
-          ? 'बुआई के समय कतारों में गोबर की खाद एवं बेसल एनपीके दें।'
-          : 'Basal dose of FYM + 25% Nitrogen + 100% Phosphorus and Potash.',
-      },
-      {
-        stageNumber: 2,
-        name: language === 'kn' ? 'ಸಸ್ಯಕ ಬೆಳವಣಿಗೆ ಮತ್ತು ಕವಲುಗಳು' : language === 'hi' ? 'वानस्पतिक वृद्धि एवं शाखाएं' : 'Vegetative & Square Formation',
-        category: 'Vegetative',
-        startDay: 31,
-        endDay: 70,
-        irrigationReminder: language === 'kn'
-          ? 'ಗಿಡಗಳು ಸೊಂಪಾಗಿ ಬೆಳೆಯಲು 10-15 ದಿನಗಳಿಗೊಮ್ಮೆ ನಿಯಮಿತ ನೀರು ಒದಗಿಸಿ.'
-          : language === 'hi'
-          ? 'पौधों के अच्छे फैलाव के लिए 10-15 दिनों के अंतराल पर सिंचाई करें।'
-          : 'Maintain moderate moisture; avoid excessive moisture that causes vegetative rank growth.',
-        fertilizerReminder: language === 'kn'
-          ? 'ಹೂಮೊಗ್ಗು ಹಂತದಲ್ಲಿ ಯೂರಿಯಾದ ಮೊದಲ ಮೇಲುಗೊಬ್ಬರ ನೀಡಿ ಕಳೆ ತೆಗೆಯಿರಿ.'
-          : language === 'hi'
-          ? 'कली बनते समय यूरिया की पहली टॉप-ड्रेसिंग करें और निराई करें।'
-          : 'First top dressing with Urea (Nitrogen) at square initiation.',
-      },
-      {
-        stageNumber: 3,
-        name: language === 'kn' ? 'ಹೂ ಮತ್ತು ಕಾಯಿ ಕಟ್ಟುವ ಹಂತ' : language === 'hi' ? 'फूल एवं टिंडे बनना' : 'Flowering & Boll Development',
-        category: 'Flowering/Fruiting',
-        startDay: 71,
-        endDay: 120,
-        irrigationReminder: language === 'kn'
-          ? 'ಅತ್ಯಂತ ಸೂಕ್ಷ್ಮ ಹಂತ! ಹೂವು ಮತ್ತು ಕಾಯಿ ಉದುರದಂತೆ ನಿಯಮಿತ ತೇವಾಂಶ ಕಾಪಾಡಿ.'
-          : language === 'hi'
-          ? 'सबसे संवेदनशील अवस्था! फूल व टिंडे झड़ने से रोकने के लिए नमी बनाए रखें।'
-          : 'Most water-sensitive period! Water stress causes square and boll shedding.',
-        fertilizerReminder: language === 'kn'
-          ? 'ಕಾಯಿ ದೊಡ್ಡದಾಗಲು ಮತ್ತು ಉದುರುವುದು ತಡೆಯಲು ಬೋರಾನ್ ಮತ್ತು ಮೆಗ್ನೀಸಿಯಮ್ ಸಲ್ಫೇಟ್ ಸಿಂಪಡಿಸಿ.'
-          : language === 'hi'
-          ? 'टिंडों के अच्छे विकास और झड़न रोकने के लिए बोरॉन व मैग्नीशियम सल्फेट का छिड़काव करें।'
-          : 'Foliar spray of 1% Magnesium Sulphate + 0.1% Boron to prevent boll dropping.',
-      },
-      {
-        stageNumber: 4,
-        name: language === 'kn' ? 'ಕಾಯಿ ಒಡೆಯುವುದು ಮತ್ತು ಹತ್ತಿ ಬಿಡಿಸುವುದು' : language === 'hi' ? 'टिंडे खुलना एवं चुनाई' : 'Boll Bursting & Picking',
-        category: 'Harvest',
-        startDay: 121,
-        endDay: 160,
-        irrigationReminder: language === 'kn'
-          ? 'ಶೇ. 20 ರಷ್ಟು ಕಾಯಿಗಳು ಒಡೆದ ನಂತರ ನೀರು ನಿಲ್ಲಿಸಿ.'
-          : language === 'hi'
-          ? '20% टिंडे खुलने के बाद सिंचाई पूरी तरह बंद कर दें।'
-          : 'Cease irrigation when ~20% of bolls have burst open.',
-        fertilizerReminder: language === 'kn'
-          ? 'ಬಿಸಿಲು ಚೆನ್ನಾಗಿರುವಾಗ ಶುಷ್ಕ ಹತ್ತಿ ಬಿಡಿಸಿ, ಎಲೆ ಕಸ ಸೇರದಂತೆ ಕಾಳಜಿ ವಹಿಸಿ.'
-          : language === 'hi'
-          ? 'धूप वाले दिन सूखी कपास की चुनाई करें, पत्तियां या कचरा न मिलने दें।'
-          : 'Pick clean, mature seed cotton after morning dew evaporates.',
-      },
-    ],
-  };
-}
-
-function getGenericCropProfile(
-  displayName: string,
-  emoji: string,
-  t: Copy,
-  language: Language
-): CropGrowthProfile {
-  return {
-    crop: displayName,
-    emoji,
-    label: displayName,
-    totalDays: 110,
-    stages: [
-      {
-        stageNumber: 1,
-        name: `${displayName} - ${t.stageGermination}`,
-        category: 'Germination',
-        startDay: 0,
-        endDay: 15,
-        irrigationReminder: language === 'kn'
-          ? `${displayName} ಬೀಜಗಳು ಸರಾಗವಾಗಿ ಮೊಳಕೆಯೊಡೆಯಲು ಮಣ್ಣಿನಲ್ಲಿ ಸಮತೋಲಿತ ತೇವಾಂಶ ಕಾಪಾಡಿ. ನೀರು ನಿಲ್ಲದಂತೆ ಎಚ್ಚರವಹಿಸಿ.`
-          : language === 'hi'
-          ? `${displayName} के स्वस्थ अंकुरण के लिए खेत में हल्की व समान नमी बनाए रखें। जलभराव से बचें।`
-          : `Maintain light and uniform seedbed moisture for ${displayName} seed emergence. Avoid soil crusting and standing water.`,
-        fertilizerReminder: language === 'kn'
-          ? 'ಆರಂಭಿಕ ಬೇರುಗಳ ಬಲವರ್ಧನೆಗಾಗಿ ಬಿತ್ತನೆ ಸಮಯದಲ್ಲಿ ಚೆನ್ನಾಗಿ ಕೊಳೆತ ಕೊಟ್ಟಿಗೆ ಗೊಬ್ಬರ ಅಥವಾ ಆರಂಭಿಕ ಎನ್‌ಪಿಕೆ/ಡಿಎಪಿ ನೀಡಿ.'
-          : language === 'hi'
-          ? 'मजबूत जड़ प्रणाली के लिए बुआई के समय अच्छी सड़ी गोबर खाद या बेसल एनपीके/डीएपी का प्रयोग करें।'
-          : 'Apply well-decomposed organic manure or balanced starter NPK/DAP to stimulate strong seedling root initiation.',
-      },
-      {
-        stageNumber: 2,
-        name: `${displayName} - ${t.stageVegetative}`,
-        category: 'Vegetative',
-        startDay: 16,
-        endDay: 50,
-        irrigationReminder: language === 'kn'
-          ? 'ಸಸ್ಯಕ ಬೆಳವಣಿಗೆಯ ಸಮಯದಲ್ಲಿ ಮಣ್ಣಿನ ತೇವಾಂಶವನ್ನು ಗಮನಿಸಿ ನಿಯಮಿತವಾಗಿ ನೀರುಣಿಸಿ.'
-          : language === 'hi'
-          ? 'सक्रिय वानस्पतिक वृद्धि के समय आवश्यकतानुसार समय पर गहरी सिंचाई करें।'
-          : 'Provide consistent irrigations matching soil moisture and weather conditions during peak vegetative foliage expansion.',
-        fertilizerReminder: language === 'kn'
-          ? 'ಗಿಡಗಳ ಸಮೃದ್ಧ ಬೆಳವಣಿಗೆಗೆ ಸಾರಜನಕಯುಕ್ತ ಮೇಲುಗೊಬ್ಬರ ಅಥವಾ ದ್ರವರೂಪದ ಜೀವಾವೃತ/ಪಂಚಗವ್ಯ ನೀಡಿ.'
-          : language === 'hi'
-          ? 'अच्छे वानस्पतिक फैलाव के लिए नाइट्रोजन युक्त खाद (यूरिया) या तरल जीवामृत का छिड़काव/प्रयोग करें।'
-          : 'Apply nitrogenous top dressing or organic liquid bio-nutrients (Jeevamrutha) to foster vigorous shoot and branch growth.',
-      },
-      {
-        stageNumber: 3,
-        name: `${displayName} - ${t.stageFlowering}`,
-        category: 'Flowering/Fruiting',
-        startDay: 51,
-        endDay: 85,
-        irrigationReminder: language === 'kn'
-          ? 'ಅತ್ಯಂತ ಸೂಕ್ಷ್ಮ ಹಂತ! ಹೂವು ಮತ್ತು ಕಾಯಿ ಉದುರುವುದನ್ನು ತಡೆಯಲು ನಿಯಮಿತ ನೀರಾವರಿ ನೀಡಿ ತೇವಾಂಶದ ಕೊರತೆಯಾಗದಂತೆ ನೋಡಿಕೊಳ್ಳಿ.'
-          : language === 'hi'
-          ? 'अति संवेदनशील अवस्था! फूल व फल गिरने से रोकने के लिए जड़ क्षेत्र में निरंतर नमी बनाए रखें।'
-          : 'Most moisture-critical phase: never subject the root zone to moisture stress during flowering and fruit/seed filling.',
-        fertilizerReminder: language === 'kn'
-          ? 'ಉತ್ತಮ ಪರಾಗಸ್ಪರ್ಶ ಮತ್ತು ಕಾಯಿ ಕಟ್ಟುವಿಕೆಗಾಗಿ ಪೊಟ್ಯಾಶ್ ಮತ್ತು ಲಘು ಪೋಷಕಾಂಶಗಳ (ಬೋರಾನ್/ಜಿಂಕ್) ಸಿಂಪಡಣೆ ಮಾಡಿ.'
-          : language === 'hi'
-          ? 'उत्तम फलन और दाना/फल भराव के लिए घुलनशील पोटाश एवं सूक्ष्म पोषक तत्वों (बोरॉन/जिंक) का पर्णीय छिड़काव करें।'
-          : 'Apply foliar spray of Potassium and chelated micronutrients (Boron/Zinc) to prevent flower drop and maximize grain/fruit density.',
-      },
-      {
-        stageNumber: 4,
-        name: `${displayName} - ${t.stageHarvest}`,
-        category: 'Harvest',
-        startDay: 86,
-        endDay: 110,
-        irrigationReminder: language === 'kn'
-          ? 'ಬೆಳೆ ಸಮವಾಗಿ ಪಕ್ವವಾಗಲು ಕೊಯ್ಲಿಗೆ 10-14 ದಿನಗಳ ಮುಂಚಿತವಾಗಿ ನೀರುಣಿಸುವುದನ್ನು ನಿಲ್ಲಿಸಿ.'
-          : language === 'hi'
-          ? 'फसल को एक समान पकाने और सूखने के लिए कटाई से 10-14 दिन पूर्व सिंचाई रोक दें।'
-          : 'Gradually withdraw irrigation 10-14 days prior to harvest to promote uniform ripening, drying, and easy harvesting.',
-        fertilizerReminder: language === 'kn'
-          ? 'ಎಲ್ಲಾ ರಸಗೊಬ್ಬರಗಳನ್ನು ನಿಲ್ಲಿಸಿ. ಒಣ ಹವಾಮಾನದಲ್ಲಿ ಪಕ್ವವಾದ ಬೆಳೆಯನ್ನು ಕೊಯ್ಲು ಮಾಡಿ ಸೂಕ್ತವಾಗಿ ಒಣಗಿಸಿ.'
-          : language === 'hi'
-          ? 'सभी रासायनिक/उर्वरक प्रयोग बंद करें। साफ व शुष्क मौसम में परिपक्व फसल की कटाई कर सुरक्षित भंडारण करें।'
-          : 'Cease all fertilizer applications. Harvest at peak biological maturity during clear, sunny weather and dry safely.',
-      },
-    ],
-  };
-}
-
-function computeCropProfile(
-  rawCropName: string,
-  t: Copy,
-  language: Language
-): CropGrowthProfile {
-  const cleanName = rawCropName.trim();
-  const lower = cleanName.toLowerCase();
-  const displayName = cleanName || (language === 'kn' ? 'ಬೆಳೆ' : language === 'hi' ? 'फसल' : 'Crop');
-
-  if (lower.includes('paddy') || lower.includes('rice') || lower.includes('ಭತ್ತ') || lower.includes('धान')) {
-    return getPaddyProfile(displayName, language);
-  }
-  if (lower.includes('wheat') || lower.includes('ಗೋಧಿ') || lower.includes('गेहूं')) {
-    return getWheatProfile(displayName, language);
-  }
-  if (lower.includes('cotton') || lower.includes('ಹತ್ತಿ') || lower.includes('कपास')) {
-    return getCottonProfile(displayName, language);
-  }
-
-  const emoji = getCropEmoji(displayName);
-  return getGenericCropProfile(displayName, emoji, t, language);
+function parseCustomTotalDays(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const parsed = parseInt(trimmed, 10);
+  if (Number.isNaN(parsed) || parsed < 20 || parsed > 730) return null;
+  return parsed;
 }
 
 function getStageCategoryLabel(category: StageCategory, t: Copy): string {
@@ -481,32 +140,35 @@ export function CropStageCalendar({
   const t = propT || activeLangContext.t;
   const language = propLanguage || activeLangContext.language || 'en';
 
-  const [cropName, setCropName] = useState<string>('Paddy');
+  const [cropName, setCropName] = useState<string>(POPULAR_CROP_PRESETS[0].labels[language]);
   const [sowingDate, setSowingDate] = useState<string>(getTodayIso());
+  const [daysCultivatedInput, setDaysCultivatedInput] = useState<string>('0');
+  const [customTotalDaysInput, setCustomTotalDaysInput] = useState<string>('');
   const [savedSchedules, setSavedSchedules] = useState<CropSchedule[]>([]);
   const [activeScheduleId, setActiveScheduleId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const profile = useMemo(
-    () => computeCropProfile(cropName, t, language),
-    [cropName, t, language]
+  const loadedWorkspaceRef = useRef<string | null>(null);
+
+  const parsedCustomTotalDays = useMemo(
+    () => parseCustomTotalDays(customTotalDaysInput),
+    [customTotalDaysInput]
   );
 
-  const loadSchedules = useCallback(async () => {
+  const profile = useMemo(
+    () => computeCropProfile(cropName, language, parsedCustomTotalDays),
+    [cropName, language, parsedCustomTotalDays]
+  );
+
+  const refreshSchedules = useCallback(async () => {
     if (!db) return;
     try {
       const list = await listCropSchedules(db, workspaceId);
       setSavedSchedules(list);
-      if (list.length > 0 && !activeScheduleId) {
-        const first = list[0];
-        setActiveScheduleId(first.id);
-        setCropName(first.cropName);
-        setSowingDate(first.sowingDate);
-      }
     } catch (err) {
       console.warn('Could not load crop schedules:', err);
     }
-  }, [db, workspaceId, activeScheduleId]);
+  }, [db, workspaceId]);
 
   useEffect(() => {
     let alive = true;
@@ -516,48 +178,63 @@ export function CropStageCalendar({
         const list = await listCropSchedules(db, workspaceId);
         if (!alive) return;
         setSavedSchedules(list);
-        if (list.length > 0 && !activeScheduleId) {
-          const first = list[0];
-          setActiveScheduleId(first.id);
-          setCropName(first.cropName);
-          setSowingDate(first.sowingDate);
+        if (loadedWorkspaceRef.current !== workspaceId) {
+          loadedWorkspaceRef.current = workspaceId;
+          if (list.length > 0) {
+            const first = list[0];
+            setActiveScheduleId(first.id);
+            setCropName(first.cropName);
+            setSowingDate(first.sowingDate);
+            setDaysCultivatedInput(String(Math.max(0, getDaysSinceSowing(first.sowingDate))));
+            setCustomTotalDaysInput(first.totalDays != null ? String(first.totalDays) : '');
+          } else {
+            setActiveScheduleId(null);
+            setSowingDate(getTodayIso());
+            setDaysCultivatedInput('0');
+            setCustomTotalDaysInput('');
+          }
         }
       } catch (err) {
         console.warn('Could not load crop schedules on init:', err);
       }
     })();
     return () => { alive = false; };
-  }, [db, workspaceId, activeScheduleId]);
+  }, [db, workspaceId]);
 
   const handleSelectSaved = (schedule: CropSchedule) => {
     setActiveScheduleId(schedule.id);
     setCropName(schedule.cropName);
     setSowingDate(schedule.sowingDate);
+    setDaysCultivatedInput(String(Math.max(0, getDaysSinceSowing(schedule.sowingDate))));
+    setCustomTotalDaysInput(schedule.totalDays != null ? String(schedule.totalDays) : '');
   };
 
   const handleNewPlan = () => {
     setActiveScheduleId(null);
     setCropName('');
     setSowingDate(getTodayIso());
+    setDaysCultivatedInput('0');
+    setCustomTotalDaysInput('');
   };
 
   const handleSaveSchedule = async () => {
     if (!db) return;
     setIsSaving(true);
     try {
-      const cleanName = cropName.trim() || 'Custom Crop';
-      const cleanDate = sowingDate.trim() || getTodayIso();
+      const cleanName = cropName.trim() || t.customCropDefault;
+      const cleanDate = isStrictIsoDate(sowingDate) ? sowingDate.trim() : getTodayIso();
       const saved = await addCropSchedule(
         db,
         {
           cropName: cleanName,
           sowingDate: cleanDate,
+          totalDays: parsedCustomTotalDays,
         },
         workspaceId
       );
       setActiveScheduleId(saved.id);
       await scheduleCropStageNotifications(saved, profile, language);
-      await loadSchedules();
+      await refreshSchedules();
     } catch (e) {
       console.warn('Failed to save schedule:', e);
     } finally {
@@ -574,13 +251,21 @@ export function CropStageCalendar({
         if (activeScheduleId === id) {
           setActiveScheduleId(null);
         }
-        await loadSchedules();
+        await refreshSchedules();
       } catch (e) {
         console.warn('Failed to delete schedule:', e);
       }
     };
 
     const confirmMsg = t.deleteScheduleConfirm.replace('{name}', name);
+    if (Platform.OS === 'web') {
+      const confirmFn = (globalThis as { confirm?: (message: string) => boolean }).confirm;
+      if (confirmFn ? confirmFn(confirmMsg) : true) {
+        void doDelete();
+      }
+      return;
+    }
+
     Alert.alert(
       t.deleteScheduleTitle,
       confirmMsg,
@@ -592,12 +277,35 @@ export function CropStageCalendar({
   };
 
   const handleQuickDateOffset = (daysAgo: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() - daysAgo);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    setSowingDate(`${y}-${m}-${day}`);
+    const nextIso = isoDateDaysAgo(daysAgo);
+    setSowingDate(nextIso);
+    setDaysCultivatedInput(String(daysAgo));
+    setActiveScheduleId(null);
+  };
+
+  const handleSowingDateChange = (text: string) => {
+    setSowingDate(text);
+    setActiveScheduleId(null);
+    if (isStrictIsoDate(text)) {
+      const computedElapsed = Math.max(0, getDaysSinceSowing(text));
+      setDaysCultivatedInput(String(computedElapsed));
+    }
+  };
+
+  const handleDaysCultivatedChange = (text: string) => {
+    const digitsOnly = text.replace(/[^0-9]/g, '');
+    setDaysCultivatedInput(digitsOnly);
+    setActiveScheduleId(null);
+    if (!digitsOnly) return;
+    const days = parseInt(digitsOnly, 10);
+    if (!Number.isNaN(days) && days >= 0 && days <= 730) {
+      setSowingDate(isoDateDaysAgo(days));
+    }
+  };
+
+  const handleCustomTotalDaysChange = (text: string) => {
+    const digitsOnly = text.replace(/[^0-9]/g, '');
+    setCustomTotalDaysInput(digitsOnly);
     setActiveScheduleId(null);
   };
 
@@ -615,6 +323,7 @@ export function CropStageCalendar({
   }
 
   const currentStage = currentStageIndex >= 0 ? profile.stages[currentStageIndex] : null;
+  const approxMonths = (profile.totalDays / 30).toFixed(1);
 
   return (
     <View style={[shared.tipCard, lg && shared.tipCardLg, styles.container]}>
@@ -664,7 +373,7 @@ export function CropStageCalendar({
                       ]}
                       numberOfLines={1}
                     >
-                      {sch.cropName} (Day {Math.max(0, schElapsed)})
+                      {sch.cropName} ({t.dayWord} {Math.max(0, schElapsed)})
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -694,7 +403,7 @@ export function CropStageCalendar({
         </View>
       )}
 
-      {/* Custom Crop Input Field */}
+      {/* Custom Crop Input Field + Popular Presets */}
       <View style={styles.cropInputSection}>
         <FormField
           label={t.cropInputLabel}
@@ -708,18 +417,44 @@ export function CropStageCalendar({
           enableVoice={true}
           language={language}
         />
+
+        <Text style={[styles.subheading, { marginTop: 10, marginBottom: 6 }]}>
+          {t.popularCropsLabel}
+        </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.presetsRow}
+        >
+          {POPULAR_CROP_PRESETS.map(preset => {
+            const label = preset.labels[language] || preset.labels.en;
+            const isSelected = cropName.trim().toLowerCase() === label.toLowerCase();
+            return (
+              <TouchableOpacity
+                key={preset.key}
+                onPress={() => {
+                  setCropName(label);
+                  setActiveScheduleId(null);
+                }}
+                style={[styles.presetChip, isSelected && styles.presetChipActive]}
+              >
+                <Text style={{ fontSize: 13 }}>{preset.emoji}</Text>
+                <Text style={[styles.presetChipText, isSelected && styles.presetChipTextActive]}>
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
-      {/* Sowing Date Input & Quick Offsets */}
+      {/* Sowing Date Input & Quick Pick */}
       <View style={styles.dateSection}>
         <View style={styles.dateInputCol}>
           <Text style={styles.subheading}>{t.sowingDateLabel}:</Text>
           <TextInput
             value={sowingDate}
-            onChangeText={v => {
-              setSowingDate(v);
-              setActiveScheduleId(null);
-            }}
+            onChangeText={handleSowingDateChange}
             placeholder="YYYY-MM-DD"
             style={styles.dateInput}
             maxLength={10}
@@ -730,13 +465,13 @@ export function CropStageCalendar({
           <Text style={[styles.subheading, { marginBottom: 6 }]}>{t.quickPick}</Text>
           <View style={styles.quickOffsetsRow}>
             {[
-              { label: t.today || 'Today', days: 0 },
-              { label: '-7d', days: 7 },
-              { label: '-15d', days: 15 },
-              { label: '-30d', days: 30 },
+              { label: t.today, days: 0 },
+              { label: `-7${t.dayShort}`, days: 7 },
+              { label: `-15${t.dayShort}`, days: 15 },
+              { label: `-30${t.dayShort}`, days: 30 },
             ].map(offset => (
               <TouchableOpacity
-                key={offset.label}
+                key={offset.days}
                 onPress={() => handleQuickDateOffset(offset.days)}
                 style={styles.offsetBtn}
               >
@@ -744,6 +479,38 @@ export function CropStageCalendar({
               </TouchableOpacity>
             ))}
           </View>
+        </View>
+      </View>
+
+      {/* Days Already Cultivated & Total Crop Growth Days */}
+      <View style={styles.numericInputsRow}>
+        <View style={styles.numericInputCol}>
+          <Text style={styles.subheading}>{t.daysCultivatedLabel}</Text>
+          <TextInput
+            value={daysCultivatedInput}
+            onChangeText={handleDaysCultivatedChange}
+            placeholder={t.daysCultivatedPlaceholder}
+            placeholderTextColor="#94A3B8"
+            style={styles.dateInput}
+            maxLength={3}
+            keyboardType="number-pad"
+          />
+        </View>
+        <View style={styles.numericInputCol}>
+          <Text style={styles.subheading}>{t.totalCropDaysLabel}</Text>
+          <TextInput
+            value={customTotalDaysInput}
+            onChangeText={handleCustomTotalDaysChange}
+            placeholder={t.totalCropDaysPlaceholder}
+            placeholderTextColor="#94A3B8"
+            style={styles.dateInput}
+            maxLength={3}
+            keyboardType="number-pad"
+          />
+          <Text style={styles.durationHintText}>
+            {t.defaultDurationHint.replace('{days}', String(profile.defaultTotalDays))} ·{' '}
+            {t.monthsApprox.replace('{months}', approxMonths)}
+          </Text>
         </View>
       </View>
 
@@ -756,10 +523,10 @@ export function CropStageCalendar({
             </Text>
             <Text style={styles.bannerDaysText}>
               {daysElapsed < 0
-                ? `${t.sowingInDays} ${Math.abs(daysElapsed)}`
+                ? `${t.sowingInDays} ${Math.abs(daysElapsed)} ${t.daysUnit}`
                 : daysElapsed > profile.totalDays
-                ? `${t.cropMatured} (${daysElapsed} ${t.daysGrowth})`
-                : `Day ${daysElapsed} / ${profile.totalDays} ${t.daysGrowth}`}
+                ? `${t.cropMatured} (${daysElapsed} / ${profile.totalDays} ${t.daysUnit})`
+                : `${t.dayWord} ${daysElapsed} / ${profile.totalDays} ${t.daysUnit} (${t.monthsApprox.replace('{months}', approxMonths)})`}
             </Text>
           </View>
           {currentStage && (
@@ -770,7 +537,6 @@ export function CropStageCalendar({
             </View>
           )}
         </View>
-        {/* Progress bar line */}
         <View style={styles.progressBarTrack}>
           <View
             style={[
@@ -795,10 +561,10 @@ export function CropStageCalendar({
           const isCompleted = daysElapsed > stage.endDay;
           const isUpcoming = daysElapsed < stage.startDay;
           const isLast = idx === profile.stages.length - 1;
+          const isBsjdkStage = stage.stageNumber === 2;
 
           return (
             <View key={stage.stageNumber} style={styles.stageStepRow}>
-              {/* Stepper left indicator + line */}
               <View style={styles.stepperIndicatorCol}>
                 <View
                   style={[
@@ -832,25 +598,22 @@ export function CropStageCalendar({
                 )}
               </View>
 
-              {/* Stage Content Card */}
               <View
                 style={[
                   styles.stageContentCard,
                   isActive && styles.stageContentCardActive,
                 ]}
               >
-                {/* Header row inside stage */}
                 <View style={styles.stageHeaderRow}>
                   <View style={styles.stageHeaderTitleCol}>
                     <Text style={[styles.stageName, isActive && styles.stageNameActive]}>
                       {t.stageLabel} {stage.stageNumber}: {stage.name}
                     </Text>
                     <Text style={styles.stageDatesText}>
-                      Days {stage.startDay} – {stage.endDay} · {formatDateShort(startDate, language)} – {formatDateShort(endDate, language)}
+                      {t.daysRangeLabel} {stage.startDay} – {stage.endDay} · {formatDateShort(startDate, language)} – {formatDateShort(endDate, language)}
                     </Text>
                   </View>
 
-                  {/* Status Badge */}
                   <View style={styles.badgeContainer}>
                     {isActive && (
                       <View style={styles.badgeActive}>
@@ -870,7 +633,6 @@ export function CropStageCalendar({
                   </View>
                 </View>
 
-                {/* Agronomic Reminders */}
                 <View style={styles.remindersBox}>
                   <View style={styles.reminderRow}>
                     <Ionicons
@@ -892,7 +654,16 @@ export function CropStageCalendar({
                       style={{ marginTop: 1, flexShrink: 0 }}
                     />
                     <View style={{ flex: 1, minWidth: 0, flexShrink: 1 }}>
-                      <Text style={styles.reminderLabel}>{t.fertilizerNutrition}</Text>
+                      <View style={styles.nutritionLabelRow}>
+                        <Text style={styles.reminderLabel}>
+                          {isBsjdkStage ? t.bsjdkSystemLabel : t.fertilizerNutrition}
+                        </Text>
+                        {isBsjdkStage && (
+                          <View style={styles.bsjdkPill}>
+                            <Text style={styles.bsjdkPillText}>BSJDK</Text>
+                          </View>
+                        )}
+                      </View>
                       <Text style={styles.reminderText}>{stage.fertilizerReminder}</Text>
                     </View>
                   </View>
@@ -917,7 +688,7 @@ export function CropStageCalendar({
               onPress={() => {
                 const current = savedSchedules.find(s => s.id === activeScheduleId);
                 if (current) {
-                  handleDeleteSchedule(current.id, current.cropName);
+                  void handleDeleteSchedule(current.id, current.cropName);
                 }
               }}
               style={styles.deleteScheduleBtn}
@@ -933,7 +704,7 @@ export function CropStageCalendar({
           >
             <Ionicons name="bookmark-outline" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
             <Text style={shared.primaryButtonText}>
-              {isSaving ? t.savingSchedule : `${t.saveScheduleToWorkspace}`}
+              {isSaving ? t.savingSchedule : t.saveScheduleToWorkspace}
             </Text>
           </TouchableOpacity>
         )}
@@ -1035,14 +806,42 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   cropInputSection: {
-    marginBottom: 10,
+    marginBottom: 12,
+  },
+  presetsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingBottom: 2,
+  },
+  presetChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#F4F8F5',
+    borderWidth: 1,
+    borderColor: '#D6E5DA',
+  },
+  presetChipActive: {
+    backgroundColor: GREEN,
+    borderColor: GREEN,
+  },
+  presetChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: INK,
+  },
+  presetChipTextActive: {
+    color: '#FFFFFF',
   },
   dateSection: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'flex-start',
     gap: 12,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   dateInputCol: {
     flex: 1,
@@ -1084,6 +883,23 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: GREEN,
+  },
+  numericInputsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 14,
+  },
+  numericInputCol: {
+    flex: 1,
+    minWidth: 150,
+    flexShrink: 1,
+  },
+  durationHintText: {
+    fontSize: 11,
+    color: MUTED,
+    marginTop: 4,
+    fontWeight: '600',
   },
   progressBanner: {
     backgroundColor: '#F0F8F2',
@@ -1286,6 +1102,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
+  },
+  nutritionLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  bsjdkPill: {
+    backgroundColor: '#DCFCE7',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  bsjdkPillText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#15803D',
+    letterSpacing: 0.4,
   },
   reminderLabel: {
     fontSize: 10,
