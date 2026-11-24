@@ -82,6 +82,7 @@ export function ExportReportModal({
       visible={visible}
       title={t.exportShareReportTitle}
       isMobile={isMobile}
+      fullScreenOnMobile={false}
       onClose={handleClose}
     >
       <Text style={styles.subtitle}>{t.exportShareReportSubtitle}</Text>

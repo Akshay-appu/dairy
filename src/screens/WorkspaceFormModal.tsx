@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
 import { FormField } from '../components/FormField';
 import { FormModal } from '../components/FormModal';
+import { useResponsive } from '../hooks/useResponsive';
 import { Copy } from '../i18n/copy';
 
 export function WorkspaceFormModal({
@@ -19,6 +20,7 @@ export function WorkspaceFormModal({
   onSave: (name: string) => Promise<void>;
   onClose: () => void;
 }) {
+  const { isMobile } = useResponsive();
   const [name, setName] = useState(initialName);
   const [error, setError] = useState<string | undefined>();
 
@@ -42,7 +44,7 @@ export function WorkspaceFormModal({
   };
 
   return (
-    <FormModal visible={visible} title={title} isMobile={false} onClose={onClose}>
+    <FormModal visible={visible} title={title} isMobile={isMobile} onClose={onClose}>
       <FormField
         label={t.workspaceName}
         placeholder={t.workspaceNamePlaceholder}

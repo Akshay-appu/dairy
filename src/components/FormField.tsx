@@ -5,6 +5,7 @@ import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
 import { useActiveLanguage } from '../i18n/LanguageContext';
 import { getSpeechLocale } from '../i18n/languageUtils';
 import { shared } from '../styles/shared';
+import { useFormModalScroll } from './FormModal';
 
 interface SpeechRecognitionEvent {
   results?: { transcript?: string }[];
@@ -63,6 +64,7 @@ export function FormField({
   enableVoice = keyboardType !== 'numeric' && keyboardType !== 'decimal-pad',
   language: propLanguage,
   locale: propLocale,
+  onFocus,
 }: {
   label: string;
   value: string;
@@ -77,7 +79,10 @@ export function FormField({
   enableVoice?: boolean;
   language?: string;
   locale?: string;
+  onFocus?: () => void;
 }) {
+  const containerRef = useRef<View>(null);
+  const modalScroll = useFormModalScroll();
   const [isRevealed, setIsRevealed] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeechAvailable] = useState(() => {
@@ -200,7 +205,7 @@ export function FormField({
   const rightPadding = (secureTextEntry ? 46 : 0) + (showVoice ? 46 : 0);
 
   return (
-    <View>
+    <View ref={containerRef} collapsable={false}>
       <Text style={shared.fieldLabel}>{label}{required ? ' *' : ''}</Text>
       <View style={{ position: 'relative', justifyContent: 'center' }}>
         <TextInput
@@ -220,6 +225,10 @@ export function FormField({
           secureTextEntry={shouldMask}
           autoCapitalize={secureTextEntry ? 'none' : undefined}
           autoCorrect={secureTextEntry ? false : undefined}
+          onFocus={() => {
+            onFocus?.();
+            modalScroll?.scrollToNode(containerRef);
+          }}
         />
         {showVoice && (
           <TouchableOpacity

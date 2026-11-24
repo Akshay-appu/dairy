@@ -124,7 +124,7 @@ export function FarmScreen({
   const [cropForm, setCropForm] = useState<CropFormState>(EMPTY_CROP);
   const [cropErrors, setCropErrors] = useState<{ cropName?: string; sowingDate?: string; expectedHarvestDate?: string }>({});
 
-  const openAddCrop = () => { setEditingCropId(null); setCropForm(EMPTY_CROP); setCropErrors({}); setCropModalVisible(true); };
+  const openAddCrop = () => { setEditingCropId(null); setCropForm({ ...EMPTY_CROP, sowingDate: todayDateString() }); setCropErrors({}); setCropModalVisible(true); };
   const openEditCrop = (crop: Crop) => {
     setEditingCropId(crop.id);
     setCropForm({

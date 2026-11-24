@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { shared } from '../styles/shared';
 import { todayDateString } from '../utils/format';
+import { useFormModalScroll } from './FormModal';
 
 // Plain YYYY-MM-DD text entry instead of a native date-picker dependency —
 // zero new packages, identical behavior on web/Android/iOS, and the format
 // is validated before save (see isValidDateString in utils/format).
 export function DateField({
-  label, value, onChangeText, error, required, todayLabel,
+  label, value, onChangeText, error, required, todayLabel, onFocus,
 }: {
   label: string;
   value: string;
@@ -15,9 +16,13 @@ export function DateField({
   error?: string;
   required?: boolean;
   todayLabel: string;
+  onFocus?: () => void;
 }) {
+  const containerRef = useRef<View>(null);
+  const modalScroll = useFormModalScroll();
+
   return (
-    <View>
+    <View ref={containerRef} collapsable={false}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <Text style={shared.fieldLabel}>{label}{required ? ' *' : ''}</Text>
         <TouchableOpacity onPress={() => onChangeText(todayDateString())} hitSlop={6}>
@@ -31,6 +36,10 @@ export function DateField({
         style={[shared.input, !!error && shared.inputError]}
         keyboardType="numbers-and-punctuation"
         maxLength={10}
+        onFocus={() => {
+          onFocus?.();
+          modalScroll?.scrollToNode(containerRef);
+        }}
       />
       {!!error && <Text style={shared.fieldError}>{error}</Text>}
     </View>

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { DimensionValue, Text, View } from 'react-native';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
+import { CurrentDateBadge } from '../components/CurrentDateBadge';
 import { EmptyState } from '../components/EmptyState';
 import { GridList } from '../components/GridList';
 import { ListCard } from '../components/ListCard';
@@ -92,7 +93,7 @@ export function RecordsScreen({
 
   const openAddFinance = (type: 'expense' | 'income') => {
     setEditingFinanceId(null);
-    setFinanceForm({ ...EMPTY_FINANCE, type });
+    setFinanceForm({ ...EMPTY_FINANCE, type, date: todayDateString() });
     setFinanceErrors({});
     setFinanceModalVisible(true);
   };
@@ -123,7 +124,12 @@ export function RecordsScreen({
   const [harvestForm, setHarvestForm] = useState<HarvestFormState>(EMPTY_HARVEST);
   const [harvestErrors, setHarvestErrors] = useState<{ quantity?: string; harvestDate?: string }>({});
 
-  const openAddHarvest = () => { setEditingHarvestId(null); setHarvestForm(EMPTY_HARVEST); setHarvestErrors({}); setHarvestModalVisible(true); };
+  const openAddHarvest = () => {
+    setEditingHarvestId(null);
+    setHarvestForm({ ...EMPTY_HARVEST, harvestDate: todayDateString() });
+    setHarvestErrors({});
+    setHarvestModalVisible(true);
+  };
   const openEditHarvest = (h: Harvest) => {
     setEditingHarvestId(h.id);
     setHarvestForm({
@@ -197,7 +203,7 @@ export function RecordsScreen({
               cardWidth={cardWidth}
               renderItem={group => (
                 <ListCard
-                  icon="📅"
+                  icon={<CurrentDateBadge />}
                   title={seasonLabel(language, group.season)}
                   meta={`${group.list.length} ${t.cropsTab.toLowerCase()}`}
                   note={group.list.map(c => c.cropName).join(', ')}

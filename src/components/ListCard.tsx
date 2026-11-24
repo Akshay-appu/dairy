@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { shared } from '../styles/shared';
 
 export function ListCard({
   icon = '🌿', title, meta, note, onPress, onDelete, lg,
 }: {
-  icon?: string;
+  icon?: ReactNode;
   title: string;
   meta: string;
   note?: string;
@@ -20,7 +20,9 @@ export function ListCard({
       disabled={!onPress}
       style={[shared.listCard, lg && shared.listCardLg]}
     >
-      <View style={shared.listCardIcon}><Text>{icon}</Text></View>
+      <View style={shared.listCardIcon}>
+        {typeof icon === 'string' || typeof icon === 'number' ? <Text>{icon}</Text> : icon}
+      </View>
       <View style={{ flex: 1, minWidth: 0, flexShrink: 1 }}>
         <Text style={[shared.listCardTitle, lg && shared.listCardTitleLg]}>{title}</Text>
         <Text style={[shared.listCardMeta, lg && shared.listCardMetaLg]}>{meta}</Text>

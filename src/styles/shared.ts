@@ -48,7 +48,7 @@ export const shared = StyleSheet.create({
   fullWidth: { width: '100%' },
   listCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderWidth: 1, borderColor: '#E8EEE9', borderRadius: 16, padding: 13, backgroundColor: '#FFFFFF', flexShrink: 1 },
   listCardLg: { padding: 20, borderRadius: 20, gap: 14 },
-  listCardIcon: { width: 40, height: 40, backgroundColor: LIGHT_GREEN, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  listCardIcon: { width: 40, height: 40, backgroundColor: LIGHT_GREEN, borderRadius: 13, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   listCardTitle: { color: INK, fontWeight: '700', fontSize: 14, marginTop: 2 },
   listCardTitleLg: { fontSize: 17 },
   listCardMeta: { color: MUTED, fontSize: 11, marginTop: 5 },

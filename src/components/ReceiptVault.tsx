@@ -1,16 +1,21 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  LayoutAnimation,
   Modal,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as SQLite from 'expo-sqlite';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -77,6 +82,72 @@ export function ReceiptVault({
   const [draftTitle, setDraftTitle] = useState('');
   const [draftCategory, setDraftCategory] = useState<VaultCategory>('Fertilizer Bill');
   const [isSaving, setIsSaving] = useState(false);
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0);
+  const draftOpen = Boolean(draftUri);
+  const [draftKeyboardVisible, setDraftKeyboardVisible] = useState(false);
+  const [lastDraftOpen, setLastDraftOpen] = useState(draftOpen);
+  if (draftOpen !== lastDraftOpen) {
+    setLastDraftOpen(draftOpen);
+    if (!draftOpen) {
+      setDraftKeyboardVisible(false);
+    }
+  }
+  const draftScrollRef = useRef<ScrollView>(null);
+  const draftScrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearDraftScrollTimer = useCallback(() => {
+    if (draftScrollTimerRef.current) {
+      clearTimeout(draftScrollTimerRef.current);
+      draftScrollTimerRef.current = null;
+    }
+  }, []);
+
+  const scrollDraftToEnd = useCallback(() => {
+    draftScrollRef.current?.scrollToEnd({ animated: true });
+    clearDraftScrollTimer();
+    draftScrollTimerRef.current = setTimeout(() => {
+      draftScrollRef.current?.scrollToEnd({ animated: true });
+    }, 150);
+  }, [clearDraftScrollTimer]);
+
+  const closeDraftModal = useCallback(() => {
+    Keyboard.dismiss();
+    setDraftUri(null);
+  }, []);
+
+  useEffect(() => {
+    if (!draftOpen) {
+      clearDraftScrollTimer();
+      return;
+    }
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const subs = [
+      Keyboard.addListener(showEvent, () => {
+        if (Platform.OS !== 'web') {
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        }
+        setDraftKeyboardVisible(true);
+        clearDraftScrollTimer();
+        draftScrollTimerRef.current = setTimeout(() => {
+          draftScrollRef.current?.scrollToEnd({ animated: true });
+        }, 80);
+      }),
+      Keyboard.addListener(hideEvent, () => {
+        if (Platform.OS !== 'web') {
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        }
+        setDraftKeyboardVisible(false);
+        clearDraftScrollTimer();
+      }),
+    ];
+    return () => {
+      subs.forEach(sub => sub.remove());
+      clearDraftScrollTimer();
+      Keyboard.dismiss();
+    };
+  }, [draftOpen, clearDraftScrollTimer]);
 
   // Fullscreen preview modal state
   const [previewDoc, setPreviewDoc] = useState<VaultDocument | null>(null);
@@ -399,93 +470,128 @@ export function ReceiptVault({
 
       {/* Modal 1: Add New Document Modal */}
       <Modal
-        visible={Boolean(draftUri)}
+        visible={draftOpen}
         animationType="slide"
         transparent
-        onRequestClose={() => setDraftUri(null)}
+        statusBarTranslucent
+        onRequestClose={closeDraftModal}
       >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalSheet}>
+        <KeyboardAvoidingView
+          style={styles.modalBackdrop}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View
+            style={[
+              styles.modalSheet,
+              !lg && !draftKeyboardVisible && {
+                flex: 1,
+                width: '100%',
+                maxHeight: '96%',
+                marginTop: Math.max(topInset, 12),
+                paddingBottom: 0,
+              },
+              draftKeyboardVisible && {
+                flex: 1,
+                width: '100%',
+                height: '100%',
+                maxHeight: '100%',
+                marginTop: 0,
+                paddingTop: Math.max(topInset, 12) + 6,
+                paddingBottom: 0,
+                borderTopLeftRadius: 0,
+                borderTopRightRadius: 0,
+              },
+            ]}
+          >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t.vaultSaveModalTitle}</Text>
               <TouchableOpacity
-                onPress={() => setDraftUri(null)}
+                onPress={closeDraftModal}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <Text style={styles.modalCloseText}>✕</Text>
               </TouchableOpacity>
             </View>
 
-            {draftUri && (
-              <View style={styles.previewThumbnailWrapper}>
-                <Image
-                  source={{ uri: draftUri }}
-                  style={styles.draftThumbnail}
-                  resizeMode="cover"
-                />
-              </View>
-            )}
+            <ScrollView
+              ref={draftScrollRef}
+              style={(!lg || draftKeyboardVisible) ? { flex: 1 } : undefined}
+              contentContainerStyle={{ paddingBottom: 120 }}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              {draftUri && (
+                <View style={styles.previewThumbnailWrapper}>
+                  <Image
+                    source={{ uri: draftUri }}
+                    style={styles.draftThumbnail}
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
 
-            <Text style={styles.fieldLabel}>{t.vaultDocTitleLabel}</Text>
-            <TextInput
-              value={draftTitle}
-              onChangeText={setDraftTitle}
-              placeholder={t.vaultDocTitlePlaceholder}
-              style={styles.titleInput}
-              autoFocus
-            />
+              <Text style={styles.fieldLabel}>{t.vaultDocTitleLabel}</Text>
+              <TextInput
+                value={draftTitle}
+                onChangeText={setDraftTitle}
+                placeholder={t.vaultDocTitlePlaceholder}
+                style={styles.titleInput}
+                autoFocus
+                onFocus={scrollDraftToEnd}
+              />
 
-            <Text style={[styles.fieldLabel, { marginTop: 12 }]}>{t.vaultCategoryLabel}</Text>
-            <View style={styles.categorySelectRow}>
-              {CATEGORIES.map(cat => {
-                const isSelected = draftCategory === cat.key;
-                const catLabel = getVaultCategoryLabel(cat.key, t);
-                return (
-                  <TouchableOpacity
-                    key={cat.key}
-                    onPress={() => {
-                      setDraftCategory(cat.key);
-                      setDraftTitle(`${catLabel} - ${new Date().toLocaleDateString(locale)}`);
-                    }}
-                    style={[
-                      styles.categoryOptionChip,
-                      isSelected && styles.categoryOptionChipSelected,
-                    ]}
-                  >
-                    <Text style={{ fontSize: 14 }}>{cat.icon}</Text>
-                    <Text
+              <Text style={[styles.fieldLabel, { marginTop: 12 }]}>{t.vaultCategoryLabel}</Text>
+              <View style={styles.categorySelectRow}>
+                {CATEGORIES.map(cat => {
+                  const isSelected = draftCategory === cat.key;
+                  const catLabel = getVaultCategoryLabel(cat.key, t);
+                  return (
+                    <TouchableOpacity
+                      key={cat.key}
+                      onPress={() => {
+                        setDraftCategory(cat.key);
+                        setDraftTitle(`${catLabel} - ${new Date().toLocaleDateString(locale)}`);
+                      }}
                       style={[
-                        styles.categoryOptionText,
-                        isSelected && styles.categoryOptionTextSelected,
+                        styles.categoryOptionChip,
+                        isSelected && styles.categoryOptionChipSelected,
                       ]}
                     >
-                      {catLabel}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+                      <Text style={{ fontSize: 14 }}>{cat.icon}</Text>
+                      <Text
+                        style={[
+                          styles.categoryOptionText,
+                          isSelected && styles.categoryOptionTextSelected,
+                        ]}
+                      >
+                        {catLabel}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
 
-            <View style={styles.modalActionButtons}>
-              <TouchableOpacity
-                onPress={() => setDraftUri(null)}
-                style={styles.cancelBtn}
-                disabled={isSaving}
-              >
-                <Text style={styles.cancelBtnText}>{t.cancel}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleSaveDraft}
-                style={styles.saveBtn}
-                disabled={isSaving}
-              >
-                <Text style={styles.saveBtnText}>
-                  {isSaving ? t.vaultSavingBtn : t.vaultSaveBtn}
-                </Text>
-              </TouchableOpacity>
-            </View>
+              <View style={styles.modalActionButtons}>
+                <TouchableOpacity
+                  onPress={closeDraftModal}
+                  style={styles.cancelBtn}
+                  disabled={isSaving}
+                >
+                  <Text style={styles.cancelBtnText}>{t.cancel}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleSaveDraft}
+                  style={styles.saveBtn}
+                  disabled={isSaving}
+                >
+                  <Text style={styles.saveBtnText}>
+                    {isSaving ? t.vaultSavingBtn : t.vaultSaveBtn}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Modal 2: Full-screen Image Preview Modal */}
