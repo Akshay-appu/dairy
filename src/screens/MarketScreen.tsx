@@ -11,10 +11,12 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
 import { EmptyState } from '../components/EmptyState';
 import { Stat } from '../components/Stat';
-import type {
-  MarketLocationDefaults,
-  MarketRecord,
-  MarketRecordInput,
+import {
+  formatMarketSlipCode,
+  summarizeMarketByBuyerOrMarket,
+  type MarketLocationDefaults,
+  type MarketRecord,
+  type MarketRecordInput,
 } from '../db/marketRecordsRepo';
 import type { FarmProfile } from '../db/schema';
 import type { Copy, Language } from '../i18n/copy';
@@ -109,6 +111,12 @@ export function MarketScreen({
   const [editingRecord, setEditingRecord] = useState<MarketRecord | null>(null);
   const [busyExportKey, setBusyExportKey] = useState<string | null>(null);
   const [driveStatusMsg, setDriveStatusMsg] = useState('');
+  const [viewMode, setViewMode] = useState<'slips' | 'summary'>('slips');
+
+  const entitySummaries = useMemo(
+    () => summarizeMarketByBuyerOrMarket(marketRecords.items),
+    [marketRecords.items]
+  );
 
   const summary = useMemo(() => {
     let grossIncome = 0;
@@ -272,9 +280,157 @@ export function MarketScreen({
         </View>
       )}
 
-      {/* Records List */}
+      {/* View Toggle: Daily Slips vs By Market / Buyer */}
+      {marketRecords.items.length > 0 && (
+        <View style={styles.viewToggleRow}>
+          <TouchableOpacity
+            onPress={() => setViewMode('slips')}
+            style={[styles.viewToggleBtn, viewMode === 'slips' && styles.viewToggleBtnActive]}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: viewMode === 'slips' }}
+          >
+            <Ionicons
+              name="receipt-outline"
+              size={15}
+              color={viewMode === 'slips' ? '#FFFFFF' : GREEN}
+            />
+            <Text
+              style={[
+                styles.viewToggleText,
+                viewMode === 'slips' && styles.viewToggleTextActive,
+              ]}
+            >
+              {t.marketViewDailySlips} ({marketRecords.items.length})
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setViewMode('summary')}
+            style={[styles.viewToggleBtn, viewMode === 'summary' && styles.viewToggleBtnActive]}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: viewMode === 'summary' }}
+          >
+            <Ionicons
+              name="stats-chart-outline"
+              size={15}
+              color={viewMode === 'summary' ? '#FFFFFF' : GREEN}
+            />
+            <Text
+              style={[
+                styles.viewToggleText,
+                viewMode === 'summary' && styles.viewToggleTextActive,
+              ]}
+            >
+              {t.marketViewByBuyerMarket} ({entitySummaries.length})
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Records List or By Market / Buyer Summary */}
       {marketRecords.items.length === 0 ? (
         <EmptyState title={t.noMarketRecordsYet} detail={t.addFirstMarketRecord} lg={lg} />
+      ) : viewMode === 'summary' ? (
+        <View
+          style={[
+            styles.cardsGrid,
+            gridColumns > 1 && { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
+          ]}
+        >
+          {entitySummaries.map(item => {
+            const isLoss = item.netProfit < 0;
+            const tripsLabel =
+              item.tripsCount === 1
+                ? t.tripSingleLabel
+                : t.tripsCountLabel.replace('{count}', String(item.tripsCount));
+            const unitsLabel = t.unitsCountLabel.replace('{count}', String(item.totalBoxesUnits));
+
+            return (
+              <View
+                key={item.key}
+                style={[
+                  styles.recordCard,
+                  gridColumns > 1 ? { width: cardWidth } : { width: '100%' },
+                ]}
+              >
+                <View style={styles.cardHeaderRow}>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons
+                        name={item.marketName ? 'storefront-outline' : 'person-outline'}
+                        size={16}
+                        color={GREEN}
+                      />
+                      <Text style={styles.cardDate} numberOfLines={2}>
+                        {item.displayName || t.unnamedMarketOrBuyer}
+                      </Text>
+                    </View>
+                    {!!item.locationSummary && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 }}>
+                        <Ionicons name="location-outline" size={13} color={MUTED} />
+                        <Text style={[styles.cardLocation, { marginTop: 0, flexShrink: 1 }]} numberOfLines={2}>
+                          {item.locationSummary}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={[styles.netBox, isLoss && styles.netBoxLoss]}>
+                    <Text style={[styles.netBoxLabel, isLoss && styles.netBoxLabelLoss]}>
+                      {isLoss ? t.marketNetLoss : t.marketNetProfit}
+                    </Text>
+                    <Text style={[styles.netBoxValue, isLoss && styles.netBoxValueLoss]}>
+                      {formatINR(item.netProfit)}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.vegChipsRow}>
+                  <View style={styles.boxCountChip}>
+                    <Text style={styles.boxCountText}>{tripsLabel}</Text>
+                  </View>
+                  <View style={styles.vegChip}>
+                    <Text style={styles.vegChipText}>{unitsLabel}</Text>
+                  </View>
+                  {!!item.latestMarketDate && (
+                    <View style={styles.vegChip}>
+                      <Text style={styles.vegChipText}>
+                        {t.latestTripLabel}: {formatShortDate(item.latestMarketDate, locale)}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                <View style={styles.breakdownRow}>
+                  <Text style={styles.breakdownText}>
+                    {t.marketGrossIncome}: <Text style={styles.breakdownBold}>{formatINR(item.grossIncome)}</Text>
+                  </Text>
+                  <Text style={styles.breakdownText}>
+                    {t.marketTotalExpenses}: <Text style={[styles.breakdownBold, { color: DANGER }]}>-{formatINR(item.totalExpense)}</Text>
+                  </Text>
+                </View>
+
+                {(item.pendingBaaki > 0 || item.pendingCrates > 0) && (
+                  <View style={styles.badgesRow}>
+                    {item.pendingBaaki > 0 && (
+                      <View style={styles.warnBadge}>
+                        <Text style={styles.warnBadgeText}>
+                          {t.pendingBaaki}: {formatINR(item.pendingBaaki)}
+                        </Text>
+                      </View>
+                    )}
+                    {item.pendingCrates > 0 && (
+                      <View style={styles.warnBadge}>
+                        <Text style={styles.warnBadgeText}>
+                          {t.cratesPendingBadge.replace('{count}', String(item.pendingCrates))}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </View>
       ) : (
         <View
           style={[
@@ -289,6 +445,7 @@ export function MarketScreen({
               .join(', ');
             const pendingCrates = Math.max(0, record.cratesSent - record.cratesReturned);
             const isLoss = record.netProfit < 0;
+            const slipCode = formatMarketSlipCode(record);
             const pdfKey = `pdf-${record.id}`;
             const csvKey = `csv-${record.id}`;
 
@@ -300,7 +457,7 @@ export function MarketScreen({
                   gridColumns > 1 ? { width: cardWidth } : { width: '100%' },
                 ]}
               >
-                {/* Card Top: Date, Time & Net Profit */}
+                {/* Card Top: Date, Time, Slip Ref & Net Profit */}
                 <View style={styles.cardHeaderRow}>
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <View style={styles.dateTimeRow}>
@@ -313,6 +470,10 @@ export function MarketScreen({
                           {formatDisplayTime12h(record.marketOpenTime)}
                         </Text>
                       </View>
+                      <View style={styles.slipCodePill}>
+                        <Ionicons name="pricetag-outline" size={11} color={MUTED} />
+                        <Text style={styles.slipCodeText}>{slipCode}</Text>
+                      </View>
                       {record.pattiPhotoUri && (
                         <View style={styles.photoPill}>
                           <Ionicons name="image-outline" size={12} color={GREEN} />
@@ -324,6 +485,14 @@ export function MarketScreen({
                         <Ionicons name="storefront-outline" size={13} color={MUTED} />
                         <Text style={[styles.cardLocation, { marginTop: 0, flexShrink: 1 }]} numberOfLines={2}>
                           {[record.marketName, locText].filter(Boolean).join(' · ')}
+                        </Text>
+                      </View>
+                    )}
+                    {!!record.agentName && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 }}>
+                        <Ionicons name="person-outline" size={13} color={MUTED} />
+                        <Text style={[styles.cardLocation, { marginTop: 0, flexShrink: 1 }]} numberOfLines={1}>
+                          {record.agentName}
                         </Text>
                       </View>
                     )}
@@ -549,7 +718,55 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    marginBottom: 16,
+    marginBottom: 14,
+  },
+  viewToggleRow: {
+    flexDirection: 'row',
+    backgroundColor: '#EDF5EE',
+    borderWidth: 1,
+    borderColor: '#D5E7D8',
+    borderRadius: 12,
+    padding: 4,
+    gap: 6,
+    marginBottom: 14,
+  },
+  viewToggleBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 9,
+  },
+  viewToggleBtnActive: {
+    backgroundColor: GREEN,
+  },
+  viewToggleText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: GREEN,
+  },
+  viewToggleTextActive: {
+    color: '#FFFFFF',
+  },
+  slipCodePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#F3F6F4',
+    borderWidth: 1,
+    borderColor: '#DCE5DE',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  slipCodeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: MUTED,
+    letterSpacing: 0.3,
   },
   cardsGrid: {
     gap: 12,

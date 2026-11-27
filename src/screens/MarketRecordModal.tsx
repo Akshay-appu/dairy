@@ -21,10 +21,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { FormField } from '../components/FormField';
-import type {
-  MarketLocationDefaults,
-  MarketRecord,
-  MarketRecordInput,
+import {
+  formatMarketSlipCode,
+  type MarketLocationDefaults,
+  type MarketRecord,
+  type MarketRecordInput,
 } from '../db/marketRecordsRepo';
 import type { Copy, Language } from '../i18n/copy';
 import {
@@ -555,9 +556,19 @@ export function MarketRecordModal({
         >
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: theme.cardBorder }]}>
-            <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
-              {editingRecord ? t.editMarketRecord : t.newMarketRecord}
-            </Text>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
+                {editingRecord ? t.editMarketRecord : t.newMarketRecord}
+              </Text>
+              {editingRecord && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                  <Ionicons name="pricetag-outline" size={11} color={theme.muted} />
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: theme.muted }}>
+                    {formatMarketSlipCode(editingRecord)}
+                  </Text>
+                </View>
+              )}
+            </View>
             <View style={styles.headerActions}>
               <TouchableOpacity
                 onPress={() => setIsDarkSlip(v => !v)}

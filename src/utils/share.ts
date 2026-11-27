@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Platform, Share } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
@@ -25,6 +25,40 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   if (!nav?.clipboard) return false;
   await nav.clipboard.writeText(text);
   return true;
+}
+
+export async function shareTextMessage(
+  title: string,
+  message: string
+): Promise<'shared' | 'copied' | 'dismissed'> {
+  if (Platform.OS === 'web') {
+    const nav = (
+      globalThis as {
+        navigator?: Navigator & {
+          share?: (data: { title?: string; text?: string }) => Promise<void>;
+        };
+      }
+    ).navigator;
+    if (nav && typeof nav.share === 'function') {
+      try {
+        await nav.share({ title, text: message });
+        return 'shared';
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          return 'dismissed';
+        }
+      }
+    }
+    const copied = await copyToClipboard(message);
+    if (copied) return 'copied';
+    throw new Error('Sharing is not available on this device.');
+  }
+
+  const result = await Share.share({ title, message });
+  if (result.action === Share.dismissedAction) {
+    return 'dismissed';
+  }
+  return 'shared';
 }
 
 export async function shareBackupText(filename: string, text: string): Promise<void> {

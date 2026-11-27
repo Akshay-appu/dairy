@@ -422,6 +422,25 @@ export type Copy = {
   warrantyPreExpiryNotifTitle: string;
   warrantyPreExpiryNotifBody: string;
   alarmTroubleshootHint: string;
+
+  // Phase 2 Sprint 6 — Slip Reference Code, Buyer/Mandi Insights & Share BS Diary
+  marketSlipRefLabel: string;
+  marketViewDailySlips: string;
+  marketViewByBuyerMarket: string;
+  unnamedMarketOrBuyer: string;
+  tripsCountLabel: string;
+  tripSingleLabel: string;
+  unitsCountLabel: string;
+  latestTripLabel: string;
+  marketSummaryCsvHeading: string;
+  tripsColumnLabel: string;
+  totalUnitsColumnLabel: string;
+  shareAppTitle: string;
+  shareAppSubtitle: string;
+  shareAppBtn: string;
+  shareAppCopyBtn: string;
+  shareAppCopied: string;
+  shareAppMessage: string;
 };
 
 export const copy: Record<Language, Copy> = {
@@ -871,6 +890,24 @@ export const copy: Record<Language, Copy> = {
     warrantyPreExpiryNotifTitle: 'Warranty Expiring in {days} Days · BS Diary',
     warrantyPreExpiryNotifBody: 'Your warranty for {item} expires on {date} ({days} days left). Check your slip in BS Diary Vault.',
     alarmTroubleshootHint: 'Tip: Keep your phone Alarm volume up and allow BS Diary notifications in Android Settings so alarms ring and vibrate loudly.',
+
+    marketSlipRefLabel: 'Slip Ref',
+    marketViewDailySlips: 'Daily Slips',
+    marketViewByBuyerMarket: 'By Market / Buyer',
+    unnamedMarketOrBuyer: 'General Market / Direct Sale',
+    tripsCountLabel: '{count} trips',
+    tripSingleLabel: '1 trip',
+    unitsCountLabel: '{count} boxes/units',
+    latestTripLabel: 'Latest',
+    marketSummaryCsvHeading: 'Summary by Market / Buyer',
+    tripsColumnLabel: 'Trips',
+    totalUnitsColumnLabel: 'Total Boxes/Units',
+    shareAppTitle: 'Share BS Diary',
+    shareAppSubtitle: 'Invite fellow farmers to track daily farm work, mandi pattis, and crop growth offline.',
+    shareAppBtn: 'Share BS Diary',
+    shareAppCopyBtn: 'Copy Invite',
+    shareAppCopied: 'Share message copied to clipboard.',
+    shareAppMessage: 'BS Diary by BhoomiShakti — Track daily farm activities, mandi sales pattis, crop stages, and expenses offline.\nOpen App: https://app.bhoomishakti.in\nWebsite: https://www.bhoomishakti.in/',
   },
   kn: {
     tagline: 'ಪ್ರತಿ ಹೊಲದ ಕಥೆ, ಒಂದೇ ಡೈರಿಯಲ್ಲಿ',
@@ -1318,6 +1355,24 @@ export const copy: Record<Language, Copy> = {
     warrantyPreExpiryNotifTitle: '{days} ದಿನಗಳಲ್ಲಿ ವಾರಂಟಿ ಮುಕ್ತಾಯ · ಬಿಎಸ್ ಡೈರಿ',
     warrantyPreExpiryNotifBody: '{item} ನ ವಾರಂಟಿ {date} ರಂದು ಮುಕ್ತಾಯವಾಗುತ್ತದೆ ({days} ದಿನ ಬಾಕಿ). ಬಿಎಸ್ ಡೈರಿ ವಾಲ್ಟ್ ಪರಿಶೀಲಿಸಿ.',
     alarmTroubleshootHint: 'ಸಲಹೆ: ಅಲಾರಾಂ ಜೋರಾಗಿ ಬಾರಿಸಲು ಮತ್ತು ವೈಬ್ರೇಟ್ ಆಗಲು ಫೋನ್ ಅಲಾರಾಂ ವಾಲ್ಯೂಮ್ ಹೆಚ್ಚಿಸಿ ಮತ್ತು Android ಸೆಟ್ಟಿಂಗ್ಸ್‌ನಲ್ಲಿ BS Diary ಅಧಿಸೂಚನೆಗಳನ್ನು ಅನುಮತಿಸಿ.',
+
+    marketSlipRefLabel: 'ಚೀಟಿ ಸಂಖ್ಯೆ',
+    marketViewDailySlips: 'ದೈನಂದಿನ ಚೀಟಿಗಳು',
+    marketViewByBuyerMarket: 'ಮಾರುಕಟ್ಟೆ / ಖರೀದಿದಾರರು',
+    unnamedMarketOrBuyer: 'ಸಾಮಾನ್ಯ ಮಾರುಕಟ್ಟೆ / ನೇರ ಮಾರಾಟ',
+    tripsCountLabel: '{count} ಟ್ರಿಪ್‌ಗಳು',
+    tripSingleLabel: '1 ಟ್ರಿಪ್',
+    unitsCountLabel: '{count} ಬಾಕ್ಸ್/ಘಟಕ',
+    latestTripLabel: 'ಕೊನೆಯ ಭೇಟಿ',
+    marketSummaryCsvHeading: 'ಮಾರುಕಟ್ಟೆ / ಖರೀದಿದಾರರ ಸಾರಾಂಶ',
+    tripsColumnLabel: 'ಟ್ರಿಪ್‌ಗಳು',
+    totalUnitsColumnLabel: 'ಒಟ್ಟು ಬಾಕ್ಸ್/ಘಟಕ',
+    shareAppTitle: 'ಬಿಎಸ್ ಡೈರಿ ಹಂಚಿಕೊಳ್ಳಿ',
+    shareAppSubtitle: 'ದೈನಂದಿನ ಕೃಷಿ ಕೆಲಸ, ಮಂಡಿ ಪಟ್ಟಿ ಮತ್ತು ಬೆಳೆ ಬೆಳವಣಿಗೆಯನ್ನು ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ದಾಖಲಿಸಲು ಸಹ ರೈತರನ್ನು ಆಹ್ವಾನಿಸಿ.',
+    shareAppBtn: 'ಬಿಎಸ್ ಡೈರಿ ಹಂಚಿಕೊಳ್ಳಿ',
+    shareAppCopyBtn: 'ಸಂದೇಶ ನಕಲಿಸಿ',
+    shareAppCopied: 'ಹಂಚಿಕೆ ಸಂದೇಶವನ್ನು ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ಗೆ ನಕಲಿಸಲಾಗಿದೆ.',
+    shareAppMessage: 'ಭೂಮಿಶಕ್ತಿ ಬಿಎಸ್ ಡೈರಿ (BS Diary) — ದೈನಂದಿನ ಕೃಷಿ ಕೆಲಸ, ಮಂಡಿ ಮಾರಾಟ ಪಟ್ಟಿ, ಬೆಳೆ ಹಂತಗಳು ಮತ್ತು ಖರ್ಚು-ವೆಚ್ಚಗಳನ್ನು ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ದಾಖಲಿಸಿ.\nಆ್ಯಪ್ ತೆರೆಯಿರಿ: https://app.bhoomishakti.in\nವೆಬ್‌ಸೈಟ್: https://www.bhoomishakti.in/',
   },
   hi: {
     tagline: 'हर खेत की कहानी, एक ही डायरी में',
@@ -1765,5 +1820,23 @@ export const copy: Record<Language, Copy> = {
     warrantyPreExpiryNotifTitle: 'वारंटी {days} दिन में समाप्त · BS डायरी',
     warrantyPreExpiryNotifBody: '{item} की वारंटी {date} को समाप्त हो रही है ({days} दिन शेष)। BS डायरी वॉल्ट में पर्ची देखें।',
     alarmTroubleshootHint: 'सुझाव: अलार्म की तेज़ आवाज़ और वाइब्रेशन के लिए फ़ोन का अलार्म वॉल्यूम बढ़ाएं और Android सेटिंग्स में BS Diary सूचनाएं चालू रखें।',
+
+    marketSlipRefLabel: 'पर्ची सं.',
+    marketViewDailySlips: 'दैनिक पर्चियाँ',
+    marketViewByBuyerMarket: 'मंडी / ख़रीदार अनुसार',
+    unnamedMarketOrBuyer: 'सामान्य मंडी / सीधी बिक्री',
+    tripsCountLabel: '{count} फेरे',
+    tripSingleLabel: '1 फेरा',
+    unitsCountLabel: '{count} बॉक्स/इकाई',
+    latestTripLabel: 'आख़िरी फेरा',
+    marketSummaryCsvHeading: 'मंडी / ख़रीदार अनुसार सारांश',
+    tripsColumnLabel: 'फेरे',
+    totalUnitsColumnLabel: 'कुल बॉक्स/इकाई',
+    shareAppTitle: 'BS डायरी साझा करें',
+    shareAppSubtitle: 'दैनिक कृषि कार्य, मंडी पट्टी और फसल विकास को ऑफ़लाइन दर्ज करने के लिए अन्य किसान भाइयों को आमंत्रित करें।',
+    shareAppBtn: 'BS डायरी साझा करें',
+    shareAppCopyBtn: 'संदेश कॉपी करें',
+    shareAppCopied: 'साझा करने का संदेश क्लिपबोर्ड पर कॉपी हो गया।',
+    shareAppMessage: 'भूमि शक्ति BS डायरी (BS Diary) — रोज़ के कृषि कार्य, मंडी बिक्री पट्टी, फसल अवस्था और खर्च को ऑफ़लाइन दर्ज करें।\nऐप खोलें: https://app.bhoomishakti.in\nवेबसाइट: https://www.bhoomishakti.in/',
   },
 };

@@ -2,7 +2,12 @@ import { Platform } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
-import type { FarmProfile, MarketRecord } from '../db/schema';
+import {
+  formatMarketSlipCode,
+  summarizeMarketByBuyerOrMarket,
+  type FarmProfile,
+  type MarketRecord,
+} from '../db/schema';
 import type { Copy, Language } from '../i18n/copy';
 import { marketPaymentStatusLabel, marketUnitLabel } from '../i18n/vocab';
 import { formatDisplayTime12h, formatINR } from '../utils/format';
@@ -55,6 +60,7 @@ function buildMarketPattiHtml(
   const paymentLabel = marketPaymentStatusLabel(language, record.paymentStatus);
   const pendingCrates = Math.max(0, record.cratesSent - record.cratesReturned);
   const isLoss = record.netProfit < 0;
+  const slipCode = formatMarketSlipCode(record);
 
   const farmerMeta = [
     farmProfile?.farmName,
@@ -107,6 +113,7 @@ function buildMarketPattiHtml(
     .patti-header h1 { margin: 0; font-size: 18px; letter-spacing: 0.6px; }
     .patti-header p { margin: 3px 0 0; font-size: 11px; opacity: 0.92; }
     .patti-badge { background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 6px 10px; text-align: right; font-size: 11px; font-weight: 700; }
+    .patti-ref { font-size: 12px; letter-spacing: 0.4px; margin-bottom: 2px; }
     .meta-grid { display: flex; flex-wrap: wrap; gap: 10px; background: #F4FAF5; border: 1px solid #D5EBD9; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; }
     .meta-item { flex: 1; min-width: 180px; font-size: 11px; }
     .meta-item strong { color: #246B3B; display: block; font-size: 10px; text-transform: uppercase; margin-bottom: 2px; }
@@ -134,12 +141,16 @@ function buildMarketPattiHtml(
       <p>BS DIARY · BHOOMISHAKTI${farmerMeta ? ` · ${escapeHtml(farmerMeta)}` : ''}</p>
     </div>
     <div class="patti-badge">
-      <div>${escapeHtml(record.marketDate)}</div>
-      <div>${escapeHtml(timeLabel)}</div>
+      <div class="patti-ref">${escapeHtml(slipCode)}</div>
+      <div>${escapeHtml(record.marketDate)} · ${escapeHtml(timeLabel)}</div>
     </div>
   </div>
 
   <div class="meta-grid">
+    <div class="meta-item">
+      <strong>${escapeHtml(t.marketSlipRefLabel)}</strong>
+      ${escapeHtml(slipCode)}
+    </div>
     <div class="meta-item">
       <strong>${escapeHtml(t.marketNameLabel)}</strong>
       ${escapeHtml(record.marketName || '—')}
@@ -227,8 +238,16 @@ function buildSingleRecordCsv(
 ): string {
   const rows: (string | number | null | undefined)[][] = [];
   const pendingCrates = Math.max(0, record.cratesSent - record.cratesReturned);
+  const slipCode = formatMarketSlipCode(record);
 
-  rows.push([t.marketPattiTitle, workspaceName, record.marketDate, formatDisplayTime12h(record.marketOpenTime)]);
+  rows.push([
+    t.marketPattiTitle,
+    t.marketSlipRefLabel,
+    slipCode,
+    workspaceName,
+    record.marketDate,
+    formatDisplayTime12h(record.marketOpenTime),
+  ]);
   rows.push([t.marketNameLabel, record.marketName, t.village, record.village, t.taluk, record.taluk, t.district, record.district, t.stateField, record.state]);
   rows.push([
     t.paymentStatusLabel,
@@ -301,6 +320,7 @@ function buildLedgerCsv(
   rows.push([t.dailyMarket, workspaceName, new Date().toISOString().slice(0, 10)]);
   rows.push([]);
   rows.push([
+    t.marketSlipRefLabel,
     t.marketDateLabel,
     t.marketTimeLabel,
     t.marketNameLabel,
@@ -340,6 +360,7 @@ function buildLedgerCsv(
       .join(' | ');
 
     rows.push([
+      formatMarketSlipCode(r),
       r.marketDate,
       formatDisplayTime12h(r.marketOpenTime),
       r.marketName,
@@ -370,6 +391,7 @@ function buildLedgerCsv(
     '',
     '',
     '',
+    '',
     `${records.length}`,
     totalGross,
     totalExp,
@@ -382,6 +404,38 @@ function buildLedgerCsv(
     totalPendingCrates,
     '',
   ]);
+
+  const entitySummaries = summarizeMarketByBuyerOrMarket(records);
+  if (entitySummaries.length > 0) {
+    rows.push([]);
+    rows.push([t.marketSummaryCsvHeading]);
+    rows.push([
+      t.marketViewByBuyerMarket,
+      t.marketLocationHeading,
+      t.tripsColumnLabel,
+      t.totalUnitsColumnLabel,
+      t.marketGrossIncome,
+      t.marketTotalExpenses,
+      t.marketNetProfit,
+      t.pendingBaaki,
+      t.pendingCrates,
+      t.latestTripLabel,
+    ]);
+    for (const s of entitySummaries) {
+      rows.push([
+        s.displayName || t.unnamedMarketOrBuyer,
+        s.locationSummary,
+        s.tripsCount,
+        s.totalBoxesUnits,
+        s.grossIncome,
+        s.totalExpense,
+        s.netProfit,
+        s.pendingBaaki,
+        s.pendingCrates,
+        s.latestMarketDate,
+      ]);
+    }
+  }
 
   const csvBody = rows.map(row => row.map(escapeCsvCell).join(',')).join('\r\n');
   return `\uFEFF${csvBody}`;
@@ -434,7 +488,8 @@ export async function exportMarketRecordPdf(
 
   if (baseDir) {
     const safeMkt = sanitizeFilenamePart(record.marketName || workspaceName);
-    const namedUri = `${baseDir}BhoomiShakti-Patti-${safeMkt}-${record.marketDate}.pdf`;
+    const slipCode = formatMarketSlipCode(record);
+    const namedUri = `${baseDir}BhoomiShakti-Patti-${safeMkt}-${slipCode}.pdf`;
     try {
       await FileSystem.deleteAsync(namedUri, { idempotent: true });
       await FileSystem.moveAsync({ from: uri, to: namedUri });
@@ -464,7 +519,8 @@ export async function exportMarketRecordCsv(
 ): Promise<void> {
   const csvContent = buildSingleRecordCsv(record, t, language, workspaceName);
   const safeMkt = sanitizeFilenamePart(record.marketName || workspaceName);
-  const filename = `BhoomiShakti-Patti-${safeMkt}-${record.marketDate}.csv`;
+  const slipCode = formatMarketSlipCode(record);
+  const filename = `BhoomiShakti-Patti-${safeMkt}-${slipCode}.csv`;
   await shareCsvText(filename, csvContent, t.shareMarketCsvDialog, t);
 }
 
@@ -493,6 +549,7 @@ export async function buildMarketRecordDrivePayload(
 ): Promise<{ fileName: string; mimeType: string; contentBase64: string }> {
   const html = buildMarketPattiHtml(record, t, language, workspaceName, farmProfile);
   const safeMkt = sanitizeFilenamePart(record.marketName || workspaceName);
+  const slipCode = formatMarketSlipCode(record);
 
   if (Platform.OS !== 'web') {
     const result = await Print.printToFileAsync({ html, base64: true });
@@ -504,7 +561,7 @@ export async function buildMarketRecordDrivePayload(
     }
     if (base64) {
       return {
-        fileName: `BhoomiShakti-Patti-${safeMkt}-${record.marketDate}.pdf`,
+        fileName: `BhoomiShakti-Patti-${safeMkt}-${slipCode}.pdf`,
         mimeType: 'application/pdf',
         contentBase64: base64,
       };
@@ -512,7 +569,7 @@ export async function buildMarketRecordDrivePayload(
   }
 
   return {
-    fileName: `BhoomiShakti-Patti-${safeMkt}-${record.marketDate}.html`,
+    fileName: `BhoomiShakti-Patti-${safeMkt}-${slipCode}.html`,
     mimeType: 'text/html',
     contentBase64: utf8ToBase64(html),
   };

@@ -109,6 +109,150 @@ export type MarketLocationDefaults = {
   marketName: string;
 };
 
+export type MarketEntitySummary = {
+  key: string;
+  marketName: string;
+  agentName: string;
+  displayName: string;
+  locationSummary: string;
+  tripsCount: number;
+  totalBoxesUnits: number;
+  totalItemLines: number;
+  grossIncome: number;
+  totalExpense: number;
+  netProfit: number;
+  pendingBaaki: number;
+  pendingCrates: number;
+  latestMarketDate: string;
+};
+
+/**
+ * Returns a deterministic, human-readable slip reference code such as `BS-20261128-42`.
+ */
+export function formatMarketSlipCode(
+  record: Pick<MarketRecord, 'id' | 'marketDate'>
+): string {
+  const digits = (record.marketDate ?? '').replace(/\D/g, '').slice(0, 8);
+  const datePart = digits.length === 8 ? digits : '00000000';
+  const idPart = Number.isFinite(record.id) ? Math.trunc(record.id) : 0;
+  return `BS-${datePart}-${idPart}`;
+}
+
+/**
+ * Groups market slips by normalized (marketName, agentName) pair and aggregates
+ * trips, boxes/units, gross income, expenses, net profit, and pending baaki/crates.
+ */
+export function summarizeMarketByBuyerOrMarket(
+  records: MarketRecord[]
+): MarketEntitySummary[] {
+  const groups = new Map<
+    string,
+    {
+      marketName: string;
+      agentName: string;
+      state: string;
+      district: string;
+      taluk: string;
+      village: string;
+      tripsCount: number;
+      totalBoxesUnits: number;
+      totalItemLines: number;
+      grossIncome: number;
+      totalExpense: number;
+      netProfit: number;
+      pendingBaaki: number;
+      pendingCrates: number;
+      latestMarketDate: string;
+    }
+  >();
+
+  for (const r of records) {
+    const marketName = (r.marketName ?? '').trim();
+    const agentName = (r.agentName ?? '').trim();
+    const key = `${marketName.toLowerCase()}||${agentName.toLowerCase()}`;
+    const boxesUnits = (r.vegetables ?? []).reduce(
+      (sum, v) => sum + (Number.isFinite(v.quantity) ? v.quantity : 0),
+      0
+    );
+    const itemLines = (r.vegetables ?? []).length;
+    const pendingCrates = Math.max(0, (r.cratesSent ?? 0) - (r.cratesReturned ?? 0));
+
+    const existing = groups.get(key);
+    if (!existing) {
+      groups.set(key, {
+        marketName,
+        agentName,
+        state: (r.state ?? '').trim(),
+        district: (r.district ?? '').trim(),
+        taluk: (r.taluk ?? '').trim(),
+        village: (r.village ?? '').trim(),
+        tripsCount: 1,
+        totalBoxesUnits: boxesUnits,
+        totalItemLines: itemLines,
+        grossIncome: r.grossIncome,
+        totalExpense: r.totalExpense,
+        netProfit: r.netProfit,
+        pendingBaaki: r.pendingAmount,
+        pendingCrates,
+        latestMarketDate: r.marketDate,
+      });
+    } else {
+      existing.tripsCount += 1;
+      existing.totalBoxesUnits += boxesUnits;
+      existing.totalItemLines += itemLines;
+      existing.grossIncome += r.grossIncome;
+      existing.totalExpense += r.totalExpense;
+      existing.netProfit += r.netProfit;
+      existing.pendingBaaki += r.pendingAmount;
+      existing.pendingCrates += pendingCrates;
+      if (r.marketDate >= existing.latestMarketDate) {
+        existing.latestMarketDate = r.marketDate;
+        if (r.state?.trim()) existing.state = r.state.trim();
+        if (r.district?.trim()) existing.district = r.district.trim();
+        if (r.taluk?.trim()) existing.taluk = r.taluk.trim();
+        if (r.village?.trim()) existing.village = r.village.trim();
+      } else {
+        if (!existing.state && r.state?.trim()) existing.state = r.state.trim();
+        if (!existing.district && r.district?.trim()) existing.district = r.district.trim();
+        if (!existing.taluk && r.taluk?.trim()) existing.taluk = r.taluk.trim();
+        if (!existing.village && r.village?.trim()) existing.village = r.village.trim();
+      }
+    }
+  }
+
+  const results: MarketEntitySummary[] = [];
+  for (const [key, g] of groups.entries()) {
+    const displayName = [g.marketName, g.agentName].filter(Boolean).join(' · ');
+    const locationSummary = [g.state, g.district, g.taluk, g.village]
+      .filter(Boolean)
+      .join(' · ');
+    results.push({
+      key,
+      marketName: g.marketName,
+      agentName: g.agentName,
+      displayName,
+      locationSummary,
+      tripsCount: g.tripsCount,
+      totalBoxesUnits: Math.round(g.totalBoxesUnits * 100) / 100,
+      totalItemLines: g.totalItemLines,
+      grossIncome: Math.round(g.grossIncome * 100) / 100,
+      totalExpense: Math.round(g.totalExpense * 100) / 100,
+      netProfit: Math.round(g.netProfit * 100) / 100,
+      pendingBaaki: Math.round(g.pendingBaaki * 100) / 100,
+      pendingCrates: g.pendingCrates,
+      latestMarketDate: g.latestMarketDate,
+    });
+  }
+
+  results.sort((a, b) => {
+    if (b.netProfit !== a.netProfit) return b.netProfit - a.netProfit;
+    if (b.tripsCount !== a.tripsCount) return b.tripsCount - a.tripsCount;
+    return b.latestMarketDate.localeCompare(a.latestMarketDate);
+  });
+
+  return results;
+}
+
 function toFiniteNumber(val: unknown, fallback: number = 0): number {
   return typeof val === 'number' && Number.isFinite(val) ? val : fallback;
 }
