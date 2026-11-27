@@ -8,15 +8,17 @@ import { ListCard } from '../components/ListCard';
 import { SectionTitle } from '../components/SectionTitle';
 import { SegmentedTabs } from '../components/SegmentedTabs';
 import { Stat } from '../components/Stat';
-import { Crop, FinanceEntry, Harvest, Plot } from '../db/schema';
+import type { MarketLocationDefaults, MarketRecord, MarketRecordInput } from '../db/marketRecordsRepo';
+import { Crop, FarmProfile, FinanceEntry, Harvest, Plot } from '../db/schema';
 import { Copy, Language } from '../i18n/copy';
 import { expenseCategoryLabel, incomeCategoryLabel, quantityUnitLabel, seasonLabel } from '../i18n/vocab';
 import { FinanceFormModal, FinanceFormState } from './FinanceFormModal';
 import { HarvestFormModal, HarvestFormState } from './HarvestFormModal';
+import { MarketScreen } from './MarketScreen';
 import { shared } from '../styles/shared';
 import { formatINR, formatShortDate, isValidDateString, parseAmount, todayDateString } from '../utils/format';
 
-type RecordsSection = 'overview' | 'finance' | 'harvests';
+export type RecordsSection = 'overview' | 'market' | 'finance' | 'harvests';
 
 const SEASON_IDS: Record<string, number> = {
   kharif: 1,
@@ -32,8 +34,9 @@ const EMPTY_HARVEST: HarvestFormState = {
 
 export function RecordsScreen({
   t, language, lg, isMobile, gridColumns, cardWidth,
-  activitiesCount, finance, harvests, crops, plots,
-  onDeleteFinanceConfirm, onDeleteHarvestConfirm, onError, onOpenExport,
+  section, onSectionChange, workspaceName, farmProfile,
+  activitiesCount, marketRecords, finance, harvests, crops, plots,
+  onDeleteMarketConfirm, onDeleteFinanceConfirm, onDeleteHarvestConfirm, onError, onOpenExport,
 }: {
   t: Copy;
   language: Language;
@@ -41,7 +44,18 @@ export function RecordsScreen({
   isMobile: boolean;
   gridColumns: number;
   cardWidth: DimensionValue;
+  section: RecordsSection;
+  onSectionChange: (next: RecordsSection) => void;
+  workspaceName: string;
+  farmProfile?: FarmProfile | null;
   activitiesCount: number;
+  marketRecords: {
+    items: MarketRecord[];
+    loading: boolean;
+    add: (input: MarketRecordInput) => Promise<void>;
+    update: (id: number, input: MarketRecordInput) => Promise<void>;
+    getLastLocation: () => Promise<MarketLocationDefaults>;
+  };
   finance: {
     items: FinanceEntry[]; loading: boolean;
     add: (input: { type: 'expense' | 'income'; amount: number; category: string; date: string; notes: string }) => Promise<void>;
@@ -54,12 +68,13 @@ export function RecordsScreen({
   };
   crops: Crop[];
   plots: Plot[];
+  onDeleteMarketConfirm: (record: MarketRecord) => void;
   onDeleteFinanceConfirm: (entry: FinanceEntry) => void;
   onDeleteHarvestConfirm: (harvest: Harvest) => void;
   onError: (message: string) => void;
   onOpenExport: () => void;
 }) {
-  const [section, setSection] = useState<RecordsSection>('overview');
+  const locale = language === 'kn' ? 'kn-IN' : language === 'hi' ? 'hi-IN' : 'en-IN';
 
   const totalExpenses = useMemo(() => finance.items.filter(f => f.type === 'expense').reduce((sum, f) => sum + f.amount, 0), [finance.items]);
   const totalIncome = useMemo(() => finance.items.filter(f => f.type === 'income').reduce((sum, f) => sum + f.amount, 0), [finance.items]);
@@ -165,12 +180,29 @@ export function RecordsScreen({
       <SegmentedTabs
         options={[
           { key: 'overview', label: t.recordsOverviewTab },
+          { key: 'market', label: t.marketTab },
           { key: 'finance', label: t.financeTab },
           { key: 'harvests', label: t.harvestsTab },
         ]}
         value={section}
-        onChange={setSection}
+        onChange={onSectionChange}
       />
+
+      {section === 'market' && (
+        <MarketScreen
+          t={t}
+          language={language}
+          lg={lg}
+          isMobile={isMobile}
+          gridColumns={gridColumns}
+          cardWidth={cardWidth}
+          workspaceName={workspaceName}
+          farmProfile={farmProfile}
+          marketRecords={marketRecords}
+          onDeleteMarketConfirm={onDeleteMarketConfirm}
+          onError={onError}
+        />
+      )}
 
       {section === 'overview' && (
         <>
@@ -232,7 +264,7 @@ export function RecordsScreen({
                 <ListCard
                   icon={entry.type === 'expense' ? '💸' : '💰'}
                   title={entry.type === 'expense' ? expenseCategoryLabel(language, entry.category) : incomeCategoryLabel(language, entry.category)}
-                  meta={`${formatINR(entry.amount)} · ${formatShortDate(entry.date, 'en-IN')}`}
+                  meta={`${formatINR(entry.amount)} · ${formatShortDate(entry.date, locale)}`}
                   note={entry.notes}
                   onPress={() => openEditFinance(entry)}
                   onDelete={() => onDeleteFinanceConfirm(entry)}
@@ -261,7 +293,7 @@ export function RecordsScreen({
                   <ListCard
                     icon="🌾"
                     title={cropName}
-                    meta={`${h.quantity} ${quantityUnitLabel(language, h.quantityUnit)} · ${formatShortDate(h.harvestDate, 'en-IN')}`}
+                    meta={`${h.quantity} ${quantityUnitLabel(language, h.quantityUnit)} · ${formatShortDate(h.harvestDate, locale)}`}
                     note={`${t.totalValue}: ${valueLabel}${h.buyer ? ` · ${h.buyer}` : ''}`}
                     onPress={() => openEditHarvest(h)}
                     onDelete={() => onDeleteHarvestConfirm(h)}

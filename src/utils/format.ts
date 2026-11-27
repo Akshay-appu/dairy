@@ -42,6 +42,35 @@ export function todayDateString(): string {
   return `${y}-${m}-${d}`;
 }
 
+export function currentLocalTimeHHMM(): string {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm}`;
+}
+
+const TIME_HHMM_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+export function isValidTimeHHMM(value: string): boolean {
+  return TIME_HHMM_RE.test(value.trim());
+}
+
+export function formatDisplayTime12h(hhmm: string): string {
+  const trimmed = hhmm.trim();
+  const match = TIME_HHMM_RE.exec(trimmed);
+  if (!match) return trimmed;
+  const hours24 = Number(match[1]);
+  const minutes = match[2];
+  const period = hours24 >= 12 ? 'PM' : 'AM';
+  const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
+  return `${hours12}:${minutes} ${period}`;
+}
+
+export function isLowLightHour(): boolean {
+  const hour = new Date().getHours();
+  return hour < 6 || hour >= 20;
+}
+
 export function formatShortDate(value: string, locale: string): string {
   const date = isValidDateString(value) ? new Date(value) : new Date(value);
   if (Number.isNaN(date.getTime())) return value;

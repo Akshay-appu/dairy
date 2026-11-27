@@ -80,8 +80,8 @@ export async function processSyncQueue(
         const now = new Date().toISOString();
         if (item.tableName === 'farm_profile') {
           await db.runAsync(
-            `UPDATE farm_profile SET lastSyncedAt = ? WHERE id = 1 AND workspaceId = ?`,
-            now, item.workspaceId
+            "UPDATE farm_profile SET lastSyncedAt = ? WHERE workspaceId = ? AND COALESCE(userId, '') = COALESCE(?, '')",
+            now, item.workspaceId, item.userId
           );
         } else {
           await db.runAsync(

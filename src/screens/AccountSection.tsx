@@ -14,19 +14,30 @@ import { authErrorKey, useAuth } from '../hooks/useAuth';
 import { useSync } from '../hooks/useSync';
 import { useFarmProfile } from '../hooks/useFarmProfile';
 import { Copy, Language } from '../i18n/copy';
-import { formatLongDate } from '../utils/format';
+import { formatDisplayTime12h, formatLongDate, isValidTimeHHMM } from '../utils/format';
 import { GREEN, LIGHT_GREEN, DANGER, INK, MUTED } from '../theme';
 import {
+  getMandiAlarmTime,
   isDailyReminderEnabled,
+  isMandiAlarmEnabled,
   isMorningWeatherAlertEnabled,
   notifyBhoomiEmailService,
   openNotificationAlarmSettings,
   previewFarmAlarmTone,
   setDailyReminderEnabled,
+  setMandiAlarm,
   setMorningWeatherAlertEnabled,
 } from '../services/notifications';
 
 type AuthMode = 'signUp' | 'signIn';
+
+const MANDI_ALARM_PRESETS = [
+  { hour: 2, minute: 30, hhmm: '02:30' },
+  { hour: 3, minute: 0, hhmm: '03:00' },
+  { hour: 3, minute: 30, hhmm: '03:30' },
+  { hour: 4, minute: 0, hhmm: '04:00' },
+  { hour: 5, minute: 0, hhmm: '05:00' },
+];
 
 export function AccountSection({
   t,
@@ -62,6 +73,10 @@ export function AccountSection({
   // Notification & verification states
   const [dailyReminder, setDailyReminder] = useState(false);
   const [morningWeatherAlert, setMorningWeatherAlert] = useState(false);
+  const [mandiAlarmEnabled, setMandiAlarmEnabled] = useState(false);
+  const [mandiAlarmHour, setMandiAlarmHour] = useState(3);
+  const [mandiAlarmMinute, setMandiAlarmMinute] = useState(0);
+  const [mandiCustomTime, setMandiCustomTime] = useState('03:00');
   const [notifStatus, setNotifStatus] = useState<string | null>(null);
   const [notifStatusError, setNotifStatusError] = useState(false);
   const [previewingTone, setPreviewingTone] = useState(false);
@@ -71,13 +86,20 @@ export function AccountSection({
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [dailyEnabled, morningEnabled] = await Promise.all([
+      const [dailyEnabled, morningEnabled, mandiEnabled, mandiTime] = await Promise.all([
         isDailyReminderEnabled(),
         isMorningWeatherAlertEnabled(),
+        isMandiAlarmEnabled(),
+        getMandiAlarmTime(),
       ]);
       if (alive) {
         setDailyReminder(dailyEnabled);
         setMorningWeatherAlert(morningEnabled);
+        setMandiAlarmEnabled(mandiEnabled);
+        setMandiAlarmHour(mandiTime.hour);
+        setMandiAlarmMinute(mandiTime.minute);
+        const hhmm = `${String(mandiTime.hour).padStart(2, '0')}:${String(mandiTime.minute).padStart(2, '0')}`;
+        setMandiCustomTime(hhmm);
       }
     })();
     return () => {
@@ -115,6 +137,53 @@ export function AccountSection({
       setNotifStatus(t.notificationPermissionDenied);
       setNotifStatusError(true);
     }
+  };
+
+  const applyMandiAlarm = async (nextEnabled: boolean, nextHour: number, nextMinute: number) => {
+    const hhmm = `${String(nextHour).padStart(2, '0')}:${String(nextMinute).padStart(2, '0')}`;
+    setMandiAlarmEnabled(nextEnabled);
+    setMandiAlarmHour(nextHour);
+    setMandiAlarmMinute(nextMinute);
+    setMandiCustomTime(hhmm);
+    setNotifStatus(null);
+    setNotifStatusError(false);
+
+    const success = await setMandiAlarm(
+      nextEnabled,
+      nextHour,
+      nextMinute,
+      t.mandiAlarmNotifTitle,
+      t.mandiAlarmNotifBody
+    );
+    if (!success && nextEnabled) {
+      setMandiAlarmEnabled(false);
+      setNotifStatus(t.notificationPermissionDenied);
+      setNotifStatusError(true);
+    } else if (nextEnabled) {
+      setNotifStatus(
+        t.mandiAlarmScheduledNote.replace('{time}', formatDisplayTime12h(hhmm))
+      );
+      setNotifStatusError(false);
+    }
+  };
+
+  const handleToggleMandiAlarm = (value: boolean) => {
+    void applyMandiAlarm(value, mandiAlarmHour, mandiAlarmMinute);
+  };
+
+  const handleSelectMandiPreset = (hour: number, minute: number) => {
+    void applyMandiAlarm(mandiAlarmEnabled, hour, minute);
+  };
+
+  const handleApplyCustomMandiTime = () => {
+    const clean = mandiCustomTime.trim();
+    if (!isValidTimeHHMM(clean)) {
+      setNotifStatus(t.invalidTime);
+      setNotifStatusError(true);
+      return;
+    }
+    const [hStr, mStr] = clean.split(':');
+    void applyMandiAlarm(mandiAlarmEnabled, Number(hStr), Number(mStr));
   };
 
   const handleChooseAlarmTone = async () => {
@@ -180,6 +249,7 @@ export function AccountSection({
             farmName: profile.profile?.farmName || (cleanVillage ? `${cleanVillage} Farm` : 'My Farm'),
             farmerName: cleanName || profile.profile?.farmerName || '',
             village: cleanVillage || profile.profile?.village || '',
+            taluk: profile.profile?.taluk || '',
             district: profile.profile?.district || '',
             state: profile.profile?.state || '',
             totalArea: profile.profile?.totalArea ?? null,
@@ -611,6 +681,66 @@ export function AccountSection({
             trackColor={{ false: '#CBD5E1', true: '#81C784' }}
             thumbColor={morningWeatherAlert ? GREEN : '#F1F5F9'}
           />
+        </View>
+
+        <View style={styles.divider} />
+
+        {/* Configurable Mandi Morning Wake-Up Alarm */}
+        <View style={styles.reminderRow}>
+          <View style={styles.reminderTextWrap}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="storefront-outline" size={18} color={GREEN} />
+              <Text style={styles.reminderTitle}>{t.mandiAlarmTitle}</Text>
+            </View>
+            <Text style={styles.reminderSubtitle}>{t.mandiAlarmSubtitle}</Text>
+          </View>
+          <Switch
+            value={mandiAlarmEnabled}
+            onValueChange={handleToggleMandiAlarm}
+            trackColor={{ false: '#CBD5E1', true: '#81C784' }}
+            thumbColor={mandiAlarmEnabled ? GREEN : '#F1F5F9'}
+          />
+        </View>
+
+        <View style={styles.mandiAlarmBox}>
+          <Text style={styles.mandiAlarmTimeLabel}>
+            {t.mandiAlarmTimeLabel}:{' '}
+            <Text style={{ color: GREEN }}>
+              {formatDisplayTime12h(
+                `${String(mandiAlarmHour).padStart(2, '0')}:${String(mandiAlarmMinute).padStart(2, '0')}`
+              )}
+            </Text>
+          </Text>
+          <View style={styles.mandiPresetRow}>
+            {MANDI_ALARM_PRESETS.map(preset => {
+              const active = mandiAlarmHour === preset.hour && mandiAlarmMinute === preset.minute;
+              return (
+                <TouchableOpacity
+                  key={preset.hhmm}
+                  onPress={() => handleSelectMandiPreset(preset.hour, preset.minute)}
+                  style={[styles.mandiPresetChip, active && styles.mandiPresetChipActive]}
+                >
+                  <Text style={[styles.mandiPresetText, active && styles.mandiPresetTextActive]}>
+                    {formatDisplayTime12h(preset.hhmm)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <View style={styles.mandiCustomRow}>
+            <TextInput
+              value={mandiCustomTime}
+              onChangeText={setMandiCustomTime}
+              placeholder={t.mandiAlarmCustomTimePlaceholder}
+              placeholderTextColor="#94A3B8"
+              keyboardType="numbers-and-punctuation"
+              maxLength={5}
+              style={styles.mandiCustomInput}
+            />
+            <TouchableOpacity onPress={handleApplyCustomMandiTime} style={styles.mandiSetBtn}>
+              <Text style={styles.mandiSetBtnText}>{t.mandiAlarmSetTimeBtn}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.divider} />
@@ -1108,5 +1238,72 @@ const styles = StyleSheet.create({
   },
   btnDisabled: {
     opacity: 0.6,
+  },
+  mandiAlarmBox: {
+    backgroundColor: '#F8FAF8',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#DCE8DE',
+    padding: 10,
+    marginTop: 8,
+    gap: 8,
+  },
+  mandiAlarmTimeLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: INK,
+  },
+  mandiPresetRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  mandiPresetChip: {
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+  },
+  mandiPresetChipActive: {
+    borderColor: GREEN,
+    backgroundColor: LIGHT_GREEN,
+  },
+  mandiPresetText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: MUTED,
+  },
+  mandiPresetTextActive: {
+    color: GREEN,
+  },
+  mandiCustomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  mandiCustomInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 13,
+    fontWeight: '600',
+    color: INK,
+  },
+  mandiSetBtn: {
+    backgroundColor: GREEN,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  mandiSetBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

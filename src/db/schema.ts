@@ -2,6 +2,7 @@ import * as SQLite from 'expo-sqlite';
 import { uuidv4 } from '../utils/uuid';
 export * from './cropSchedulesRepo';
 export * from './vaultRepo';
+export * from './marketRecordsRepo';
 
 // Sync bookkeeping columns shared by every syncable table:
 //   uuid         - stable cross-device identity; also the Firestore doc id
@@ -27,10 +28,11 @@ export type Entry = {
 } & SyncColumns;
 
 export type FarmProfile = {
-  id: 1;
+  id: number;
   farmName: string;
   farmerName: string;
   village: string;
+  taluk: string;
   district: string;
   state: string;
   totalArea: number | null;
@@ -38,6 +40,7 @@ export type FarmProfile = {
   updatedAt: string;
   userId: string | null;
   lastSyncedAt: string | null;
+  workspaceId?: string;
 };
 
 export type Plot = {
@@ -88,7 +91,7 @@ export type Harvest = {
   updatedAt: string;
 } & SyncColumns;
 
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 
 // Every syncable table except farm_profile (singleton, no uuid/tombstone needed).
 const SYNCABLE_TABLES = ['plots', 'crops', 'diary_entries', 'finance_entries', 'harvests'] as const;
@@ -233,7 +236,7 @@ async function migrateToV4(db: SQLite.SQLiteDatabase): Promise<void> {
 
 let databasePromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
-async function createFreshV5Schema(database: SQLite.SQLiteDatabase): Promise<void> {
+async function createFreshV6Schema(database: SQLite.SQLiteDatabase): Promise<void> {
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS diary_entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -252,10 +255,11 @@ async function createFreshV5Schema(database: SQLite.SQLiteDatabase): Promise<voi
     );
 
     CREATE TABLE IF NOT EXISTS farm_profile (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       farmName TEXT NOT NULL DEFAULT '',
       farmerName TEXT NOT NULL DEFAULT '',
       village TEXT NOT NULL DEFAULT '',
+      taluk TEXT NOT NULL DEFAULT '',
       district TEXT NOT NULL DEFAULT '',
       state TEXT NOT NULL DEFAULT '',
       totalArea REAL,
@@ -263,8 +267,10 @@ async function createFreshV5Schema(database: SQLite.SQLiteDatabase): Promise<voi
       updatedAt TEXT NOT NULL,
       userId TEXT,
       lastSyncedAt TEXT,
-      workspaceId TEXT DEFAULT 'default'
+      workspaceId TEXT NOT NULL DEFAULT 'default'
     );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_farm_profile_ws_owner
+      ON farm_profile (workspaceId, COALESCE(userId, ''));
 
     CREATE TABLE IF NOT EXISTS plots (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -363,12 +369,69 @@ async function createFreshV5Schema(database: SQLite.SQLiteDatabase): Promise<voi
       capturedAt TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_vault_documents_workspace ON vault_documents(workspaceId);
+
+    CREATE TABLE IF NOT EXISTS market_records (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      uuid TEXT NOT NULL,
+      userId TEXT,
+      workspaceId TEXT NOT NULL DEFAULT 'default',
+      marketDate TEXT NOT NULL,
+      marketOpenTime TEXT NOT NULL DEFAULT '03:30',
+      state TEXT NOT NULL DEFAULT '',
+      district TEXT NOT NULL DEFAULT '',
+      taluk TEXT NOT NULL DEFAULT '',
+      village TEXT NOT NULL DEFAULT '',
+      marketName TEXT NOT NULL DEFAULT '',
+      grossIncome REAL NOT NULL DEFAULT 0,
+      totalExpense REAL NOT NULL DEFAULT 0,
+      netProfit REAL NOT NULL DEFAULT 0,
+      paymentStatus TEXT NOT NULL DEFAULT 'cash',
+      pendingAmount REAL NOT NULL DEFAULT 0,
+      agentName TEXT NOT NULL DEFAULT '',
+      cratesSent INTEGER NOT NULL DEFAULT 0,
+      cratesReturned INTEGER NOT NULL DEFAULT 0,
+      pattiPhotoUri TEXT,
+      notes TEXT NOT NULL DEFAULT '',
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL,
+      deletedAt TEXT,
+      lastSyncedAt TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_market_records_workspace_date
+      ON market_records(workspaceId, marketDate);
+
+    CREATE TABLE IF NOT EXISTS market_vegetable_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      recordId INTEGER NOT NULL,
+      vegetableName TEXT NOT NULL,
+      grade TEXT NOT NULL DEFAULT '',
+      unit TEXT NOT NULL DEFAULT 'box',
+      quantity REAL NOT NULL DEFAULT 0,
+      weightPerUnitKg REAL,
+      ratePerUnit REAL NOT NULL DEFAULT 0,
+      totalAmount REAL NOT NULL DEFAULT 0,
+      sortOrder INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_market_vegetable_items_record
+      ON market_vegetable_items(recordId);
+
+    CREATE TABLE IF NOT EXISTS market_expenses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      recordId INTEGER NOT NULL,
+      label TEXT NOT NULL,
+      isPercentage INTEGER NOT NULL DEFAULT 0,
+      percentageValue REAL,
+      amount REAL NOT NULL DEFAULT 0,
+      sortOrder INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_market_expenses_record
+      ON market_expenses(recordId);
   `);
 
   const now = new Date().toISOString();
   await database.runAsync(
     `INSERT OR IGNORE INTO workspaces (id, name, isDefault, createdAt, updatedAt, uuid) VALUES (?, ?, 1, ?, ?, ?)`,
-    'default', 'Default Workspace', now, now, uuidv4()
+    'default', 'Default Workspace', now, now, 'default'
   );
   await database.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
 }
@@ -409,6 +472,125 @@ async function migrateToV5(database: SQLite.SQLiteDatabase): Promise<void> {
   await addColumnIfMissing(database, 'vault_documents', 'capturedAt', "capturedAt TEXT NOT NULL DEFAULT ''");
 }
 
+async function migrateToV6(database: SQLite.SQLiteDatabase): Promise<void> {
+  // 1. Normalize any existing workspaces where uuid != id (or uuid IS NULL) so uuid = id
+  await database.execAsync(`
+    UPDATE workspaces SET uuid = id WHERE uuid IS NULL OR uuid != id;
+  `);
+
+  // 2. Migrate farm_profile to remove CHECK (id = 1) so each workspace/account can hold its
+  //    own profile row keyed by (workspaceId, COALESCE(userId, '')), and add taluk column.
+  const hasTaluk = await columnExists(database, 'farm_profile', 'taluk');
+  const hasWorkspaceId = await columnExists(database, 'farm_profile', 'workspaceId');
+  const talukSelect = hasTaluk ? "COALESCE(taluk, '')" : "''";
+  const workspaceSelect = hasWorkspaceId ? "COALESCE(workspaceId, 'default')" : "'default'";
+
+  await database.withTransactionAsync(async () => {
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS farm_profile_v6 (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        farmName TEXT NOT NULL DEFAULT '',
+        farmerName TEXT NOT NULL DEFAULT '',
+        village TEXT NOT NULL DEFAULT '',
+        taluk TEXT NOT NULL DEFAULT '',
+        district TEXT NOT NULL DEFAULT '',
+        state TEXT NOT NULL DEFAULT '',
+        totalArea REAL,
+        areaUnit TEXT NOT NULL DEFAULT 'acres',
+        updatedAt TEXT NOT NULL,
+        userId TEXT,
+        lastSyncedAt TEXT,
+        workspaceId TEXT NOT NULL DEFAULT 'default'
+      );
+
+      INSERT INTO farm_profile_v6 (
+        farmName, farmerName, village, taluk, district, state,
+        totalArea, areaUnit, updatedAt, userId, lastSyncedAt, workspaceId
+      )
+      SELECT
+        COALESCE(farmName, ''),
+        COALESCE(farmerName, ''),
+        COALESCE(village, ''),
+        ${talukSelect},
+        COALESCE(district, ''),
+        COALESCE(state, ''),
+        totalArea,
+        COALESCE(areaUnit, 'acres'),
+        COALESCE(updatedAt, ''),
+        userId,
+        lastSyncedAt,
+        ${workspaceSelect}
+      FROM farm_profile;
+
+      DROP TABLE farm_profile;
+      ALTER TABLE farm_profile_v6 RENAME TO farm_profile;
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_farm_profile_ws_owner
+        ON farm_profile (workspaceId, COALESCE(userId, ''));
+    `);
+  });
+
+  // 3. Create Daily Market Records tables + indexes
+  await database.execAsync(`
+    CREATE TABLE IF NOT EXISTS market_records (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      uuid TEXT NOT NULL,
+      userId TEXT,
+      workspaceId TEXT NOT NULL DEFAULT 'default',
+      marketDate TEXT NOT NULL,
+      marketOpenTime TEXT NOT NULL DEFAULT '03:30',
+      state TEXT NOT NULL DEFAULT '',
+      district TEXT NOT NULL DEFAULT '',
+      taluk TEXT NOT NULL DEFAULT '',
+      village TEXT NOT NULL DEFAULT '',
+      marketName TEXT NOT NULL DEFAULT '',
+      grossIncome REAL NOT NULL DEFAULT 0,
+      totalExpense REAL NOT NULL DEFAULT 0,
+      netProfit REAL NOT NULL DEFAULT 0,
+      paymentStatus TEXT NOT NULL DEFAULT 'cash',
+      pendingAmount REAL NOT NULL DEFAULT 0,
+      agentName TEXT NOT NULL DEFAULT '',
+      cratesSent INTEGER NOT NULL DEFAULT 0,
+      cratesReturned INTEGER NOT NULL DEFAULT 0,
+      pattiPhotoUri TEXT,
+      notes TEXT NOT NULL DEFAULT '',
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL,
+      deletedAt TEXT,
+      lastSyncedAt TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_market_records_workspace_date
+      ON market_records(workspaceId, marketDate);
+
+    CREATE TABLE IF NOT EXISTS market_vegetable_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      recordId INTEGER NOT NULL,
+      vegetableName TEXT NOT NULL,
+      grade TEXT NOT NULL DEFAULT '',
+      unit TEXT NOT NULL DEFAULT 'box',
+      quantity REAL NOT NULL DEFAULT 0,
+      weightPerUnitKg REAL,
+      ratePerUnit REAL NOT NULL DEFAULT 0,
+      totalAmount REAL NOT NULL DEFAULT 0,
+      sortOrder INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_market_vegetable_items_record
+      ON market_vegetable_items(recordId);
+
+    CREATE TABLE IF NOT EXISTS market_expenses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      recordId INTEGER NOT NULL,
+      label TEXT NOT NULL,
+      isPercentage INTEGER NOT NULL DEFAULT 0,
+      percentageValue REAL,
+      amount REAL NOT NULL DEFAULT 0,
+      sortOrder INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_market_expenses_record
+      ON market_expenses(recordId);
+  `);
+}
+
 async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
   const database = await SQLite.openDatabaseAsync('bhoomishakti-diary.db');
   await database.execAsync('PRAGMA journal_mode = WAL;');
@@ -421,13 +603,13 @@ async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
     return database;
   }
 
-  // Fast path: brand-new fresh install creates all V5 tables in one batched SQL exec
+  // Fast path: brand-new fresh install creates all V6 tables in one batched SQL exec
   if (version === 0) {
     const existingLegacy = await database.getFirstAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'diary_entries'"
     );
     if (!existingLegacy) {
-      await createFreshV5Schema(database);
+      await createFreshV6Schema(database);
       return database;
     }
   }
@@ -460,6 +642,10 @@ async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
   }
   if (version < 5) {
     await migrateToV5(database);
+    version = 5;
+  }
+  if (version < 6) {
+    await migrateToV6(database);
   }
 
   await database.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION}`);

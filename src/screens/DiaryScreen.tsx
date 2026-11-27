@@ -5,14 +5,16 @@ import { GridList } from '../components/GridList';
 import { ListCard } from '../components/ListCard';
 import { PrimaryButton } from '../components/Buttons';
 import { Entry } from '../db/schema';
-import { Copy } from '../i18n/copy';
+import { Copy, Language } from '../i18n/copy';
+import { useActiveLanguage } from '../i18n/LanguageContext';
 import { shared } from '../styles/shared';
 import { formatShortDate } from '../utils/format';
 
 export function DiaryScreen({
-  t, lg, gridColumns, cardWidth, entries, onAddPress, onEditEntry, onDeleteEntry,
+  t, language, lg, gridColumns, cardWidth, entries, onAddPress, onEditEntry, onDeleteEntry,
 }: {
   t: Copy;
+  language?: Language;
   lg: boolean;
   gridColumns: number;
   cardWidth: DimensionValue;
@@ -21,6 +23,10 @@ export function DiaryScreen({
   onEditEntry?: (entry: Entry) => void;
   onDeleteEntry: (id: number) => void;
 }) {
+  const { language: activeLanguage } = useActiveLanguage();
+  const effectiveLanguage = language ?? activeLanguage;
+  const locale = effectiveLanguage === 'kn' ? 'kn-IN' : effectiveLanguage === 'hi' ? 'hi-IN' : 'en-IN';
+
   return (
     <>
       <Text style={[shared.pageTitle, lg && shared.pageTitleLg]}>{t.diary}</Text>
@@ -34,7 +40,7 @@ export function DiaryScreen({
           renderItem={entry => (
             <ListCard
               title={entry.title}
-              meta={`${entry.category} · ${formatShortDate(entry.createdAt, 'en-IN')}`}
+              meta={`${entry.category} · ${formatShortDate(entry.createdAt, locale)}`}
               note={entry.note}
               onPress={onEditEntry ? () => onEditEntry(entry) : undefined}
               onDelete={() => onDeleteEntry(entry.id)}

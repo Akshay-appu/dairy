@@ -18,12 +18,12 @@ import { isValidDateString, parseAmount, todayDateString } from '../utils/format
 type FarmSection = 'profile' | 'plots' | 'crops';
 
 type ProfileDraft = {
-  farmName: string; farmerName: string; village: string; district: string; state: string;
+  farmName: string; farmerName: string; village: string; taluk: string; district: string; state: string;
   totalArea: string; areaUnit: string;
 };
 
 const EMPTY_PROFILE_DRAFT: ProfileDraft = {
-  farmName: '', farmerName: '', village: '', district: '', state: '', totalArea: '', areaUnit: 'acres',
+  farmName: '', farmerName: '', village: '', taluk: '', district: '', state: '', totalArea: '', areaUnit: 'acres',
 };
 
 const EMPTY_PLOT: PlotFormState = { name: '', area: '', areaUnit: 'acres', notes: '' };
@@ -39,7 +39,7 @@ export function FarmScreen({
   isMobile: boolean;
   gridColumns: number;
   cardWidth: DimensionValue;
-  profile: { profile: { farmName: string; farmerName: string; village: string; district: string; state: string; totalArea: number | null; areaUnit: string } | null; loading: boolean; save: (input: ProfileDraftParsed) => Promise<void> };
+  profile: { profile: { farmName: string; farmerName: string; village: string; taluk?: string; district: string; state: string; totalArea: number | null; areaUnit: string } | null; loading: boolean; save: (input: ProfileDraftParsed) => Promise<void> };
   plots: { items: Plot[]; loading: boolean; add: (input: { name: string; area: number | null; areaUnit: string; notes: string }) => Promise<void>; update: (id: number, input: { name: string; area: number | null; areaUnit: string; notes: string }) => Promise<void> };
   crops: { items: Crop[]; loading: boolean; add: (input: { cropName: string; season: string; plotId: number | null; sowingDate: string; expectedHarvestDate: string | null }) => Promise<void>; update: (id: number, input: { cropName: string; season: string; plotId: number | null; sowingDate: string; expectedHarvestDate: string | null }) => Promise<void> };
   onDeletePlotConfirm: (plot: Plot) => void;
@@ -69,11 +69,14 @@ export function FarmScreen({
         farmName: profile.profile.farmName,
         farmerName: profile.profile.farmerName,
         village: profile.profile.village,
+        taluk: profile.profile.taluk ?? '',
         district: profile.profile.district,
         state: profile.profile.state,
         totalArea: profile.profile.totalArea != null ? String(profile.profile.totalArea) : '',
         areaUnit: profile.profile.areaUnit,
       });
+    } else {
+      setProfileDraft(EMPTY_PROFILE_DRAFT);
     }
   }
 
@@ -83,6 +86,7 @@ export function FarmScreen({
         farmName: profileDraft.farmName.trim(),
         farmerName: profileDraft.farmerName.trim(),
         village: profileDraft.village.trim(),
+        taluk: profileDraft.taluk.trim(),
         district: profileDraft.district.trim(),
         state: profileDraft.state.trim(),
         totalArea: parseAmount(profileDraft.totalArea),
@@ -172,6 +176,7 @@ export function FarmScreen({
           <FormField label={t.farmName} value={profileDraft.farmName} onChangeText={v => setProfileDraft({ ...profileDraft, farmName: v })} placeholder={t.farmNamePlaceholder} />
           <FormField label={t.farmerName} value={profileDraft.farmerName} onChangeText={v => setProfileDraft({ ...profileDraft, farmerName: v })} placeholder={t.farmerNamePlaceholder} />
           <FormField label={t.village} value={profileDraft.village} onChangeText={v => setProfileDraft({ ...profileDraft, village: v })} placeholder={t.villagePlaceholder} />
+          <FormField label={t.taluk} value={profileDraft.taluk} onChangeText={v => setProfileDraft({ ...profileDraft, taluk: v })} placeholder={t.talukPlaceholder} />
           <FormField label={t.district} value={profileDraft.district} onChangeText={v => setProfileDraft({ ...profileDraft, district: v })} placeholder={t.districtPlaceholder} />
           <FormField label={t.stateField} value={profileDraft.state} onChangeText={v => setProfileDraft({ ...profileDraft, state: v })} placeholder={t.statePlaceholder} />
           <FormField label={t.totalArea} value={profileDraft.totalArea} onChangeText={v => setProfileDraft({ ...profileDraft, totalArea: v })} placeholder="e.g. 5" keyboardType="decimal-pad" />
@@ -266,6 +271,6 @@ export function FarmScreen({
 }
 
 type ProfileDraftParsed = {
-  farmName: string; farmerName: string; village: string; district: string; state: string;
+  farmName: string; farmerName: string; village: string; taluk: string; district: string; state: string;
   totalArea: number | null; areaUnit: string;
 };

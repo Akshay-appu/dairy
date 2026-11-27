@@ -43,6 +43,28 @@ export const incomeCategoryLabels: Record<Language, Record<IncomeCategory, strin
   hi: { produceSale: 'उपज बिक्री', subsidy: 'सब्सिडी', other: 'अन्य' },
 };
 
+export type MarketUnit = 'box' | 'crate' | 'bag' | 'kg' | 'quintal' | 'bundle';
+export const marketUnits: MarketUnit[] = ['box', 'crate', 'bag', 'kg', 'quintal', 'bundle'];
+export const marketUnitLabels: Record<Language, Record<MarketUnit, string>> = {
+  en: { box: 'Box', crate: 'Crate', bag: 'Bag', kg: 'Kg', quintal: 'Quintal', bundle: 'Bundle' },
+  kn: { box: 'ಬಾಕ್ಸ್', crate: 'ಕ್ರೇಟ್', bag: 'ಚೀಲ', kg: 'ಕೆ.ಜಿ.', quintal: 'ಕ್ವಿಂಟಲ್', bundle: 'ಕಟ್ಟು' },
+  hi: { box: 'बॉक्स', crate: 'क्रेट', bag: 'बोरी', kg: 'किलो', quintal: 'क्विंटल', bundle: 'गट्ठर' },
+};
+
+export type MarketPaymentStatus = 'cash' | 'upi' | 'pending';
+export const marketPaymentStatuses: MarketPaymentStatus[] = ['cash', 'upi', 'pending'];
+export const marketPaymentStatusLabels: Record<Language, Record<MarketPaymentStatus, string>> = {
+  en: { cash: 'Cash', upi: 'UPI', pending: 'Pending / Baaki' },
+  kn: { cash: 'ನಗದು', upi: 'ಯುಪಿಐ', pending: 'ಬಾಕಿ ಇದೆ' },
+  hi: { cash: 'नकद', upi: 'UPI', pending: 'बकाया / बाकी' },
+};
+
+export const quickVegetableNames: Record<Language, string[]> = {
+  en: ['Tomato', 'Beans', 'Chilli', 'Onion', 'Potato', 'Capsicum', 'Brinjal', 'Coriander', 'Cabbage', 'Carrot'],
+  kn: ['ಟೊಮೆಟೊ', 'ಬೀನ್ಸ್', 'ಮೆಣಸಿನಕಾಯಿ', 'ಈರುಳ್ಳಿ', 'ಆಲೂಗಡ್ಡೆ', 'ದೊಣ್ಣಮೆಣಸಿನಕಾಯಿ', 'ಬದನೆಕಾಯಿ', 'ಕೊತ್ತಂಬರಿ', 'ಎಲೆಕೋಸು', 'ಕ್ಯಾರೆಟ್'],
+  hi: ['टमाटर', 'बीन्स', 'मिर्च', 'प्याज़', 'आलू', 'शिमला मिर्च', 'बैंगन', 'धनिया', 'पत्तागोभी', 'गाजर'],
+};
+
 // DB columns store these as plain TEXT, so a stored value might in principle
 // not match the known vocab (e.g. data edited outside the app). These lookups
 // fall back to the raw stored string instead of crashing on an unknown key.
@@ -60,4 +82,10 @@ export function expenseCategoryLabel(language: Language, category: string): stri
 }
 export function incomeCategoryLabel(language: Language, category: string): string {
   return incomeCategoryLabels[language][category as IncomeCategory] ?? category;
+}
+export function marketUnitLabel(language: Language, unit: string): string {
+  return marketUnitLabels[language][unit as MarketUnit] ?? unit;
+}
+export function marketPaymentStatusLabel(language: Language, status: string): string {
+  return marketPaymentStatusLabels[language][status as MarketPaymentStatus] ?? status;
 }

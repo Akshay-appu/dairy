@@ -199,18 +199,21 @@ export async function pullWorkspaces(db: SQLite.SQLiteDatabase, firestore: Fires
 
 export async function pushProfile(db: SQLite.SQLiteDatabase, firestore: Firestore, ownerId: string, workspaceId: string): Promise<boolean> {
   const row = await db.getFirstAsync<Record<string, SqlValue>>(
-    'SELECT * FROM farm_profile WHERE id = 1 AND (userId IS ?) AND workspaceId = ? AND (lastSyncedAt IS NULL OR updatedAt > lastSyncedAt)',
-    ownerId, workspaceId
+    "SELECT * FROM farm_profile WHERE workspaceId = ? AND COALESCE(userId, '') = COALESCE(?, '') AND (lastSyncedAt IS NULL OR updatedAt > lastSyncedAt)",
+    workspaceId, ownerId
   );
   if (!row) return false;
   const now = new Date().toISOString();
   const data = {
-    farmName: row.farmName, farmerName: row.farmerName, village: row.village, district: row.district,
-    state: row.state, totalArea: row.totalArea, areaUnit: row.areaUnit, updatedAt: row.updatedAt,
+    farmName: row.farmName, farmerName: row.farmerName, village: row.village, taluk: row.taluk ?? '',
+    district: row.district, state: row.state, totalArea: row.totalArea, areaUnit: row.areaUnit, updatedAt: row.updatedAt,
   };
   try {
     await setDoc(doc(firestore, `users/${ownerId}/workspaces/${workspaceId}/meta/profile`), data);
-    await db.runAsync('UPDATE farm_profile SET lastSyncedAt = ? WHERE id = 1 AND workspaceId = ?', now, workspaceId);
+    await db.runAsync(
+      "UPDATE farm_profile SET lastSyncedAt = ? WHERE workspaceId = ? AND COALESCE(userId, '') = COALESCE(?, '')",
+      now, workspaceId, ownerId
+    );
     return true;
   } catch {
     await enqueueSyncMutation(db, workspaceId, 'farm_profile', 'meta/profile', workspaceId, data, ownerId);
@@ -224,23 +227,34 @@ export async function pullProfile(db: SQLite.SQLiteDatabase, firestore: Firestor
   const remote = snap.data();
   const remoteUpdatedAt = String(remote.updatedAt ?? '');
   const now = new Date().toISOString();
-  const existing = await db.getFirstAsync<{ updatedAt: string }>(
-    'SELECT updatedAt FROM farm_profile WHERE id = 1 AND (userId IS ?) AND workspaceId = ?', ownerId, workspaceId
+  const existing = await db.getFirstAsync<{ id: number; updatedAt: string }>(
+    "SELECT id, updatedAt FROM farm_profile WHERE workspaceId = ? AND COALESCE(userId, '') = COALESCE(?, '')",
+    workspaceId, ownerId
   );
   if (existing && existing.updatedAt >= remoteUpdatedAt) {
     if (existing.updatedAt === remoteUpdatedAt) {
-      await db.runAsync('UPDATE farm_profile SET lastSyncedAt = ? WHERE id = 1 AND workspaceId = ?', now, workspaceId);
+      await db.runAsync('UPDATE farm_profile SET lastSyncedAt = ? WHERE id = ?', now, existing.id);
     }
     return false;
   }
-  await db.runAsync(
-    `INSERT INTO farm_profile (id, farmName, farmerName, village, district, state, totalArea, areaUnit, updatedAt, userId, workspaceId, lastSyncedAt)
-     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(id) DO UPDATE SET farmName=excluded.farmName, farmerName=excluded.farmerName, village=excluded.village,
-       district=excluded.district, state=excluded.state, totalArea=excluded.totalArea, areaUnit=excluded.areaUnit,
-       updatedAt=excluded.updatedAt, userId=excluded.userId, workspaceId=excluded.workspaceId, lastSyncedAt=excluded.lastSyncedAt`,
-    remote.farmName, remote.farmerName, remote.village, remote.district, remote.state,
-    remote.totalArea, remote.areaUnit, remoteUpdatedAt, ownerId, workspaceId, now
-  );
+  if (existing) {
+    await db.runAsync(
+      `UPDATE farm_profile
+       SET farmName = ?, farmerName = ?, village = ?, taluk = ?, district = ?, state = ?,
+           totalArea = ?, areaUnit = ?, updatedAt = ?, userId = ?, workspaceId = ?, lastSyncedAt = ?
+       WHERE id = ?`,
+      remote.farmName ?? '', remote.farmerName ?? '', remote.village ?? '', remote.taluk ?? '',
+      remote.district ?? '', remote.state ?? '', remote.totalArea ?? null, remote.areaUnit ?? 'acres',
+      remoteUpdatedAt, ownerId, workspaceId, now, existing.id
+    );
+  } else {
+    await db.runAsync(
+      `INSERT INTO farm_profile (farmName, farmerName, village, taluk, district, state, totalArea, areaUnit, updatedAt, userId, workspaceId, lastSyncedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      remote.farmName ?? '', remote.farmerName ?? '', remote.village ?? '', remote.taluk ?? '',
+      remote.district ?? '', remote.state ?? '', remote.totalArea ?? null, remote.areaUnit ?? 'acres',
+      remoteUpdatedAt, ownerId, workspaceId, now
+    );
+  }
   return true;
 }

@@ -29,7 +29,7 @@ export async function addWorkspace(db: SQLite.SQLiteDatabase, input: WorkspaceIn
   const now = new Date().toISOString();
   await db.runAsync(
     'INSERT INTO workspaces (id, name, isDefault, createdAt, updatedAt, uuid, userId) VALUES (?, ?, 0, ?, ?, ?, ?)',
-    id, input.name, now, now, uuidv4(), ownerId
+    id, input.name, now, now, id, ownerId
   );
   return id;
 }

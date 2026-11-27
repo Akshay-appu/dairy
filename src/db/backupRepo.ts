@@ -1,9 +1,23 @@
 import * as SQLite from 'expo-sqlite';
-import { Crop, Entry, FarmProfile, FinanceEntry, Harvest, Plot } from './schema';
+import {
+  Crop,
+  CropSchedule,
+  Entry,
+  FarmProfile,
+  FinanceEntry,
+  Harvest,
+  MarketRecord,
+  Plot,
+  VaultDocument,
+} from './schema';
+import { listCropSchedules } from './cropSchedulesRepo';
+import { listMarketRecords } from './marketRecordsRepo';
+import { getProfile } from './profileRepo';
+import { listVaultDocuments } from './vaultRepo';
 import { uuidv4 } from '../utils/uuid';
 
 export const BACKUP_FORMAT = 'bhoomishakti-backup';
-export const BACKUP_VERSION = 1;
+export const BACKUP_VERSION = 2;
 
 export type BackupData = {
   format: typeof BACKUP_FORMAT;
@@ -15,6 +29,9 @@ export type BackupData = {
   diaryEntries: Entry[];
   financeEntries: FinanceEntry[];
   harvests: Harvest[];
+  marketRecords: MarketRecord[];
+  cropSchedules: CropSchedule[];
+  vaultDocuments: VaultDocument[];
 };
 
 export type BackupCounts = {
@@ -24,6 +41,9 @@ export type BackupCounts = {
   diaryEntries: number;
   financeEntries: number;
   harvests: number;
+  marketRecords: number;
+  cropSchedules: number;
+  vaultDocuments: number;
 };
 
 export function countBackup(data: BackupData): BackupCounts {
@@ -34,30 +54,55 @@ export function countBackup(data: BackupData): BackupCounts {
     diaryEntries: data.diaryEntries.length,
     financeEntries: data.financeEntries.length,
     harvests: data.harvests.length,
+    marketRecords: (data.marketRecords ?? []).length,
+    cropSchedules: (data.cropSchedules ?? []).length,
+    vaultDocuments: (data.vaultDocuments ?? []).length,
   };
 }
 
 // Scoped to the active owner and workspace — a backup never includes another local
 // account's or workspace's data.
 export async function buildBackup(db: SQLite.SQLiteDatabase, ownerId: string | null, workspaceId: string = 'default'): Promise<BackupData> {
-  const [farmProfile, plots, crops, diaryEntries, financeEntries, harvests] = await Promise.all([
-    db.getFirstAsync<FarmProfile>('SELECT * FROM farm_profile WHERE id = 1 AND (userId IS ?) AND workspaceId = ?', ownerId, workspaceId),
+  const [
+    farmProfile,
+    plots,
+    crops,
+    diaryEntries,
+    financeEntries,
+    harvests,
+    marketRecords,
+    cropSchedules,
+    vaultDocuments,
+  ] = await Promise.all([
+    getProfile(db, ownerId, workspaceId),
     db.getAllAsync<Plot>('SELECT * FROM plots WHERE deletedAt IS NULL AND (userId IS ?) AND workspaceId = ?', ownerId, workspaceId),
     db.getAllAsync<Crop>('SELECT * FROM crops WHERE deletedAt IS NULL AND (userId IS ?) AND workspaceId = ?', ownerId, workspaceId),
     db.getAllAsync<Entry>('SELECT * FROM diary_entries WHERE deletedAt IS NULL AND (userId IS ?) AND workspaceId = ?', ownerId, workspaceId),
     db.getAllAsync<FinanceEntry>('SELECT * FROM finance_entries WHERE deletedAt IS NULL AND (userId IS ?) AND workspaceId = ?', ownerId, workspaceId),
     db.getAllAsync<Harvest>('SELECT * FROM harvests WHERE deletedAt IS NULL AND (userId IS ?) AND workspaceId = ?', ownerId, workspaceId),
+    listMarketRecords(db, ownerId, workspaceId),
+    listCropSchedules(db, workspaceId),
+    listVaultDocuments(db, workspaceId),
   ]);
   return {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
     farmProfile: farmProfile ?? null,
-    plots, crops, diaryEntries, financeEntries, harvests,
+    plots,
+    crops,
+    diaryEntries,
+    financeEntries,
+    harvests,
+    marketRecords,
+    cropSchedules,
+    vaultDocuments,
   };
 }
 
 // Validates shape only (not exhaustively) before anything touches the DB.
+// Backward-compatible with v1 backups where marketRecords, cropSchedules, and
+// vaultDocuments were not present (defaults them to empty arrays).
 export function parseBackup(text: string): BackupData {
   let json: unknown;
   try {
@@ -65,45 +110,71 @@ export function parseBackup(text: string): BackupData {
   } catch {
     throw new Error('invalid-json');
   }
+  const obj = json as Record<string, unknown>;
   if (
     typeof json !== 'object' || json === null ||
-    (json as Record<string, unknown>).format !== BACKUP_FORMAT ||
-    !Array.isArray((json as Record<string, unknown>).plots) ||
-    !Array.isArray((json as Record<string, unknown>).crops) ||
-    !Array.isArray((json as Record<string, unknown>).diaryEntries) ||
-    !Array.isArray((json as Record<string, unknown>).financeEntries) ||
-    !Array.isArray((json as Record<string, unknown>).harvests)
+    obj.format !== BACKUP_FORMAT ||
+    !Array.isArray(obj.plots) ||
+    !Array.isArray(obj.crops) ||
+    !Array.isArray(obj.diaryEntries) ||
+    !Array.isArray(obj.financeEntries) ||
+    !Array.isArray(obj.harvests) ||
+    (obj.marketRecords !== undefined && !Array.isArray(obj.marketRecords)) ||
+    (obj.cropSchedules !== undefined && !Array.isArray(obj.cropSchedules)) ||
+    (obj.vaultDocuments !== undefined && !Array.isArray(obj.vaultDocuments))
   ) {
     throw new Error('invalid-shape');
   }
-  return json as BackupData;
+  return {
+    ...(obj as BackupData),
+    marketRecords: Array.isArray(obj.marketRecords) ? (obj.marketRecords as MarketRecord[]) : [],
+    cropSchedules: Array.isArray(obj.cropSchedules) ? (obj.cropSchedules as CropSchedule[]) : [],
+    vaultDocuments: Array.isArray(obj.vaultDocuments) ? (obj.vaultDocuments as VaultDocument[]) : [],
+  };
 }
 
 // Replaces only the *active owner's and workspace's* rows with the backup's contents, inside
 // one transaction (all-or-nothing).
 export async function restoreBackup(db: SQLite.SQLiteDatabase, data: BackupData, ownerId: string | null, workspaceId: string = 'default'): Promise<void> {
   await db.withTransactionAsync(async () => {
+    await db.runAsync(
+      'DELETE FROM market_vegetable_items WHERE recordId IN (SELECT id FROM market_records WHERE (userId IS ?) AND workspaceId = ?)',
+      ownerId, workspaceId
+    );
+    await db.runAsync(
+      'DELETE FROM market_expenses WHERE recordId IN (SELECT id FROM market_records WHERE (userId IS ?) AND workspaceId = ?)',
+      ownerId, workspaceId
+    );
+    await db.runAsync('DELETE FROM market_records WHERE (userId IS ?) AND workspaceId = ?', ownerId, workspaceId);
+    await db.runAsync('DELETE FROM crop_schedules WHERE workspaceId = ?', workspaceId);
+    await db.runAsync('DELETE FROM vault_documents WHERE workspaceId = ?', workspaceId);
     await db.runAsync('DELETE FROM harvests WHERE (userId IS ?) AND workspaceId = ?', ownerId, workspaceId);
     await db.runAsync('DELETE FROM finance_entries WHERE (userId IS ?) AND workspaceId = ?', ownerId, workspaceId);
     await db.runAsync('DELETE FROM diary_entries WHERE (userId IS ?) AND workspaceId = ?', ownerId, workspaceId);
     await db.runAsync('DELETE FROM crops WHERE (userId IS ?) AND workspaceId = ?', ownerId, workspaceId);
     await db.runAsync('DELETE FROM plots WHERE (userId IS ?) AND workspaceId = ?', ownerId, workspaceId);
-    await db.runAsync('DELETE FROM farm_profile WHERE id = 1 AND (userId IS ?) AND workspaceId = ?', ownerId, workspaceId);
+    await db.runAsync(
+      "DELETE FROM farm_profile WHERE workspaceId = ? AND COALESCE(userId, '') = COALESCE(?, '')",
+      workspaceId, ownerId
+    );
 
     if (data.farmProfile) {
       const p = data.farmProfile;
-      const result = await db.runAsync(
-        `UPDATE farm_profile SET farmName = ?, farmerName = ?, village = ?, district = ?, state = ?,
-           totalArea = ?, areaUnit = ?, updatedAt = ?, userId = ? WHERE id = 1 AND workspaceId = ?`,
-        p.farmName, p.farmerName, p.village, p.district, p.state, p.totalArea, p.areaUnit, p.updatedAt, ownerId, workspaceId
+      await db.runAsync(
+        `INSERT INTO farm_profile (farmName, farmerName, village, taluk, district, state, totalArea, areaUnit, updatedAt, userId, workspaceId)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        p.farmName ?? '',
+        p.farmerName ?? '',
+        p.village ?? '',
+        p.taluk ?? '',
+        p.district ?? '',
+        p.state ?? '',
+        p.totalArea ?? null,
+        p.areaUnit ?? 'acres',
+        p.updatedAt ?? new Date().toISOString(),
+        ownerId,
+        workspaceId
       );
-      if (result.changes === 0) {
-        await db.runAsync(
-          `INSERT INTO farm_profile (id, farmName, farmerName, village, district, state, totalArea, areaUnit, updatedAt, userId, workspaceId)
-           VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          p.farmName, p.farmerName, p.village, p.district, p.state, p.totalArea, p.areaUnit, p.updatedAt, ownerId, workspaceId
-        );
-      }
     }
 
     const plotIdMap = new Map<number, number>();
@@ -148,6 +219,104 @@ export async function restoreBackup(db: SQLite.SQLiteDatabase, data: BackupData,
         `INSERT INTO harvests (cropId, plotId, harvestDate, quantity, quantityUnit, sellingPrice, buyer, notes, createdAt, updatedAt, uuid, userId, workspaceId, deletedAt, lastSyncedAt)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)`,
         mappedCropId, mappedPlotId, h.harvestDate, h.quantity, h.quantityUnit, h.sellingPrice, h.buyer, h.notes, h.createdAt, h.updatedAt, h.uuid ?? uuidv4(), ownerId, workspaceId
+      );
+    }
+
+    const now = new Date().toISOString();
+    for (const rec of data.marketRecords ?? []) {
+      const result = await db.runAsync(
+        `INSERT INTO market_records (
+          uuid, userId, workspaceId,
+          marketDate, marketOpenTime,
+          state, district, taluk, village, marketName,
+          grossIncome, totalExpense, netProfit,
+          paymentStatus, pendingAmount, agentName,
+          cratesSent, cratesReturned,
+          pattiPhotoUri, notes,
+          createdAt, updatedAt, deletedAt, lastSyncedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)`,
+        rec.uuid ?? uuidv4(),
+        ownerId,
+        workspaceId,
+        rec.marketDate,
+        rec.marketOpenTime ?? '03:30',
+        rec.state ?? '',
+        rec.district ?? '',
+        rec.taluk ?? '',
+        rec.village ?? '',
+        rec.marketName ?? '',
+        rec.grossIncome ?? 0,
+        rec.totalExpense ?? 0,
+        rec.netProfit ?? 0,
+        rec.paymentStatus ?? 'cash',
+        rec.pendingAmount ?? 0,
+        rec.agentName ?? '',
+        rec.cratesSent ?? 0,
+        rec.cratesReturned ?? 0,
+        rec.pattiPhotoUri ?? null,
+        rec.notes ?? '',
+        rec.createdAt ?? now,
+        rec.updatedAt ?? now
+      );
+      const recordId = result.lastInsertRowId;
+
+      for (let i = 0; i < (rec.vegetables ?? []).length; i += 1) {
+        const veg = rec.vegetables[i];
+        await db.runAsync(
+          `INSERT INTO market_vegetable_items (
+            recordId, vegetableName, grade, unit, quantity, weightPerUnitKg, ratePerUnit, totalAmount, sortOrder
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          recordId,
+          veg.vegetableName ?? '',
+          veg.grade ?? '',
+          veg.unit ?? 'box',
+          veg.quantity ?? 0,
+          veg.weightPerUnitKg ?? null,
+          veg.ratePerUnit ?? 0,
+          veg.totalAmount ?? 0,
+          veg.sortOrder ?? i
+        );
+      }
+
+      for (let i = 0; i < (rec.expenses ?? []).length; i += 1) {
+        const exp = rec.expenses[i];
+        await db.runAsync(
+          `INSERT INTO market_expenses (
+            recordId, label, isPercentage, percentageValue, amount, sortOrder
+          ) VALUES (?, ?, ?, ?, ?, ?)`,
+          recordId,
+          exp.label ?? '',
+          exp.isPercentage ? 1 : 0,
+          exp.percentageValue ?? null,
+          exp.amount ?? 0,
+          exp.sortOrder ?? i
+        );
+      }
+    }
+
+    for (const sch of data.cropSchedules ?? []) {
+      await db.runAsync(
+        `INSERT OR REPLACE INTO crop_schedules (id, workspaceId, cropName, sowingDate, totalDays, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        sch.id || uuidv4(),
+        workspaceId,
+        sch.cropName,
+        sch.sowingDate,
+        sch.totalDays ?? null,
+        sch.createdAt ?? now
+      );
+    }
+
+    for (const doc of data.vaultDocuments ?? []) {
+      await db.runAsync(
+        `INSERT OR REPLACE INTO vault_documents (id, workspaceId, title, category, localUri, capturedAt)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        doc.id || uuidv4(),
+        workspaceId,
+        doc.title,
+        doc.category,
+        doc.localUri,
+        doc.capturedAt ?? now
       );
     }
   });

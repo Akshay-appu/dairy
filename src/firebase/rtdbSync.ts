@@ -52,7 +52,7 @@ export async function syncToRealtimeDatabase(
     ).catch(() => []);
 
     const profile = await db.getFirstAsync<Record<string, unknown>>(
-      'SELECT farmName, farmerName, village, district, state, totalArea, areaUnit FROM farm_profile WHERE id = 1'
+      "SELECT farmName, farmerName, village, taluk, district, state, totalArea, areaUnit FROM farm_profile WHERE workspaceId = 'default' ORDER BY id ASC LIMIT 1"
     ).catch(() => null);
 
     const finance = await db.getAllAsync<Record<string, unknown>>(
@@ -133,7 +133,7 @@ export async function syncToRealtimeDatabase(
     await db.runAsync('UPDATE diary_entries SET lastSyncedAt = ? WHERE (deletedAt IS NULL)', now).catch(() => {});
     await db.runAsync('UPDATE plots SET lastSyncedAt = ? WHERE (deletedAt IS NULL)', now).catch(() => {});
     await db.runAsync('UPDATE crops SET lastSyncedAt = ? WHERE (deletedAt IS NULL)', now).catch(() => {});
-    await db.runAsync('UPDATE farm_profile SET lastSyncedAt = ? WHERE id = 1', now).catch(() => {});
+    await db.runAsync("UPDATE farm_profile SET lastSyncedAt = ? WHERE workspaceId = 'default'", now).catch(() => {});
 
     return {
       success: true,
@@ -195,28 +195,52 @@ export async function pullFromRealtimeDatabase(
     if (data.profile && typeof data.profile === 'object') {
       const p = data.profile;
       if (p.farmerName || p.farmName || p.village) {
-        await db.runAsync(
-          `INSERT INTO farm_profile (id, farmName, farmerName, village, district, state, totalArea, areaUnit, updatedAt, userId)
-           VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-           ON CONFLICT(id) DO UPDATE SET
-             farmName = COALESCE(excluded.farmName, farm_profile.farmName),
-             farmerName = COALESCE(excluded.farmerName, farm_profile.farmerName),
-             village = COALESCE(excluded.village, farm_profile.village),
-             district = COALESCE(excluded.district, farm_profile.district),
-             state = COALESCE(excluded.state, farm_profile.state),
-             totalArea = COALESCE(excluded.totalArea, farm_profile.totalArea),
-             areaUnit = COALESCE(excluded.areaUnit, farm_profile.areaUnit),
-             userId = excluded.userId`,
-          p.farmName || '',
-          p.farmerName || '',
-          p.village || '',
-          p.district || '',
-          p.state || '',
-          p.totalArea ?? null,
-          p.areaUnit || 'acres',
-          new Date().toISOString(),
+        const nowIso = new Date().toISOString();
+        const existingProfile = await db.getFirstAsync<{ id: number }>(
+          "SELECT id FROM farm_profile WHERE workspaceId = 'default' AND COALESCE(userId, '') = COALESCE(?, '')",
           ownerId
-        ).catch(() => {});
+        ).catch(() => null);
+
+        if (existingProfile) {
+          await db.runAsync(
+            `UPDATE farm_profile SET
+               farmName = COALESCE(NULLIF(?, ''), farmName),
+               farmerName = COALESCE(NULLIF(?, ''), farmerName),
+               village = COALESCE(NULLIF(?, ''), village),
+               taluk = COALESCE(NULLIF(?, ''), taluk),
+               district = COALESCE(NULLIF(?, ''), district),
+               state = COALESCE(NULLIF(?, ''), state),
+               totalArea = COALESCE(?, totalArea),
+               areaUnit = COALESCE(NULLIF(?, ''), areaUnit),
+               updatedAt = ?
+             WHERE id = ?`,
+            p.farmName || '',
+            p.farmerName || '',
+            p.village || '',
+            p.taluk || '',
+            p.district || '',
+            p.state || '',
+            p.totalArea ?? null,
+            p.areaUnit || 'acres',
+            nowIso,
+            existingProfile.id
+          ).catch(() => {});
+        } else {
+          await db.runAsync(
+            `INSERT INTO farm_profile (farmName, farmerName, village, taluk, district, state, totalArea, areaUnit, updatedAt, userId, workspaceId)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'default')`,
+            p.farmName || '',
+            p.farmerName || '',
+            p.village || '',
+            p.taluk || '',
+            p.district || '',
+            p.state || '',
+            p.totalArea ?? null,
+            p.areaUnit || 'acres',
+            nowIso,
+            ownerId
+          ).catch(() => {});
+        }
       }
     }
 

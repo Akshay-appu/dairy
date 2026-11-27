@@ -27,6 +27,7 @@ export type Copy = {
   farmName: string; farmNamePlaceholder: string;
   farmerName: string; farmerNamePlaceholder: string;
   village: string; villagePlaceholder: string;
+  taluk: string; talukPlaceholder: string;
   district: string; districtPlaceholder: string;
   stateField: string; statePlaceholder: string;
   totalArea: string; unit: string; profileIntro: string;
@@ -293,6 +294,83 @@ export type Copy = {
   reportGeneratedOn: string;
   reportNoRecords: string;
   reportWorkspaceLabel: string;
+
+  // Daily Market Ledger & Mandi Patti
+  marketTab: string;
+  dailyMarket: string;
+  dailyMarketSubtitle: string;
+  newMarketRecord: string;
+  editMarketRecord: string;
+  deleteMarketRecord: string;
+  noMarketRecordsYet: string;
+  addFirstMarketRecord: string;
+  liveClockLabel: string;
+  marketGrossIncome: string;
+  marketTotalExpenses: string;
+  marketNetProfit: string;
+  marketNetLoss: string;
+  pendingBaaki: string;
+  pendingCrates: string;
+  cratesPendingBadge: string;
+  boxesCountLabel: string;
+  marketLocationHeading: string;
+  marketNameLabel: string;
+  marketNamePlaceholder: string;
+  marketDateLabel: string;
+  marketTimeLabel: string;
+  timeNowBtn: string;
+  invalidTime: string;
+  vegetableBoxesHeading: string;
+  addVegetableBox: string;
+  quickAddVegetables: string;
+  vegetableNameLabel: string;
+  vegetableNamePlaceholder: string;
+  gradeOptionalLabel: string;
+  gradePlaceholder: string;
+  weightPerUnitLabel: string;
+  ratePerUnitLabel: string;
+  lineTotalLabel: string;
+  removeItem: string;
+  atLeastOneVegetable: string;
+  marketExpensesHeading: string;
+  addCustomExpense: string;
+  expenseLabelPlaceholder: string;
+  expenseCommissionPreset: string;
+  expenseTransportPreset: string;
+  expenseHamaliPreset: string;
+  expenseCrateRentPreset: string;
+  expensePercentToggle: string;
+  expenseFlatToggle: string;
+  expensePercentPlaceholder: string;
+  settlementHeading: string;
+  paymentStatusLabel: string;
+  pendingAmountLabel: string;
+  agentNameLabel: string;
+  agentNamePlaceholder: string;
+  cratesSentLabel: string;
+  cratesReturnedLabel: string;
+  attachPattiPhoto: string;
+  pattiCameraBtn: string;
+  pattiGalleryBtn: string;
+  removePattiPhoto: string;
+  darkSlipModeOn: string;
+  darkSlipModeOff: string;
+  exportMarketLedgerCsv: string;
+  exportPattiPdf: string;
+  exportDayCsv: string;
+  marketPattiTitle: string;
+  marketPattiFooter: string;
+  shareMarketPdfDialog: string;
+  shareMarketCsvDialog: string;
+  marketExportNoRecords: string;
+  mandiAlarmTitle: string;
+  mandiAlarmSubtitle: string;
+  mandiAlarmTimeLabel: string;
+  mandiAlarmCustomTimePlaceholder: string;
+  mandiAlarmSetTimeBtn: string;
+  mandiAlarmNotifTitle: string;
+  mandiAlarmNotifBody: string;
+  mandiAlarmScheduledNote: string;
 };
 
 export const copy: Record<Language, Copy> = {
@@ -324,6 +402,7 @@ export const copy: Record<Language, Copy> = {
     farmName: 'Farm name', farmNamePlaceholder: 'e.g. Green Valley Farm',
     farmerName: 'Farmer name', farmerNamePlaceholder: 'e.g. Ramesh Kumar',
     village: 'Village', villagePlaceholder: 'e.g. Hosahalli',
+    taluk: 'Taluk', talukPlaceholder: 'e.g. Nanjangud',
     district: 'District', districtPlaceholder: 'e.g. Mysuru',
     stateField: 'State', statePlaceholder: 'e.g. Karnataka',
     totalArea: 'Total land area', unit: 'Unit',
@@ -616,6 +695,82 @@ export const copy: Record<Language, Copy> = {
     reportGeneratedOn: 'Generated on',
     reportNoRecords: 'No records recorded yet.',
     reportWorkspaceLabel: 'Workspace',
+
+    marketTab: 'Market',
+    dailyMarket: 'Daily Market',
+    dailyMarketSubtitle: 'Log early-morning mandi sales, vegetable boxes, expenses & net profit.',
+    newMarketRecord: 'New Market Record',
+    editMarketRecord: 'Edit Market Record',
+    deleteMarketRecord: 'Delete market record?',
+    noMarketRecordsYet: 'No market records yet',
+    addFirstMarketRecord: 'Tap "+ New Market Record" to log today’s vegetable boxes, mandi expenses, and net profit.',
+    liveClockLabel: 'Live',
+    marketGrossIncome: 'Gross Income',
+    marketTotalExpenses: 'Market Expenses',
+    marketNetProfit: 'Net Profit',
+    marketNetLoss: 'Net Loss',
+    pendingBaaki: 'Pending Baaki',
+    pendingCrates: 'Pending Crates',
+    cratesPendingBadge: '{count} crates pending',
+    boxesCountLabel: '{count} items',
+    marketLocationHeading: 'Market Location & Time',
+    marketNameLabel: 'Market / APMC Name',
+    marketNamePlaceholder: 'e.g. KR Market / APMC Yard',
+    marketDateLabel: 'Market Date',
+    marketTimeLabel: 'Market Time (24h)',
+    timeNowBtn: 'Now',
+    invalidTime: 'Enter a valid time as HH:MM (00:00–23:59).',
+    vegetableBoxesHeading: 'Vegetable Boxes',
+    addVegetableBox: 'Add Vegetable Box',
+    quickAddVegetables: 'Quick tap to add:',
+    vegetableNameLabel: 'Vegetable Name',
+    vegetableNamePlaceholder: 'e.g. Tomato, Beans, Chilli…',
+    gradeOptionalLabel: 'Grade (optional)',
+    gradePlaceholder: 'e.g. Grade A / Local',
+    weightPerUnitLabel: 'Wt/Unit kg (opt)',
+    ratePerUnitLabel: 'Rate / Unit (₹)',
+    lineTotalLabel: 'Line Total',
+    removeItem: 'Remove',
+    atLeastOneVegetable: 'Add at least one vegetable box with a name.',
+    marketExpensesHeading: 'Market Expenses',
+    addCustomExpense: 'Add Custom Expense',
+    expenseLabelPlaceholder: 'e.g. Entry fee, Weighbridge…',
+    expenseCommissionPreset: 'Mandi Commission / Dalali',
+    expenseTransportPreset: 'Transport / Tempo',
+    expenseHamaliPreset: 'Hamali / Unloading',
+    expenseCrateRentPreset: 'Crate Rent',
+    expensePercentToggle: '% of Gross',
+    expenseFlatToggle: 'Flat ₹',
+    expensePercentPlaceholder: 'e.g. 8',
+    settlementHeading: 'Settlement, Crates & Patti Photo',
+    paymentStatusLabel: 'Payment Status',
+    pendingAmountLabel: 'Pending Amount (₹)',
+    agentNameLabel: 'Agent / Buyer Name (optional)',
+    agentNamePlaceholder: 'e.g. Sri Lakshmi Traders',
+    cratesSentLabel: 'Crates Sent',
+    cratesReturnedLabel: 'Crates Returned',
+    attachPattiPhoto: 'Attach Patti Photo (optional)',
+    pattiCameraBtn: 'Camera',
+    pattiGalleryBtn: 'Gallery',
+    removePattiPhoto: 'Remove Photo',
+    darkSlipModeOn: 'Dark Slip',
+    darkSlipModeOff: 'Light Slip',
+    exportMarketLedgerCsv: 'Export Ledger (Excel/CSV)',
+    exportPattiPdf: 'PDF Patti',
+    exportDayCsv: 'Excel (.csv)',
+    marketPattiTitle: 'DAILY MARKET PATTI',
+    marketPattiFooter: 'BhoomiShakti Daily Market Ledger · bhoomishakti.in',
+    shareMarketPdfDialog: 'Share BhoomiShakti Market Patti (PDF)',
+    shareMarketCsvDialog: 'Share BhoomiShakti Market Sheet (Excel/CSV)',
+    marketExportNoRecords: 'No market records to export yet.',
+    mandiAlarmTitle: 'Mandi Morning Wake-Up Alarm',
+    mandiAlarmSubtitle: 'Loud daily wake-up alarm before early-morning market loading and travel.',
+    mandiAlarmTimeLabel: 'Alarm Time',
+    mandiAlarmCustomTimePlaceholder: 'HH:MM (e.g. 03:15)',
+    mandiAlarmSetTimeBtn: 'Set Time',
+    mandiAlarmNotifTitle: '🏪 Mandi Morning Alarm',
+    mandiAlarmNotifBody: 'Time to prepare for the morning mandi! Open BS Diary to log today’s vegetable boxes.',
+    mandiAlarmScheduledNote: 'Scheduled daily at {time}',
   },
   kn: {
     tagline: 'ಪ್ರತಿ ಹೊಲದ ಕಥೆ, ಒಂದೇ ಡೈರಿಯಲ್ಲಿ',
@@ -645,6 +800,7 @@ export const copy: Record<Language, Copy> = {
     farmName: 'ಹೊಲದ ಹೆಸರು', farmNamePlaceholder: 'ಉದಾ. ಹಸಿರು ಕಣಿವೆ ಫಾರ್ಮ್',
     farmerName: 'ರೈತರ ಹೆಸರು', farmerNamePlaceholder: 'ಉದಾ. ರಮೇಶ್ ಕುಮಾರ್',
     village: 'ಗ್ರಾಮ', villagePlaceholder: 'ಉದಾ. ಹೊಸಹಳ್ಳಿ',
+    taluk: 'ತಾಲ್ಲೂಕು', talukPlaceholder: 'ಉದಾ. ನಂಜನಗೂಡು',
     district: 'ಜಿಲ್ಲೆ', districtPlaceholder: 'ಉದಾ. ಮೈಸೂರು',
     stateField: 'ರಾಜ್ಯ', statePlaceholder: 'ಉದಾ. ಕರ್ನಾಟಕ',
     totalArea: 'ಒಟ್ಟು ಭೂಮಿಯ ವಿಸ್ತೀರ್ಣ', unit: 'ಅಳತೆ ಘಟಕ',
@@ -937,6 +1093,82 @@ export const copy: Record<Language, Copy> = {
     reportGeneratedOn: 'ರಚಿಸಿದ ದಿನಾಂಕ',
     reportNoRecords: 'ಇನ್ನೂ ಯಾವುದೇ ದಾಖಲೆಗಳಿಲ್ಲ.',
     reportWorkspaceLabel: 'ಕಾರ್ಯಕ್ಷೇತ್ರ',
+
+    marketTab: 'ಮಾರುಕಟ್ಟೆ',
+    dailyMarket: 'ದೈನಂದಿನ ಮಾರುಕಟ್ಟೆ',
+    dailyMarketSubtitle: 'ಬೆಳಗಿನ ಮಂಡಿ ಮಾರಾಟ, ತರಕಾರಿ ಬಾಕ್ಸ್, ಖರ್ಚು ಮತ್ತು ನಿವ್ವಳ ಲಾಭ ದಾಖಲಿಸಿ.',
+    newMarketRecord: 'ಹೊಸ ಮಾರುಕಟ್ಟೆ ದಾಖಲೆ',
+    editMarketRecord: 'ಮಾರುಕಟ್ಟೆ ದಾಖಲೆ ಸಂಪಾದಿಸಿ',
+    deleteMarketRecord: 'ಮಾರುಕಟ್ಟೆ ದಾಖಲೆಯನ್ನು ಅಳಿಸಬೇಕೇ?',
+    noMarketRecordsYet: 'ಇನ್ನೂ ಮಾರುಕಟ್ಟೆ ದಾಖಲೆಗಳಿಲ್ಲ',
+    addFirstMarketRecord: 'ಇಂದಿನ ತರಕಾರಿ ಬಾಕ್ಸ್, ಮಂಡಿ ಖರ್ಚು ಮತ್ತು ನಿವ್ವಳ ಲಾಭ ದಾಖಲಿಸಲು "+ ಹೊಸ ಮಾರುಕಟ್ಟೆ ದಾಖಲೆ" ಒತ್ತಿ.',
+    liveClockLabel: 'ಲೈವ್',
+    marketGrossIncome: 'ಒಟ್ಟು ಆದಾಯ',
+    marketTotalExpenses: 'ಮಾರುಕಟ್ಟೆ ಖರ್ಚು',
+    marketNetProfit: 'ನಿವ್ವಳ ಲಾಭ',
+    marketNetLoss: 'ನಿವ್ವಳ ನಷ್ಟ',
+    pendingBaaki: 'ಬಾಕಿ ಮೊತ್ತ',
+    pendingCrates: 'ಬಾಕಿ ಕ್ರೇಟ್‌ಗಳು',
+    cratesPendingBadge: '{count} ಕ್ರೇಟ್ ಬಾಕಿ',
+    boxesCountLabel: '{count} ಬಗೆಗಳು',
+    marketLocationHeading: 'ಮಾರುಕಟ್ಟೆ ಸ್ಥಳ ಮತ್ತು ಸಮಯ',
+    marketNameLabel: 'ಮಾರುಕಟ್ಟೆ / ಎಪಿಎಂಸಿ ಹೆಸರು',
+    marketNamePlaceholder: 'ಉದಾ. ಕೆಆರ್ ಮಾರುಕಟ್ಟೆ / ಎಪಿಎಂಸಿ ಯಾರ್ಡ್',
+    marketDateLabel: 'ಮಾರುಕಟ್ಟೆ ದಿನಾಂಕ',
+    marketTimeLabel: 'ಮಾರುಕಟ್ಟೆ ಸಮಯ (24ಗಂ)',
+    timeNowBtn: 'ಈಗ',
+    invalidTime: 'ಸರಿಯಾದ ಸಮಯವನ್ನು HH:MM (00:00–23:59) ರೂಪದಲ್ಲಿ ನಮೂದಿಸಿ.',
+    vegetableBoxesHeading: 'ತರಕಾರಿ ಬಾಕ್ಸ್‌ಗಳು',
+    addVegetableBox: 'ತರಕಾರಿ ಬಾಕ್ಸ್ ಸೇರಿಸಿ',
+    quickAddVegetables: 'ತಕ್ಷಣ ಸೇರಿಸಲು ಒತ್ತಿ:',
+    vegetableNameLabel: 'ತರಕಾರಿ ಹೆಸರು',
+    vegetableNamePlaceholder: 'ಉದಾ. ಟೊಮೆಟೊ, ಬೀನ್ಸ್, ಮೆಣಸಿನಕಾಯಿ…',
+    gradeOptionalLabel: 'ಗ್ರೇಡ್ (ಐಚ್ಛಿಕ)',
+    gradePlaceholder: 'ಉದಾ. ಗ್ರೇಡ್ ಎ / ನಾಟಿ',
+    weightPerUnitLabel: 'ತೂಕ/ಘಟಕ ಕೆ.ಜಿ (ಐಚ್ಛಿಕ)',
+    ratePerUnitLabel: 'ಪ್ರತಿ ಘಟಕ ದರ (₹)',
+    lineTotalLabel: 'ಒಟ್ಟು ಮೊತ್ತ',
+    removeItem: 'ತೆಗೆಯಿರಿ',
+    atLeastOneVegetable: 'ಹೆಸರಿರುವ ಕನಿಷ್ಠ ಒಂದು ತರಕಾರಿ ಬಾಕ್ಸ್ ಸೇರಿಸಿ.',
+    marketExpensesHeading: 'ಮಾರುಕಟ್ಟೆ ಖರ್ಚುಗಳು',
+    addCustomExpense: 'ಇತರೆ ಖರ್ಚು ಸೇರಿಸಿ',
+    expenseLabelPlaceholder: 'ಉದಾ. ಪ್ರವೇಶ ಶುಲ್ಕ, ತೂಕ ಶುಲ್ಕ…',
+    expenseCommissionPreset: 'ಮಂಡಿ ಕಮಿಷನ್ / ದಲ್ಲಾಳಿ',
+    expenseTransportPreset: 'ಸಾಗಣೆ / ಟೆಂಪೋ ಬಾಡಿಗೆ',
+    expenseHamaliPreset: 'ಹಮಾಲಿ / ಇಳಿಸುವಿಕೆ',
+    expenseCrateRentPreset: 'ಕ್ರೇಟ್ ಬಾಡಿಗೆ',
+    expensePercentToggle: '% ಆದಾಯದ',
+    expenseFlatToggle: 'ನಿಗದಿತ ₹',
+    expensePercentPlaceholder: 'ಉದಾ. 8',
+    settlementHeading: 'ಪಾವತಿ, ಕ್ರೇಟ್ ಮತ್ತು ಪಟ್ಟಿ ಫೋಟೋ',
+    paymentStatusLabel: 'ಪಾವತಿ ಸ್ಥಿತಿ',
+    pendingAmountLabel: 'ಬಾಕಿ ಮೊತ್ತ (₹)',
+    agentNameLabel: 'ಏಜೆಂಟ್ / ಖರೀದಿದಾರರ ಹೆಸರು (ಐಚ್ಛಿಕ)',
+    agentNamePlaceholder: 'ಉದಾ. ಶ್ರೀ ಲಕ್ಷ್ಮಿ ಟ್ರೇಡರ್ಸ್',
+    cratesSentLabel: 'ಕಳುಹಿಸಿದ ಕ್ರೇಟ್‌ಗಳು',
+    cratesReturnedLabel: 'ಹಿಂತಿರುಗಿದ ಕ್ರೇಟ್‌ಗಳು',
+    attachPattiPhoto: 'ಪಟ್ಟಿ ಫೋಟೋ ಲಗತ್ತಿಸಿ (ಐಚ್ಛಿಕ)',
+    pattiCameraBtn: 'ಕ್ಯಾಮೆರಾ',
+    pattiGalleryBtn: 'ಗ್ಯಾಲರಿ',
+    removePattiPhoto: 'ಫೋಟೋ ತೆಗೆಯಿರಿ',
+    darkSlipModeOn: 'ಡಾರ್ಕ್ ಸ್ಲಿಪ್',
+    darkSlipModeOff: 'ಲೈಟ್ ಸ್ಲಿಪ್',
+    exportMarketLedgerCsv: 'ಲೆಡ್ಜರ್ ರಫ್ತು (Excel/CSV)',
+    exportPattiPdf: 'PDF ಪಟ್ಟಿ',
+    exportDayCsv: 'Excel (.csv)',
+    marketPattiTitle: 'ದೈನಂದಿನ ಮಾರುಕಟ್ಟೆ ಪಟ್ಟಿ',
+    marketPattiFooter: 'ಭೂಮಿಶಕ್ತಿ ದೈನಂದಿನ ಮಾರುಕಟ್ಟೆ ಲೆಡ್ಜರ್ · bhoomishakti.in',
+    shareMarketPdfDialog: 'ಭೂಮಿಶಕ್ತಿ ಮಾರುಕಟ್ಟೆ ಪಟ್ಟಿ (PDF) ಹಂಚಿಕೊಳ್ಳಿ',
+    shareMarketCsvDialog: 'ಭೂಮಿಶಕ್ತಿ ಮಾರುಕಟ್ಟೆ ಶೀಟ್ (Excel/CSV) ಹಂಚಿಕೊಳ್ಳಿ',
+    marketExportNoRecords: 'ರಫ್ತು ಮಾಡಲು ಯಾವುದೇ ಮಾರುಕಟ್ಟೆ ದಾಖಲೆಗಳಿಲ್ಲ.',
+    mandiAlarmTitle: 'ಮಂಡಿ ಬೆಳಗಿನ ಅಲಾರಾಂ',
+    mandiAlarmSubtitle: 'ಬೆಳಗಿನ ಜಾವ ಮಾರುಕಟ್ಟೆ ಪ್ರಯಾಣ ಮತ್ತು ಲೋಡಿಂಗ್‌ಗೆ ಮುಂಚಿತವಾಗಿ ಜೋರಾದ ದೈನಂದಿನ ಅಲಾರಾಂ.',
+    mandiAlarmTimeLabel: 'ಅಲಾರಾಂ ಸಮಯ',
+    mandiAlarmCustomTimePlaceholder: 'HH:MM (ಉದಾ. 03:15)',
+    mandiAlarmSetTimeBtn: 'ಸಮಯ ಹೊಂದಿಸಿ',
+    mandiAlarmNotifTitle: '🏪 ಮಂಡಿ ಬೆಳಗಿನ ಅಲಾರಾಂ',
+    mandiAlarmNotifBody: 'ಬೆಳಗಿನ ಮಂಡಿಗೆ ಸಿದ್ಧರಾಗುವ ಸಮಯ! ಇಂದಿನ ತರಕಾರಿ ಬಾಕ್ಸ್‌ಗಳನ್ನು ದಾಖಲಿಸಲು ಬಿಎಸ್ ಡೈರಿ ತೆರೆಯಿರಿ.',
+    mandiAlarmScheduledNote: 'ಪ್ರತಿದಿನ {time} ಕ್ಕೆ ನಿಗದಿಯಾಗಿದೆ',
   },
   hi: {
     tagline: 'हर खेत की कहानी, एक ही डायरी में',
@@ -966,6 +1198,7 @@ export const copy: Record<Language, Copy> = {
     farmName: 'खेत का नाम', farmNamePlaceholder: 'जैसे ग्रीन वैली फ़ार्म',
     farmerName: 'किसान का नाम', farmerNamePlaceholder: 'जैसे रमेश कुमार',
     village: 'गाँव', villagePlaceholder: 'जैसे होसहल्ली',
+    taluk: 'तालुका / तहसील', talukPlaceholder: 'जैसे नंजनगुड',
     district: 'ज़िला', districtPlaceholder: 'जैसे मैसूर',
     stateField: 'राज्य', statePlaceholder: 'जैसे कर्नाटक',
     totalArea: 'कुल भूमि क्षेत्रफल', unit: 'इकाई',
@@ -1258,5 +1491,81 @@ export const copy: Record<Language, Copy> = {
     reportGeneratedOn: 'निर्माण तिथि',
     reportNoRecords: 'अभी कोई रिकॉर्ड दर्ज नहीं है।',
     reportWorkspaceLabel: 'कार्यक्षेत्र',
+
+    marketTab: 'मंडी',
+    dailyMarket: 'दैनिक मंडी',
+    dailyMarketSubtitle: 'सुबह की मंडी बिक्री, सब्ज़ी बॉक्स, खर्च और शुद्ध लाभ दर्ज करें।',
+    newMarketRecord: 'नया मंडी रिकॉर्ड',
+    editMarketRecord: 'मंडी रिकॉर्ड संपादित करें',
+    deleteMarketRecord: 'मंडी रिकॉर्ड हटाएँ?',
+    noMarketRecordsYet: 'अभी कोई मंडी रिकॉर्ड नहीं',
+    addFirstMarketRecord: 'आज के सब्ज़ी बॉक्स, मंडी खर्च और शुद्ध लाभ दर्ज करने के लिए "+ नया मंडी रिकॉर्ड" दबाएं।',
+    liveClockLabel: 'लाइव',
+    marketGrossIncome: 'कुल आय',
+    marketTotalExpenses: 'मंडी खर्च',
+    marketNetProfit: 'शुद्ध लाभ',
+    marketNetLoss: 'शुद्ध हानि',
+    pendingBaaki: 'बकाया राशि',
+    pendingCrates: 'बकाया क्रेट',
+    cratesPendingBadge: '{count} क्रेट बकाया',
+    boxesCountLabel: '{count} आइटम',
+    marketLocationHeading: 'मंडी स्थान और समय',
+    marketNameLabel: 'मंडी / APMC का नाम',
+    marketNamePlaceholder: 'जैसे केआर मार्केट / APMC यार्ड',
+    marketDateLabel: 'मंडी की तारीख़',
+    marketTimeLabel: 'मंडी समय (24घं)',
+    timeNowBtn: 'अभी',
+    invalidTime: 'सही समय HH:MM (00:00–23:59) रूप में लिखें।',
+    vegetableBoxesHeading: 'सब्ज़ी बॉक्स',
+    addVegetableBox: 'सब्ज़ी बॉक्स जोड़ें',
+    quickAddVegetables: 'जल्दी जोड़ने के लिए टैप करें:',
+    vegetableNameLabel: 'सब्ज़ी का नाम',
+    vegetableNamePlaceholder: 'जैसे टमाटर, बीन्स, मिर्च…',
+    gradeOptionalLabel: 'ग्रेड (वैकल्पिक)',
+    gradePlaceholder: 'जैसे ग्रेड A / देसी',
+    weightPerUnitLabel: 'वज़न/इकाई किलो (वैक.)',
+    ratePerUnitLabel: 'दर / इकाई (₹)',
+    lineTotalLabel: 'कुल राशि',
+    removeItem: 'हटाएँ',
+    atLeastOneVegetable: 'नाम के साथ कम से कम एक सब्ज़ी बॉक्स जोड़ें।',
+    marketExpensesHeading: 'मंडी खर्च',
+    addCustomExpense: 'अन्य खर्च जोड़ें',
+    expenseLabelPlaceholder: 'जैसे प्रवेश शुल्क, कांटा पर्ची…',
+    expenseCommissionPreset: 'मंडी कमीशन / दलाली',
+    expenseTransportPreset: 'भाड़ा / टेम्पो',
+    expenseHamaliPreset: 'हमाली / उतराई',
+    expenseCrateRentPreset: 'क्रेट किराया',
+    expensePercentToggle: '% कुल आय का',
+    expenseFlatToggle: 'निश्चित ₹',
+    expensePercentPlaceholder: 'जैसे 8',
+    settlementHeading: 'भुगतान, क्रेट और पट्टी फ़ोटो',
+    paymentStatusLabel: 'भुगतान स्थिति',
+    pendingAmountLabel: 'बकाया राशि (₹)',
+    agentNameLabel: 'आढ़तिया / ख़रीदार का नाम (वैकल्पिक)',
+    agentNamePlaceholder: 'जैसे श्री लक्ष्मी ट्रेडर्स',
+    cratesSentLabel: 'भेजे गए क्रेट',
+    cratesReturnedLabel: 'वापस मिले क्रेट',
+    attachPattiPhoto: 'पट्टी फ़ोटो जोड़ें (वैकल्पिक)',
+    pattiCameraBtn: 'कैमरा',
+    pattiGalleryBtn: 'गैलरी',
+    removePattiPhoto: 'फ़ोटो हटाएँ',
+    darkSlipModeOn: 'डार्क स्लिप',
+    darkSlipModeOff: 'लाइट स्लिप',
+    exportMarketLedgerCsv: 'लेजर निर्यात (Excel/CSV)',
+    exportPattiPdf: 'PDF पट्टी',
+    exportDayCsv: 'Excel (.csv)',
+    marketPattiTitle: 'दैनिक मंडी पट्टी',
+    marketPattiFooter: 'भूमि शक्ति दैनिक मंडी लेजर · bhoomishakti.in',
+    shareMarketPdfDialog: 'भूमि शक्ति मंडी पट्टी (PDF) साझा करें',
+    shareMarketCsvDialog: 'भूमि शक्ति मंडी शीट (Excel/CSV) साझा करें',
+    marketExportNoRecords: 'निर्यात करने के लिए अभी कोई मंडी रिकॉर्ड नहीं है।',
+    mandiAlarmTitle: 'मंडी सुबह का अलार्म',
+    mandiAlarmSubtitle: 'सुबह जल्दी मंडी लोडिंग और यात्रा से पहले तेज़ दैनिक अलार्म।',
+    mandiAlarmTimeLabel: 'अलार्म का समय',
+    mandiAlarmCustomTimePlaceholder: 'HH:MM (जैसे 03:15)',
+    mandiAlarmSetTimeBtn: 'समय सेट करें',
+    mandiAlarmNotifTitle: '🏪 मंडी सुबह का अलार्म',
+    mandiAlarmNotifBody: 'सुबह की मंडी की तैयारी का समय! आज के सब्ज़ी बॉक्स दर्ज करने के लिए BS डायरी खोलें।',
+    mandiAlarmScheduledNote: 'रोज़ {time} पर निर्धारित',
   },
 };

@@ -58,7 +58,7 @@ export async function getWorkspaceDashboardMetrics(
   const netBalance = finance.totalIncome - finance.totalExpenses;
 
   const harvestRow = await db.getFirstAsync<{ cnt: number; totalQty: number; totalVal: number | null }>(
-    `SELECT COUNT(*) as cnt, COALESCE(SUM(quantity), 0) as totalQty, COALESCE(SUM(sellingPrice), 0) as totalVal
+    `SELECT COUNT(*) as cnt, COALESCE(SUM(quantity), 0) as totalQty, COALESCE(SUM(quantity * sellingPrice), 0) as totalVal
      FROM harvests WHERE deletedAt IS NULL AND (userId IS ?) AND workspaceId = ?`,
     ownerId, workspaceId
   );

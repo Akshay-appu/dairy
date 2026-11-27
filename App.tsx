@@ -19,6 +19,7 @@ import { usePlots } from './src/hooks/usePlots';
 import { useCrops } from './src/hooks/useCrops';
 import { useFinance } from './src/hooks/useFinance';
 import { useHarvests } from './src/hooks/useHarvests';
+import { useMarketRecords } from './src/hooks/useMarketRecords';
 import { useBackup } from './src/hooks/useBackup';
 import { useAuth } from './src/hooks/useAuth';
 import { useClaimLocalData } from './src/hooks/useClaimLocalData';
@@ -28,7 +29,7 @@ import { useWorkspaces } from './src/hooks/useWorkspaces';
 import { AuthScreen } from './src/screens/AuthScreen';
 import { DeleteAccountModal } from './src/screens/DeleteAccountModal';
 import { ExportReportModal } from './src/components/ExportReportModal';
-import { openDatabase, Crop, Entry, FinanceEntry, Harvest, Plot } from './src/db/schema';
+import { openDatabase, Crop, Entry, FinanceEntry, Harvest, MarketRecord, Plot } from './src/db/schema';
 import { BackupData } from './src/db/backupRepo';
 import { copy, Language, languages } from './src/i18n/copy';
 import { seasonLabel } from './src/i18n/vocab';
@@ -36,7 +37,7 @@ import { ActivityFormModal } from './src/screens/ActivityFormModal';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { DiaryScreen } from './src/screens/DiaryScreen';
 import { FarmScreen } from './src/screens/FarmScreen';
-import { RecordsScreen } from './src/screens/RecordsScreen';
+import { RecordsScreen, RecordsSection } from './src/screens/RecordsScreen';
 import { MoreScreen } from './src/screens/MoreScreen';
 import { shared } from './src/styles/shared';
 import { GREEN } from './src/theme';
@@ -55,6 +56,7 @@ function MainApp() {
   const [bootTimedOut, setBootTimedOut] = useState(false);
   const splashHiddenRef = useRef(false);
   const [tab, setTab] = useState<Tab>('Home');
+  const [recordsSection, setRecordsSection] = useState<RecordsSection>('overview');
   const [language, setLanguage] = useState<Language>('en');
   const [showAdd, setShowAdd] = useState(false);
   const [editingEntryId, setEditingEntryId] = useState<number | null>(null);
@@ -82,14 +84,15 @@ function MainApp() {
   const crops = useCrops(db, dbReady, ownerId, activeWsId);
   const finance = useFinance(db, dbReady, ownerId, activeWsId);
   const harvests = useHarvests(db, dbReady, ownerId, activeWsId);
+  const marketRecords = useMarketRecords(db, dbReady, ownerId, activeWsId);
   const backup = useBackup(db, ownerId, activeWsId);
 
   const refreshAllEntities = useCallback(async () => {
     await Promise.all([
       activities.refresh(), profile.refresh(), plots.refresh(),
-      crops.refresh(), finance.refresh(), harvests.refresh(),
+      crops.refresh(), finance.refresh(), harvests.refresh(), marketRecords.refresh(),
     ]);
-  }, [activities, profile, plots, crops, finance, harvests]);
+  }, [activities, profile, plots, crops, finance, harvests, marketRecords]);
 
   // Shared lock between sync and account deletion: deletion sets this true
   // for its whole duration so neither the periodic sync interval nor a
@@ -237,6 +240,18 @@ function MainApp() {
     ]);
   }, [harvests, showAlert, t.cancel, t.delete, t.deleteConfirmGeneric, t.deleteHarvest]);
 
+  const deleteMarketRecordConfirm = useCallback((record: MarketRecord) => {
+    showAlert(t.deleteMarketRecord, t.deleteConfirmGeneric, [
+      { text: t.cancel, style: 'cancel' },
+      { text: t.delete, style: 'destructive', onPress: () => marketRecords.remove(record.id) },
+    ]);
+  }, [marketRecords, showAlert, t.cancel, t.delete, t.deleteConfirmGeneric, t.deleteMarketRecord]);
+
+  const openMarketLedger = useCallback(() => {
+    setRecordsSection('market');
+    setTab('Records');
+  }, []);
+
   const confirmRestore = useCallback((data: BackupData) => {
     showAlert(t.restoreWarningTitle, t.replaceDataWarning, [
       { text: t.cancel, style: 'cancel' },
@@ -347,11 +362,13 @@ function MainApp() {
             onDeleteEntry={id => deleteActivity(id)}
             onViewAll={() => setTab('Diary')}
             onOpenExport={() => setShowExportModal(true)}
+            onOpenMarket={openMarketLedger}
           />
         )}
         {tab === 'Diary' && (
           <DiaryScreen
             t={t}
+            language={language}
             lg={lg}
             gridColumns={gridColumns}
             cardWidth={cardWidth}
@@ -385,11 +402,17 @@ function MainApp() {
             isMobile={isMobile}
             gridColumns={gridColumns}
             cardWidth={cardWidth}
+            section={recordsSection}
+            onSectionChange={setRecordsSection}
+            workspaceName={workspaceName}
+            farmProfile={profile.profile}
             activitiesCount={activities.entries.length}
+            marketRecords={marketRecords}
             finance={finance}
             harvests={harvests}
             crops={crops.items}
             plots={plots.items}
+            onDeleteMarketConfirm={deleteMarketRecordConfirm}
             onDeleteFinanceConfirm={deleteFinanceConfirm}
             onDeleteHarvestConfirm={deleteHarvestConfirm}
             onError={message => showAlert('Save failed', message)}

@@ -65,6 +65,7 @@ export function FormField({
   language: propLanguage,
   locale: propLocale,
   onFocus,
+  dark = false,
 }: {
   label: string;
   value: string;
@@ -80,6 +81,7 @@ export function FormField({
   language?: string;
   locale?: string;
   onFocus?: () => void;
+  dark?: boolean;
 }) {
   const containerRef = useRef<View>(null);
   const modalScroll = useFormModalScroll();
@@ -96,6 +98,7 @@ export function FormField({
     return false;
   });
   const baseValueRef = useRef('');
+  const isActiveListenerRef = useRef(false);
   const shouldMask = Boolean(secureTextEntry && !isRevealed);
 
   const { language: activeLanguage, locale: activeContextLocale, t } = useActiveLanguage();
@@ -105,17 +108,22 @@ export function FormField({
   // Safe cleanup on unmount
   useEffect(() => {
     return () => {
-      try {
-        if (ExpoSpeechRecognitionModule?.abort) {
-          ExpoSpeechRecognitionModule.abort();
+      const wasActive = isActiveListenerRef.current;
+      isActiveListenerRef.current = false;
+      if (wasActive) {
+        try {
+          if (ExpoSpeechRecognitionModule?.abort) {
+            ExpoSpeechRecognitionModule.abort();
+          }
+        } catch (err) {
+          console.warn('Failed to abort speech recognition on unmount:', err);
         }
-      } catch (err) {
-        console.warn('Failed to abort speech recognition on unmount:', err);
       }
     };
   }, []);
 
   useSafeSpeechRecognitionEvent('result', (event) => {
+    if (!isActiveListenerRef.current) return;
     try {
       const transcript = event?.results?.[0]?.transcript;
       if (transcript !== undefined) {
@@ -133,6 +141,8 @@ export function FormField({
   });
 
   useSafeSpeechRecognitionEvent('end', () => {
+    if (!isActiveListenerRef.current) return;
+    isActiveListenerRef.current = false;
     try {
       setIsListening(false);
     } catch (err) {
@@ -141,6 +151,8 @@ export function FormField({
   });
 
   useSafeSpeechRecognitionEvent('error', (event) => {
+    if (!isActiveListenerRef.current) return;
+    isActiveListenerRef.current = false;
     try {
       console.warn('Speech recognition error event:', event);
       setIsListening(false);
@@ -153,16 +165,19 @@ export function FormField({
   const handleToggleVoice = async () => {
     try {
       if (!ExpoSpeechRecognitionModule) {
+        isActiveListenerRef.current = false;
         setIsListening(false);
         return;
       }
 
       if (isListening) {
+        isActiveListenerRef.current = false;
         try {
           await ExpoSpeechRecognitionModule.stop?.();
         } catch (stopErr) {
           console.warn('ExpoSpeechRecognitionModule.stop error:', stopErr);
         } finally {
+          isActiveListenerRef.current = false;
           setIsListening(false);
         }
       } else {
@@ -172,11 +187,13 @@ export function FormField({
             : true;
           if (!isAvail) {
             console.warn('Speech recognition is not available on this device');
+            isActiveListenerRef.current = false;
             setIsListening(false);
             return;
           }
         } catch (checkErr) {
           console.warn('Speech recognition availability check threw error:', checkErr);
+          isActiveListenerRef.current = false;
           setIsListening(false);
           return;
         }
@@ -184,19 +201,23 @@ export function FormField({
         const permResponse = await ExpoSpeechRecognitionModule.requestPermissionsAsync?.();
         if (permResponse?.granted) {
           baseValueRef.current = value;
+          isActiveListenerRef.current = true;
           setIsListening(true);
           try {
             await ExpoSpeechRecognitionModule.start?.({ lang: effectiveLocale, interimResults: true });
           } catch (startErr) {
             console.warn('ExpoSpeechRecognitionModule.start error:', startErr);
+            isActiveListenerRef.current = false;
             setIsListening(false);
           }
         } else {
+          isActiveListenerRef.current = false;
           setIsListening(false);
         }
       }
     } catch (err) {
       console.warn('Speech recognition toggle error:', err);
+      isActiveListenerRef.current = false;
       setIsListening(false);
     }
   };
@@ -206,14 +227,16 @@ export function FormField({
 
   return (
     <View ref={containerRef} collapsable={false}>
-      <Text style={shared.fieldLabel}>{label}{required ? ' *' : ''}</Text>
+      <Text style={[shared.fieldLabel, dark && { color: '#C8E6C9' }]}>{label}{required ? ' *' : ''}</Text>
       <View style={{ position: 'relative', justifyContent: 'center' }}>
         <TextInput
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
+          placeholderTextColor={dark ? '#7E9C87' : undefined}
           style={[
             shared.input,
+            dark && { backgroundColor: '#16281E', borderColor: '#2E4C3A', color: '#EEF7F0' },
             multiline && shared.notesInput,
             !!error && shared.inputError,
             rightPadding > 0 && { paddingRight: rightPadding },
@@ -241,7 +264,7 @@ export function FormField({
               justifyContent: 'center',
               alignItems: 'center',
               width: 32,
-              backgroundColor: isListening ? '#FDE8E8' : 'transparent',
+              backgroundColor: isListening ? (dark ? '#4A1D1D' : '#FDE8E8') : 'transparent',
               borderRadius: 8,
             }}
             accessibilityRole="button"
@@ -250,9 +273,9 @@ export function FormField({
           >
             <View style={{ width: 24, height: 24, alignItems: 'center', justifyContent: 'center' }}>
               {isListening ? (
-                <Ionicons name="stop-circle" size={22} color="#B3261E" />
+                <Ionicons name="stop-circle" size={22} color={dark ? '#F87171' : '#B3261E'} />
               ) : (
-                <Ionicons name="mic-outline" size={20} color="#2E7D32" />
+                <Ionicons name="mic-outline" size={20} color={dark ? '#86EFAC' : '#2E7D32'} />
               )}
             </View>
           </TouchableOpacity>

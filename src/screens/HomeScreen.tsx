@@ -34,6 +34,7 @@ export function HomeScreen({
   onDeleteEntry,
   onViewAll,
   onOpenExport,
+  onOpenMarket,
 }: {
   t: Copy;
   language: Language;
@@ -54,6 +55,7 @@ export function HomeScreen({
   onDeleteEntry: (id: number) => void;
   onViewAll: () => void;
   onOpenExport: () => void;
+  onOpenMarket: () => void;
 }) {
   const locale = language === 'kn' ? 'kn-IN' : language === 'hi' ? 'hi-IN' : 'en-IN';
 
@@ -73,9 +75,15 @@ export function HomeScreen({
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
           <TouchableOpacity
             style={[shared.primaryButton, lg && shared.primaryButtonLg, { flex: 1, minWidth: 150 }]}
+            onPress={onOpenMarket}
+          >
+            <Text style={[shared.primaryButtonText, lg && shared.primaryButtonTextLg]}>🏪 {t.dailyMarket}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[shared.secondaryButton, { flex: 1, minWidth: 140 }]}
             onPress={onAddPress}
           >
-            <Text style={[shared.primaryButtonText, lg && shared.primaryButtonTextLg]}>＋ {t.addActivity}</Text>
+            <Text style={shared.secondaryButtonText}>＋ {t.addActivity}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[shared.secondaryButton, { flex: 1, minWidth: 140 }]}

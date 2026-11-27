@@ -7,6 +7,8 @@ import { Language } from '../i18n/copy';
 
 const DAILY_REMINDER_KEY = '@bhoomi_daily_reminder_enabled';
 const MORNING_WEATHER_ALERT_KEY = '@bhoomi_morning_weather_alert_enabled';
+const MANDI_ALARM_ENABLED_KEY = '@bhoomi_mandi_alarm_enabled';
+const MANDI_ALARM_TIME_KEY = '@bhoomi_mandi_alarm_time';
 const ANDROID_PACKAGE_NAME = 'com.bhoomishakti.diary';
 
 export const FARM_ALARMS_CHANNEL_ID = 'farm-alarms-v2';
@@ -214,6 +216,86 @@ export async function setMorningWeatherAlertEnabled(
     return true;
   } catch (err) {
     console.warn('Failed to toggle morning weather alert:', err);
+    return false;
+  }
+}
+
+export async function isMandiAlarmEnabled(): Promise<boolean> {
+  try {
+    const value = await AsyncStorage.getItem(MANDI_ALARM_ENABLED_KEY);
+    return value === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export async function getMandiAlarmTime(): Promise<{ hour: number; minute: number }> {
+  try {
+    const raw = await AsyncStorage.getItem(MANDI_ALARM_TIME_KEY);
+    if (!raw) return { hour: 3, minute: 0 };
+    const parsed = JSON.parse(raw) as { hour?: unknown; minute?: unknown };
+    const hour = typeof parsed.hour === 'number' && Number.isInteger(parsed.hour) && parsed.hour >= 0 && parsed.hour <= 23
+      ? parsed.hour
+      : 3;
+    const minute = typeof parsed.minute === 'number' && Number.isInteger(parsed.minute) && parsed.minute >= 0 && parsed.minute <= 59
+      ? parsed.minute
+      : 0;
+    return { hour, minute };
+  } catch {
+    return { hour: 3, minute: 0 };
+  }
+}
+
+export async function setMandiAlarm(
+  enabled: boolean,
+  hour: number,
+  minute: number,
+  title: string = '🏪 Mandi Morning Alarm',
+  body: string = 'Time to prepare for the morning mandi! Open BS Diary to log today’s vegetable boxes.'
+): Promise<boolean> {
+  const safeHour = Math.max(0, Math.min(23, Math.floor(Number.isFinite(hour) ? hour : 3)));
+  const safeMinute = Math.max(0, Math.min(59, Math.floor(Number.isFinite(minute) ? minute : 0)));
+  try {
+    await AsyncStorage.setItem(MANDI_ALARM_TIME_KEY, JSON.stringify({ hour: safeHour, minute: safeMinute }));
+    await AsyncStorage.setItem(MANDI_ALARM_ENABLED_KEY, enabled ? 'true' : 'false');
+    if (Platform.OS !== 'web') {
+      await Notifications.cancelScheduledNotificationAsync('mandi-morning-alarm').catch(() => {});
+    }
+
+    if (!enabled) {
+      return true;
+    }
+
+    const granted = await requestNotificationPermissions();
+    if (!granted) {
+      await AsyncStorage.setItem(MANDI_ALARM_ENABLED_KEY, 'false');
+      return false;
+    }
+
+    await setupNotificationChannels();
+
+    await Notifications.scheduleNotificationAsync({
+      identifier: 'mandi-morning-alarm',
+      content: {
+        title,
+        body,
+        sound: FARM_ALARM_SOUND,
+        priority: Notifications.AndroidNotificationPriority.MAX,
+        vibrate: ALARM_VIBRATION_PATTERN,
+        interruptionLevel: 'timeSensitive',
+        color: '#1B5E20',
+        data: { type: 'mandi_morning_alarm', hour: safeHour, minute: safeMinute },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour: safeHour,
+        minute: safeMinute,
+        channelId: FARM_ALARMS_CHANNEL_ID,
+      },
+    });
+    return true;
+  } catch (err) {
+    console.warn('Failed to configure mandi morning alarm:', err);
     return false;
   }
 }
