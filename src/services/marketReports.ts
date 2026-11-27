@@ -7,6 +7,7 @@ import type { Copy, Language } from '../i18n/copy';
 import { marketPaymentStatusLabel, marketUnitLabel } from '../i18n/vocab';
 import { formatDisplayTime12h, formatINR } from '../utils/format';
 import { downloadTextFile } from '../utils/share';
+import { utf8ToBase64 } from './googleDriveSync';
 
 function sanitizeFilenamePart(raw: string): string {
   const cleaned = raw.trim().replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
@@ -481,4 +482,38 @@ export async function exportMarketLedgerCsv(
   const dateStr = new Date().toISOString().slice(0, 10);
   const filename = `BhoomiShakti-Market-Ledger-${safeWs}-${dateStr}.csv`;
   await shareCsvText(filename, csvContent, t.shareMarketCsvDialog, t);
+}
+
+export async function buildMarketRecordDrivePayload(
+  record: MarketRecord,
+  t: Copy,
+  language: Language,
+  workspaceName: string,
+  farmProfile?: FarmProfile | null
+): Promise<{ fileName: string; mimeType: string; contentBase64: string }> {
+  const html = buildMarketPattiHtml(record, t, language, workspaceName, farmProfile);
+  const safeMkt = sanitizeFilenamePart(record.marketName || workspaceName);
+
+  if (Platform.OS !== 'web') {
+    const result = await Print.printToFileAsync({ html, base64: true });
+    let base64 = result.base64;
+    if (!base64 && result.uri) {
+      base64 = await FileSystem.readAsStringAsync(result.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+    }
+    if (base64) {
+      return {
+        fileName: `BhoomiShakti-Patti-${safeMkt}-${record.marketDate}.pdf`,
+        mimeType: 'application/pdf',
+        contentBase64: base64,
+      };
+    }
+  }
+
+  return {
+    fileName: `BhoomiShakti-Patti-${safeMkt}-${record.marketDate}.html`,
+    mimeType: 'text/html',
+    contentBase64: utf8ToBase64(html),
+  };
 }

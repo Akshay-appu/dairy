@@ -15,6 +15,7 @@ import { expenseCategoryLabel, incomeCategoryLabel, quantityUnitLabel, seasonLab
 import { FinanceFormModal, FinanceFormState } from './FinanceFormModal';
 import { HarvestFormModal, HarvestFormState } from './HarvestFormModal';
 import { MarketScreen } from './MarketScreen';
+import type { GoogleDriveController } from '../services/googleDriveAuth';
 import { shared } from '../styles/shared';
 import { formatINR, formatShortDate, isValidDateString, parseAmount, todayDateString } from '../utils/format';
 
@@ -35,7 +36,7 @@ const EMPTY_HARVEST: HarvestFormState = {
 export function RecordsScreen({
   t, language, lg, isMobile, gridColumns, cardWidth,
   section, onSectionChange, workspaceName, farmProfile,
-  activitiesCount, marketRecords, finance, harvests, crops, plots,
+  activitiesCount, marketRecords, finance, harvests, crops, plots, drive,
   onDeleteMarketConfirm, onDeleteFinanceConfirm, onDeleteHarvestConfirm, onError, onOpenExport,
 }: {
   t: Copy;
@@ -68,6 +69,7 @@ export function RecordsScreen({
   };
   crops: Crop[];
   plots: Plot[];
+  drive?: GoogleDriveController;
   onDeleteMarketConfirm: (record: MarketRecord) => void;
   onDeleteFinanceConfirm: (entry: FinanceEntry) => void;
   onDeleteHarvestConfirm: (harvest: Harvest) => void;
@@ -199,6 +201,7 @@ export function RecordsScreen({
           workspaceName={workspaceName}
           farmProfile={farmProfile}
           marketRecords={marketRecords}
+          drive={drive}
           onDeleteMarketConfirm={onDeleteMarketConfirm}
           onError={onError}
         />

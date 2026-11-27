@@ -5,10 +5,13 @@ import * as SQLite from 'expo-sqlite';
 import { FormModal } from './FormModal';
 import { Copy, Language } from '../i18n/copy';
 import {
+  buildFarmReportDrivePayload,
   exportFarmReportCsv,
   exportFarmReportPdf,
   loadFarmReportSnapshot,
 } from '../services/exportReports';
+import type { GoogleDriveController } from '../services/googleDriveAuth';
+import { driveErrorCopyKey, uploadFileToBsDiaryDriveFolder } from '../services/googleDriveSync';
 import { GREEN, LIGHT_GREEN, DANGER, INK, MUTED } from '../theme';
 
 export function ExportReportModal({
@@ -22,6 +25,7 @@ export function ExportReportModal({
   workspaceName,
   userEmail,
   counts,
+  drive,
   onClose,
 }: {
   visible: boolean;
@@ -34,9 +38,10 @@ export function ExportReportModal({
   workspaceName: string;
   userEmail?: string | null;
   counts: { activities: number; finance: number; harvests: number };
+  drive?: GoogleDriveController;
   onClose: () => void;
 }) {
-  const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null);
+  const [exporting, setExporting] = useState<'pdf' | 'csv' | 'drive' | null>(null);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -47,7 +52,7 @@ export function ExportReportModal({
     onClose();
   };
 
-  const runExport = async (format: 'pdf' | 'csv') => {
+  const runExport = async (format: 'pdf' | 'csv' | 'drive') => {
     if (!db) {
       setErrorMessage(t.exportErrorGeneric);
       return;
@@ -66,12 +71,21 @@ export function ExportReportModal({
       if (format === 'pdf') {
         await exportFarmReportPdf(snapshot, t, { userEmail });
         setStatusMessage(t.exportSuccessPdf);
-      } else {
+      } else if (format === 'csv') {
         await exportFarmReportCsv(snapshot, t, { userEmail });
         setStatusMessage(t.exportSuccessCsv);
+      } else if (drive) {
+        const token = drive.getValidAccessToken() ?? (await drive.connect());
+        const payload = await buildFarmReportDrivePayload(snapshot, t);
+        await uploadFileToBsDiaryDriveFolder(token, payload);
+        setStatusMessage(t.savedToDriveSuccess);
       }
     } catch (err) {
-      setErrorMessage(err instanceof Error && err.message ? err.message : t.exportErrorGeneric);
+      if (format === 'drive') {
+        setErrorMessage(t[driveErrorCopyKey(err)]);
+      } else {
+        setErrorMessage(err instanceof Error && err.message ? err.message : t.exportErrorGeneric);
+      }
     } finally {
       setExporting(null);
     }
@@ -137,6 +151,30 @@ export function ExportReportModal({
         </View>
         <Ionicons name="share-social-outline" size={20} color={GREEN} />
       </TouchableOpacity>
+
+      {drive?.isConnected && (
+        <TouchableOpacity
+          style={[styles.optionCard, exporting === 'drive' && styles.optionCardBusy]}
+          onPress={() => void runExport('drive')}
+          disabled={exporting !== null}
+          activeOpacity={0.75}
+        >
+          <View style={[styles.optionIconCircle, { backgroundColor: '#E0F2FE' }]}>
+            {exporting === 'drive' ? (
+              <ActivityIndicator size="small" color="#0369A1" />
+            ) : (
+              <Ionicons name="cloud-upload-outline" size={24} color="#0369A1" />
+            )}
+          </View>
+          <View style={styles.optionTextWrap}>
+            <Text style={styles.optionTitle}>
+              {exporting === 'drive' ? t.savingToDrive : t.saveToMyDrive}
+            </Text>
+            <Text style={styles.optionDesc}>{t.saveReportToDriveDesc}</Text>
+          </View>
+          <Ionicons name="logo-google" size={18} color={GREEN} />
+        </TouchableOpacity>
+      )}
 
       {!!statusMessage && (
         <View style={styles.statusBox}>

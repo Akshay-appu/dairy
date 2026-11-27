@@ -371,6 +371,36 @@ export type Copy = {
   mandiAlarmNotifTitle: string;
   mandiAlarmNotifBody: string;
   mandiAlarmScheduledNote: string;
+
+  // User-Owned Google Drive BYOC Backup & Report Vault
+  driveCardTitle: string;
+  driveCardSubtitle: string;
+  driveConnectBtn: string;
+  driveReconnectBtn: string;
+  driveDisconnectBtn: string;
+  driveConnectedBadge: string;
+  driveConnectedAs: string;
+  driveLastBackup: string;
+  driveNeverBackedUp: string;
+  driveBackupNowBtn: string;
+  driveBackingUp: string;
+  driveBackupSuccess: string;
+  driveRestoreBtn: string;
+  driveCheckingBackup: string;
+  driveRestoreNewerWarning: string;
+  saveToMyDrive: string;
+  savingToDrive: string;
+  savedToDriveSuccess: string;
+  saveReportToDriveDesc: string;
+  driveErrorNotConfigured: string;
+  driveErrorNotConnected: string;
+  driveErrorTokenExpired: string;
+  driveErrorQuotaExceeded: string;
+  driveErrorNetwork: string;
+  driveErrorNoBackup: string;
+  driveErrorInvalidBackup: string;
+  driveErrorCancelled: string;
+  driveErrorGeneric: string;
 };
 
 export const copy: Record<Language, Copy> = {
@@ -771,6 +801,35 @@ export const copy: Record<Language, Copy> = {
     mandiAlarmNotifTitle: '🏪 Mandi Morning Alarm',
     mandiAlarmNotifBody: 'Time to prepare for the morning mandi! Open BS Diary to log today’s vegetable boxes.',
     mandiAlarmScheduledNote: 'Scheduled daily at {time}',
+
+    driveCardTitle: 'My Google Drive Backup (15 GB Free)',
+    driveCardSubtitle: 'Back up your entire diary privately to your own Google Drive and archive Market Pattis in your "BS Diary" folder.',
+    driveConnectBtn: 'Connect Google Drive',
+    driveReconnectBtn: 'Reconnect Drive',
+    driveDisconnectBtn: 'Disconnect',
+    driveConnectedBadge: 'Connected',
+    driveConnectedAs: 'Connected to Google Drive',
+    driveLastBackup: 'Last Drive backup',
+    driveNeverBackedUp: 'Not backed up to Drive yet',
+    driveBackupNowBtn: 'Back Up Now to My Drive',
+    driveBackingUp: 'Backing up to Google Drive…',
+    driveBackupSuccess: 'Backed up {count} workspace(s) safely to your Google Drive.',
+    driveRestoreBtn: 'Restore from My Drive',
+    driveCheckingBackup: 'Checking backup in Google Drive…',
+    driveRestoreNewerWarning: 'Note: This device has newer local edits than the Drive backup. Review carefully before restoring.',
+    saveToMyDrive: 'Save to My Drive',
+    savingToDrive: 'Saving to Drive…',
+    savedToDriveSuccess: 'Saved to your "BS Diary" folder in Google Drive.',
+    saveReportToDriveDesc: 'Archive this farm report directly inside your "BS Diary" Google Drive folder.',
+    driveErrorNotConfigured: 'Google Drive OAuth Client IDs are not configured in this build yet.',
+    driveErrorNotConnected: 'Connect your Google Drive first to use Drive backup and archiving.',
+    driveErrorTokenExpired: 'Your Google Drive session expired. Tap Connect Google Drive to sign in again.',
+    driveErrorQuotaExceeded: 'Your 15 GB Google Drive storage is full. Your records remain safely saved on this device.',
+    driveErrorNetwork: 'No internet connection. Your records stay safely saved on this device until you are back online.',
+    driveErrorNoBackup: 'No backup file was found in your Google Drive for this workspace yet.',
+    driveErrorInvalidBackup: 'The backup file in Google Drive could not be read.',
+    driveErrorCancelled: 'Google Drive sign-in was cancelled.',
+    driveErrorGeneric: 'Google Drive action could not complete. Please try again.',
   },
   kn: {
     tagline: 'ಪ್ರತಿ ಹೊಲದ ಕಥೆ, ಒಂದೇ ಡೈರಿಯಲ್ಲಿ',
@@ -1169,6 +1228,35 @@ export const copy: Record<Language, Copy> = {
     mandiAlarmNotifTitle: '🏪 ಮಂಡಿ ಬೆಳಗಿನ ಅಲಾರಾಂ',
     mandiAlarmNotifBody: 'ಬೆಳಗಿನ ಮಂಡಿಗೆ ಸಿದ್ಧರಾಗುವ ಸಮಯ! ಇಂದಿನ ತರಕಾರಿ ಬಾಕ್ಸ್‌ಗಳನ್ನು ದಾಖಲಿಸಲು ಬಿಎಸ್ ಡೈರಿ ತೆರೆಯಿರಿ.',
     mandiAlarmScheduledNote: 'ಪ್ರತಿದಿನ {time} ಕ್ಕೆ ನಿಗದಿಯಾಗಿದೆ',
+
+    driveCardTitle: 'ನನ್ನ Google Drive ಬ್ಯಾಕಪ್ (15 GB ಉಚಿತ)',
+    driveCardSubtitle: 'ನಿಮ್ಮ ಸಂಪೂರ್ಣ ಡೈರಿಯನ್ನು ನಿಮ್ಮ ಸ್ವಂತ Google Drive ಗೆ ಖಾಸಗಿಯಾಗಿ ಬ್ಯಾಕಪ್ ಮಾಡಿ ಮತ್ತು ಮಾರುಕಟ್ಟೆ ಪಟ್ಟಿಗಳನ್ನು "BS Diary" ಫೋಲ್ಡರ್‌ನಲ್ಲಿ ಉಳಿಸಿ.',
+    driveConnectBtn: 'Google Drive ಸಂಪರ್ಕಿಸಿ',
+    driveReconnectBtn: 'ಮತ್ತೆ ಸಂಪರ್ಕಿಸಿ',
+    driveDisconnectBtn: 'ಸಂಪರ್ಕ ಕಡಿತಗೊಳಿಸಿ',
+    driveConnectedBadge: 'ಸಂಪರ್ಕಿಸಲಾಗಿದೆ',
+    driveConnectedAs: 'Google Drive ಗೆ ಸಂಪರ್ಕಿಸಲಾಗಿದೆ',
+    driveLastBackup: 'ಕೊನೆಯ Drive ಬ್ಯಾಕಪ್',
+    driveNeverBackedUp: 'ಇನ್ನೂ Drive ಗೆ ಬ್ಯಾಕಪ್ ಮಾಡಿಲ್ಲ',
+    driveBackupNowBtn: 'ಈಗ ನನ್ನ Drive ಗೆ ಬ್ಯಾಕಪ್ ಮಾಡಿ',
+    driveBackingUp: 'Google Drive ಗೆ ಬ್ಯಾಕಪ್ ಆಗುತ್ತಿದೆ…',
+    driveBackupSuccess: '{count} ಕಾರ್ಯಕ್ಷೇತ್ರ(ಗಳನ್ನು) ನಿಮ್ಮ Google Drive ಗೆ ಸುರಕ್ಷಿತವಾಗಿ ಬ್ಯಾಕಪ್ ಮಾಡಲಾಗಿದೆ.',
+    driveRestoreBtn: 'ನನ್ನ Drive ನಿಂದ ಮರುಸ್ಥಾಪಿಸಿ',
+    driveCheckingBackup: 'Google Drive ಬ್ಯಾಕಪ್ ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ…',
+    driveRestoreNewerWarning: 'ಗಮನಿಸಿ: ಈ ಸಾಧನದಲ್ಲಿ Drive ಬ್ಯಾಕಪ್‌ಗಿಂತ ಹೊಸ ಬದಲಾವಣೆಗಳಿವೆ. ಮರುಸ್ಥಾಪಿಸುವ ಮೊದಲು ಪರಿಶೀಲಿಸಿ.',
+    saveToMyDrive: 'ನನ್ನ Drive ಗೆ ಉಳಿಸಿ',
+    savingToDrive: 'Drive ಗೆ ಉಳಿಸಲಾಗುತ್ತಿದೆ…',
+    savedToDriveSuccess: 'ನಿಮ್ಮ Google Drive ನ "BS Diary" ಫೋಲ್ಡರ್‌ನಲ್ಲಿ ಉಳಿಸಲಾಗಿದೆ.',
+    saveReportToDriveDesc: 'ಈ ಕೃಷಿ ವರದಿಯನ್ನು ನಿಮ್ಮ Google Drive ನ "BS Diary" ಫೋಲ್ಡರ್‌ನಲ್ಲಿ ನೇರವಾಗಿ ಉಳಿಸಿ.',
+    driveErrorNotConfigured: 'ಈ ಆ್ಯಪ್ ಬಿಲ್ಡ್‌ನಲ್ಲಿ Google Drive OAuth ಕ್ಲೈಂಟ್ ಐಡಿಗಳನ್ನು ಇನ್ನೂ ಹೊಂದಿಸಲಾಗಿಲ್ಲ.',
+    driveErrorNotConnected: 'Drive ಬ್ಯಾಕಪ್ ಮತ್ತು ಉಳಿಸುವಿಕೆ ಬಳಸಲು ಮೊದಲು ನಿಮ್ಮ Google Drive ಸಂಪರ್ಕಿಸಿ.',
+    driveErrorTokenExpired: 'ನಿಮ್ಮ Google Drive ಸೆಷನ್ ಅವಧಿ ಮುಗಿದಿದೆ. ಮತ್ತೆ ಸೈನ್ ಇನ್ ಮಾಡಲು Google Drive ಸಂಪರ್ಕಿಸಿ ಒತ್ತಿ.',
+    driveErrorQuotaExceeded: 'ನಿಮ್ಮ 15 GB Google Drive ಸಂಗ್ರಹಣೆ ತುಂಬಿದೆ. ನಿಮ್ಮ ದಾಖಲೆಗಳು ಈ ಫೋನ್‌ನಲ್ಲಿ ಸುರಕ್ಷಿತವಾಗಿ ಉಳಿದಿವೆ.',
+    driveErrorNetwork: 'ಇಂಟರ್ನೆಟ್ ಸಂಪರ್ಕವಿಲ್ಲ. ನೀವು ಆನ್‌ಲೈನ್‌ಗೆ ಬರುವವರೆಗೆ ನಿಮ್ಮ ದಾಖಲೆಗಳು ಈ ಫೋನ್‌ನಲ್ಲಿ ಸುರಕ್ಷಿತವಾಗಿರುತ್ತವೆ.',
+    driveErrorNoBackup: 'ಈ ಕಾರ್ಯಕ್ಷೇತ್ರಕ್ಕೆ ನಿಮ್ಮ Google Drive ನಲ್ಲಿ ಇನ್ನೂ ಯಾವುದೇ ಬ್ಯಾಕಪ್ ಫೈಲ್ ಸಿಗಲಿಲ್ಲ.',
+    driveErrorInvalidBackup: 'Google Drive ನಲ್ಲಿರುವ ಬ್ಯಾಕಪ್ ಫೈಲ್ ಅನ್ನು ಓದಲಾಗಲಿಲ್ಲ.',
+    driveErrorCancelled: 'Google Drive ಸೈನ್-ಇನ್ ರದ್ದುಗೊಳಿಸಲಾಗಿದೆ.',
+    driveErrorGeneric: 'Google Drive ಕ್ರಿಯೆ ಪೂರ್ಣಗೊಳ್ಳಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
   },
   hi: {
     tagline: 'हर खेत की कहानी, एक ही डायरी में',
@@ -1567,5 +1655,34 @@ export const copy: Record<Language, Copy> = {
     mandiAlarmNotifTitle: '🏪 मंडी सुबह का अलार्म',
     mandiAlarmNotifBody: 'सुबह की मंडी की तैयारी का समय! आज के सब्ज़ी बॉक्स दर्ज करने के लिए BS डायरी खोलें।',
     mandiAlarmScheduledNote: 'रोज़ {time} पर निर्धारित',
+
+    driveCardTitle: 'मेरा Google Drive बैकअप (15 GB मुफ़्त)',
+    driveCardSubtitle: 'अपनी पूरी डायरी का निजी बैकअप अपने Google Drive पर रखें और मंडी पट्टियाँ "BS Diary" फ़ोल्डर में सहेजें।',
+    driveConnectBtn: 'Google Drive जोड़ें',
+    driveReconnectBtn: 'फिर से जोड़ें',
+    driveDisconnectBtn: 'डिस्कनेक्ट करें',
+    driveConnectedBadge: 'जुड़ा हुआ',
+    driveConnectedAs: 'Google Drive से जुड़ा है',
+    driveLastBackup: 'आख़िरी Drive बैकअप',
+    driveNeverBackedUp: 'अभी तक Drive पर बैकअप नहीं हुआ',
+    driveBackupNowBtn: 'अभी मेरे Drive पर बैकअप करें',
+    driveBackingUp: 'Google Drive पर बैकअप हो रहा है…',
+    driveBackupSuccess: '{count} कार्यक्षेत्र का बैकअप आपके Google Drive पर सुरक्षित हो गया।',
+    driveRestoreBtn: 'मेरे Drive से पुनर्स्थापित करें',
+    driveCheckingBackup: 'Google Drive बैकअप जाँचा जा रहा है…',
+    driveRestoreNewerWarning: 'ध्यान दें: इस डिवाइस पर Drive बैकअप से नए बदलाव मौजूद हैं। पुनर्स्थापित करने से पहले जांच लें।',
+    saveToMyDrive: 'मेरे Drive में सहेजें',
+    savingToDrive: 'Drive में सहेजा जा रहा है…',
+    savedToDriveSuccess: 'आपके Google Drive के "BS Diary" फ़ोल्डर में सहेजा गया।',
+    saveReportToDriveDesc: 'इस कृषि रिपोर्ट को सीधे अपने Google Drive के "BS Diary" फ़ोल्डर में सहेजें।',
+    driveErrorNotConfigured: 'इस ऐप बिल्ड में Google Drive OAuth क्लाइंट आईडी अभी सेट नहीं हैं।',
+    driveErrorNotConnected: 'Drive बैकअप और सहेजने के लिए पहले अपना Google Drive जोड़ें।',
+    driveErrorTokenExpired: 'आपका Google Drive सत्र समाप्त हो गया है। फिर से साइन इन करने के लिए Google Drive जोड़ें दबाएं।',
+    driveErrorQuotaExceeded: 'आपका 15 GB Google Drive स्टोरेज भर गया है। आपके रिकॉर्ड इस फ़ोन में पूरी तरह सुरक्षित हैं।',
+    driveErrorNetwork: 'इंटरनेट कनेक्शन नहीं है। ऑनलाइन आने तक आपके रिकॉर्ड इस फ़ोन में सुरक्षित रहेंगे।',
+    driveErrorNoBackup: 'इस कार्यक्षेत्र के लिए आपके Google Drive में कोई बैकअप फ़ाइल नहीं मिली।',
+    driveErrorInvalidBackup: 'Google Drive की बैकअप फ़ाइल पढ़ी नहीं जा सकी।',
+    driveErrorCancelled: 'Google Drive साइन-इन रद्द कर दिया गया।',
+    driveErrorGeneric: 'Google Drive कार्य पूरा नहीं हो सका। कृपया फिर प्रयास करें।',
   },
 };

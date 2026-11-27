@@ -70,11 +70,13 @@ export async function processSyncQueue(
   for (const item of queued) {
     try {
       const data = JSON.parse(item.payload) as Record<string, unknown>;
-      await setDoc(
-        doc(firestore, `users/${ownerId}/workspaces/${item.workspaceId}/${item.collection}/${item.recordUuid}`),
-        data,
-        { merge: true }
-      );
+      const docPath =
+        item.tableName === 'workspaces'
+          ? `users/${ownerId}/workspaces/${item.recordUuid}`
+          : item.tableName === 'farm_profile'
+            ? `users/${ownerId}/workspaces/${item.workspaceId}/meta/profile`
+            : `users/${ownerId}/workspaces/${item.workspaceId}/${item.collection}/${item.recordUuid}`;
+      await setDoc(doc(firestore, docPath), data, { merge: true });
       await db.runAsync(`DELETE FROM sync_queue WHERE id = ?`, item.id);
       try {
         const now = new Date().toISOString();
@@ -82,6 +84,11 @@ export async function processSyncQueue(
           await db.runAsync(
             "UPDATE farm_profile SET lastSyncedAt = ? WHERE workspaceId = ? AND COALESCE(userId, '') = COALESCE(?, '')",
             now, item.workspaceId, item.userId
+          );
+        } else if (item.tableName === 'workspaces') {
+          await db.runAsync(
+            'UPDATE workspaces SET lastSyncedAt = ? WHERE id = ? OR uuid = ?',
+            now, item.recordUuid, item.recordUuid
           );
         } else {
           await db.runAsync(

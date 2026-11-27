@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useSync } from '../hooks/useSync';
 import { useFarmProfile } from '../hooks/useFarmProfile';
 import { Copy, Language, languages } from '../i18n/copy';
+import type { GoogleDriveController } from '../services/googleDriveAuth';
 import { shared } from '../styles/shared';
 import { AccountSection } from './AccountSection';
 import { BackupSection } from './BackupSection';
@@ -15,7 +16,7 @@ import { WorkspaceSection } from './WorkspaceSection';
 export function MoreScreen({
   t, lg, language, onLanguageChange, auth, sync, onSignIn, onSignOutConfirm, onDeleteAccount, backup,
   workspaces, activeWorkspaceId, onSwitchWorkspace, onCreateWorkspace, onUpdateWorkspace, onDeleteWorkspace,
-  onError, onConfirmRestore, onOpenExport, db, profile,
+  onError, onConfirmRestore, onOpenExport, db, ownerId, profile, drive,
 }: {
   t: Copy;
   lg: boolean;
@@ -40,7 +41,9 @@ export function MoreScreen({
   onConfirmRestore: (data: BackupData) => void;
   onOpenExport: () => void;
   db?: SQLite.SQLiteDatabase | null;
+  ownerId?: string | null;
   profile?: ReturnType<typeof useFarmProfile>;
+  drive?: GoogleDriveController;
 }) {
   return (
     <>
@@ -81,7 +84,12 @@ export function MoreScreen({
       </View>
       <BackupSection
         t={t}
+        language={language}
         backup={backup}
+        db={db}
+        ownerId={ownerId}
+        activeWorkspaceId={activeWorkspaceId}
+        drive={drive}
         onOpenExport={onOpenExport}
         onError={onError}
         onConfirmRestore={onConfirmRestore}

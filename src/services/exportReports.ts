@@ -10,6 +10,7 @@ import { Copy, Language } from '../i18n/copy';
 import { expenseCategoryLabel, incomeCategoryLabel, quantityUnitLabel } from '../i18n/vocab';
 import { formatINR, formatShortDate } from '../utils/format';
 import { downloadTextFile } from '../utils/share';
+import { utf8ToBase64 } from './googleDriveSync';
 import { notifyBhoomiEmailService } from './notifications';
 
 export type FarmReportSnapshot = BackupData & {
@@ -472,4 +473,36 @@ export async function exportFarmReportCsv(
       language: snapshot.language,
     });
   }
+}
+
+export async function buildFarmReportDrivePayload(
+  snapshot: FarmReportSnapshot,
+  t: Copy
+): Promise<{ fileName: string; mimeType: string; contentBase64: string }> {
+  const html = buildReportHtml(snapshot, t);
+  const safeWs = sanitizeFilenamePart(snapshot.workspaceName);
+  const dateStr = new Date().toISOString().slice(0, 10);
+
+  if (Platform.OS !== 'web') {
+    const result = await Print.printToFileAsync({ html, base64: true });
+    let base64 = result.base64;
+    if (!base64 && result.uri) {
+      base64 = await FileSystem.readAsStringAsync(result.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+    }
+    if (base64) {
+      return {
+        fileName: `BhoomiShakti-Report-${safeWs}-${dateStr}.pdf`,
+        mimeType: 'application/pdf',
+        contentBase64: base64,
+      };
+    }
+  }
+
+  return {
+    fileName: `BhoomiShakti-Report-${safeWs}-${dateStr}.html`,
+    mimeType: 'text/html',
+    contentBase64: utf8ToBase64(html),
+  };
 }

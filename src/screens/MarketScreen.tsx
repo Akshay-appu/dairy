@@ -20,10 +20,13 @@ import type { FarmProfile } from '../db/schema';
 import type { Copy, Language } from '../i18n/copy';
 import { marketPaymentStatusLabel, marketUnitLabel } from '../i18n/vocab';
 import {
+  buildMarketRecordDrivePayload,
   exportMarketLedgerCsv,
   exportMarketRecordCsv,
   exportMarketRecordPdf,
 } from '../services/marketReports';
+import type { GoogleDriveController } from '../services/googleDriveAuth';
+import { driveErrorCopyKey, uploadFileToBsDiaryDriveFolder } from '../services/googleDriveSync';
 import { shared } from '../styles/shared';
 import { DANGER, GREEN, INK, LIGHT_GREEN, MUTED } from '../theme';
 import {
@@ -45,6 +48,7 @@ export function MarketScreen({
   workspaceName,
   farmProfile,
   marketRecords,
+  drive,
   onDeleteMarketConfirm,
   onError,
 }: {
@@ -63,6 +67,7 @@ export function MarketScreen({
     update: (id: number, input: MarketRecordInput) => Promise<void>;
     getLastLocation: () => Promise<MarketLocationDefaults>;
   };
+  drive?: GoogleDriveController;
   onDeleteMarketConfirm: (record: MarketRecord) => void;
   onError: (message: string) => void;
 }) {
@@ -103,6 +108,7 @@ export function MarketScreen({
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<MarketRecord | null>(null);
   const [busyExportKey, setBusyExportKey] = useState<string | null>(null);
+  const [driveStatusMsg, setDriveStatusMsg] = useState('');
 
   const summary = useMemo(() => {
     let grossIncome = 0;
@@ -152,10 +158,34 @@ export function MarketScreen({
 
   const runExport = async (key: string, fn: () => Promise<void>) => {
     setBusyExportKey(key);
+    setDriveStatusMsg('');
     try {
       await fn();
     } catch (err) {
       onError(err instanceof Error ? err.message : t.exportErrorGeneric);
+    } finally {
+      setBusyExportKey(null);
+    }
+  };
+
+  const handleSaveRecordToDrive = async (record: MarketRecord) => {
+    if (!drive) return;
+    const key = `drive-${record.id}`;
+    setBusyExportKey(key);
+    setDriveStatusMsg('');
+    try {
+      const token = drive.getValidAccessToken() ?? (await drive.connect());
+      const payload = await buildMarketRecordDrivePayload(
+        record,
+        t,
+        language,
+        workspaceName,
+        farmProfile
+      );
+      await uploadFileToBsDiaryDriveFolder(token, payload);
+      setDriveStatusMsg(t.savedToDriveSuccess);
+    } catch (err) {
+      onError(t[driveErrorCopyKey(err)]);
     } finally {
       setBusyExportKey(null);
     }
@@ -230,6 +260,13 @@ export function MarketScreen({
           />
         </View>
       </View>
+
+      {!!driveStatusMsg && (
+        <View style={styles.driveToast}>
+          <Ionicons name="cloud-done-outline" size={16} color={GREEN} />
+          <Text style={styles.driveToastText}>{driveStatusMsg}</Text>
+        </View>
+      )}
 
       {/* Records List */}
       {marketRecords.items.length === 0 ? (
@@ -384,6 +421,23 @@ export function MarketScreen({
                     )}
                     <Text style={styles.exportActionText}>{t.exportDayCsv}</Text>
                   </TouchableOpacity>
+
+                  {drive?.isConnected && (
+                    <TouchableOpacity
+                      onPress={() => void handleSaveRecordToDrive(record)}
+                      disabled={busyExportKey !== null}
+                      style={[styles.exportActionBtn, styles.driveExportBtn]}
+                    >
+                      {busyExportKey === `drive-${record.id}` ? (
+                        <ActivityIndicator size="small" color={GREEN} />
+                      ) : (
+                        <Ionicons name="cloud-upload-outline" size={15} color={GREEN} />
+                      )}
+                      <Text style={[styles.exportActionText, { color: GREEN }]}>
+                        {busyExportKey === `drive-${record.id}` ? t.savingToDrive : t.saveToMyDrive}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
 
                   <View style={styles.rightIconActions}>
                     <TouchableOpacity
@@ -671,6 +725,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: INK,
+  },
+  driveExportBtn: {
+    backgroundColor: LIGHT_GREEN,
+    borderColor: '#B8DEC0',
+  },
+  driveToast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: LIGHT_GREEN,
+    borderWidth: 1,
+    borderColor: '#B8DEC0',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    marginBottom: 12,
+  },
+  driveToastText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '700',
+    color: GREEN,
   },
   rightIconActions: {
     flexDirection: 'row',

@@ -41,6 +41,7 @@ import { RecordsScreen, RecordsSection } from './src/screens/RecordsScreen';
 import { MoreScreen } from './src/screens/MoreScreen';
 import { shared } from './src/styles/shared';
 import { GREEN } from './src/theme';
+import { useGoogleDriveAuth } from './src/services/googleDriveAuth';
 import { setupNotificationHandler, setupNotificationChannels } from './src/services/notifications';
 
 type Tab = 'Home' | 'Diary' | 'Farm' | 'Records' | 'More';
@@ -72,6 +73,11 @@ function MainApp() {
   const { isMobile, lg, horizontalPadding, gridColumns, cardWidth, contentMaxWidth } = useResponsive();
   const { webAlert, setWebAlert, showAlert } = useCrossPlatformAlert();
   const auth = useAuth();
+  const drive = useGoogleDriveAuth({
+    isFirebaseConfigured: auth.isFirebaseConfigured,
+    signInWithGoogleWeb: auth.signInWithGoogleWeb,
+    signInWithGoogleIdToken: auth.signInWithGoogleIdToken,
+  });
   // Every entity query is scoped by this value (see schema.ts's
   // SyncColumns): null while signed out (today's local-only behavior,
   // untouched), the Firebase uid once signed in.
@@ -412,6 +418,7 @@ function MainApp() {
             harvests={harvests}
             crops={crops.items}
             plots={plots.items}
+            drive={drive}
             onDeleteMarketConfirm={deleteMarketRecordConfirm}
             onDeleteFinanceConfirm={deleteFinanceConfirm}
             onDeleteHarvestConfirm={deleteHarvestConfirm}
@@ -441,7 +448,9 @@ function MainApp() {
             onConfirmRestore={confirmRestore}
             onOpenExport={() => setShowExportModal(true)}
             db={db}
+            ownerId={ownerId}
             profile={profile}
+            drive={drive}
           />
         )}
       </ScrollView>
@@ -527,6 +536,7 @@ function MainApp() {
           finance: finance.items.length,
           harvests: harvests.items.length,
         }}
+        drive={drive}
         onClose={() => setShowExportModal(false)}
       />
 

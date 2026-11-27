@@ -2,6 +2,7 @@
   "expo": {
     "name": "BS Diary",
     "slug": "BhoomiShaktiDiary-App",
+    "scheme": "bsdiary",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

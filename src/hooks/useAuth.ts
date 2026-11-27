@@ -6,6 +6,11 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { auth, isFirebaseConfigured } from '../firebase/config';
+import {
+  clearStoredDriveToken,
+  GOOGLE_DRIVE_SCOPES,
+  setStoredDriveToken,
+} from '../services/googleDriveAuth';
 
 // Firebase's own error messages are developer-facing ("Firebase: Error
 // (auth/wrong-password).") — map the common ones to farmer-facing copy.
@@ -94,6 +99,7 @@ export function useAuth() {
   }, [requireAuth]);
 
   const signOutUser = useCallback(async () => {
+    clearStoredDriveToken();
     await signOut(requireAuth());
   }, [requireAuth]);
 
@@ -101,10 +107,22 @@ export function useAuth() {
     await sendPasswordResetEmail(requireAuth(), email);
   }, [requireAuth]);
 
-  // Web only: opens a real Google OAuth popup, no extra deps needed.
-  const signInWithGoogleWeb = useCallback(async () => {
+  // Web only: opens a real Google OAuth popup requesting the two non-sensitive
+  // Drive scopes (drive.appdata + drive.file) and captures the short-lived accessToken.
+  const signInWithGoogleWeb = useCallback(async (): Promise<{ accessToken: string | null; email: string | null }> => {
     if (Platform.OS !== 'web') throw new Error('auth/wrong-platform');
-    await signInWithPopup(requireAuth(), new GoogleAuthProvider());
+    const provider = new GoogleAuthProvider();
+    for (const scope of GOOGLE_DRIVE_SCOPES) {
+      provider.addScope(scope);
+    }
+    const result = await signInWithPopup(requireAuth(), provider);
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    const accessToken = credential?.accessToken ?? null;
+    const email = result.user?.email ?? null;
+    if (accessToken) {
+      setStoredDriveToken(accessToken, undefined, email);
+    }
+    return { accessToken, email };
   }, [requireAuth]);
 
   // Native: exchanges an ID token obtained via expo-auth-session (see
