@@ -1,19 +1,43 @@
-import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import React, { ReactNode } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { shared } from '../styles/shared';
 
-export function PrimaryButton({ label, onPress, lg }: { label: string; onPress: () => void; lg?: boolean }) {
+export function PrimaryButton({
+  label,
+  onPress,
+  lg,
+  icon,
+}: {
+  label: string;
+  onPress: () => void;
+  lg?: boolean;
+  icon?: ReactNode;
+}) {
   return (
     <TouchableOpacity style={[shared.primaryButton, lg && shared.primaryButtonLg]} onPress={onPress}>
-      <Text style={[shared.primaryButtonText, lg && shared.primaryButtonTextLg]}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+        {icon}
+        <Text style={[shared.primaryButtonText, lg && shared.primaryButtonTextLg]}>{label}</Text>
+      </View>
     </TouchableOpacity>
   );
 }
 
-export function SecondaryButton({ label, onPress }: { label: string; onPress: () => void }) {
+export function SecondaryButton({
+  label,
+  onPress,
+  icon,
+}: {
+  label: string;
+  onPress: () => void;
+  icon?: ReactNode;
+}) {
   return (
     <TouchableOpacity style={shared.secondaryButton} onPress={onPress}>
-      <Text style={shared.secondaryButtonText}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+        {icon}
+        <Text style={shared.secondaryButtonText}>{label}</Text>
+      </View>
     </TouchableOpacity>
   );
 }

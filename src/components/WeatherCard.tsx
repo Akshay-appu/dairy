@@ -194,9 +194,12 @@ export function WeatherCard({
           {/* Hero Location & Temp */}
           <View style={styles.heroCard}>
             <View style={styles.heroLeft}>
-              <Text style={styles.locationTitle} numberOfLines={2}>
-                📍 {weather.locationName}
-              </Text>
+              <View style={styles.locationRow}>
+                <Ionicons name="location-outline" size={15} color={GREEN} />
+                <Text style={styles.locationTitle} numberOfLines={2}>
+                  {weather.locationName}
+                </Text>
+              </View>
               <Text style={styles.workspaceMeta}>
                 {workspaceName} · {t.weatherActivePlots}: {plotsCount}
               </Text>
@@ -210,7 +213,7 @@ export function WeatherCard({
             </View>
             <View style={styles.heroRight}>
               <View style={styles.tempRow}>
-                <Text style={styles.weatherEmoji}>{condition.icon}</Text>
+                <Ionicons name={condition.iconName} size={26} color={condition.iconColor} />
                 <Text style={styles.tempValue}>{Math.round(weather.temperatureC)}°C</Text>
               </View>
               <Text style={styles.conditionLabel}>{condition.label}</Text>
@@ -241,12 +244,18 @@ export function WeatherCard({
           {/* Localized Spray & Irrigation Advisory */}
           <View style={[styles.advisoryCard, advisoryCardStyle]}>
             <View style={styles.advisoryItem}>
-              <Text style={styles.advisoryTitle}>🛡️ {t.weatherSprayAdvisoryTitle}</Text>
+              <View style={styles.advisoryTitleRow}>
+                <Ionicons name="shield-checkmark-outline" size={15} color={GREEN} />
+                <Text style={styles.advisoryTitle}>{t.weatherSprayAdvisoryTitle}</Text>
+              </View>
               <Text style={styles.advisoryText}>{advisory.sprayAdvisory}</Text>
             </View>
             <View style={styles.advisoryDivider} />
             <View style={styles.advisoryItem}>
-              <Text style={styles.advisoryTitle}>💧 {t.weatherIrrigationAdvisoryTitle}</Text>
+              <View style={styles.advisoryTitleRow}>
+                <Ionicons name="water-outline" size={15} color="#0284C7" />
+                <Text style={styles.advisoryTitle}>{t.weatherIrrigationAdvisoryTitle}</Text>
+              </View>
               <Text style={styles.advisoryText}>{advisory.irrigationAdvisory}</Text>
             </View>
           </View>
@@ -274,16 +283,19 @@ export function WeatherCard({
           {/* Immediate static layout without spinner coils before first weather fetch */}
           <View style={styles.heroCard}>
             <View style={styles.heroLeft}>
-              <Text style={styles.locationTitle} numberOfLines={2}>
-                📍 {[farmProfile?.village, farmProfile?.district].filter(Boolean).join(', ') || workspaceName}
-              </Text>
+              <View style={styles.locationRow}>
+                <Ionicons name="location-outline" size={15} color={GREEN} />
+                <Text style={styles.locationTitle} numberOfLines={2}>
+                  {[farmProfile?.village, farmProfile?.district].filter(Boolean).join(', ') || workspaceName}
+                </Text>
+              </View>
               <Text style={styles.workspaceMeta}>
                 {workspaceName} · {t.weatherActivePlots}: {plotsCount}
               </Text>
             </View>
             <View style={styles.heroRight}>
               <View style={styles.tempRow}>
-                <Text style={styles.weatherEmoji}>🌤️</Text>
+                <Ionicons name="partly-sunny-outline" size={26} color="#0284C7" />
                 <Text style={styles.tempValue}>—°C</Text>
               </View>
               <Text style={styles.conditionLabel}>{loading ? t.weatherUpdating : t.weatherPartlyCloudy}</Text>
@@ -386,10 +398,16 @@ const styles = StyleSheet.create({
     minWidth: 130,
     flexShrink: 1,
   },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   locationTitle: {
     fontSize: 15,
     fontWeight: '800',
     color: GREEN,
+    flexShrink: 1,
   },
   workspaceMeta: {
     fontSize: 11,
@@ -473,6 +491,11 @@ const styles = StyleSheet.create({
   },
   advisoryItem: {
     gap: 3,
+  },
+  advisoryTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
   advisoryTitle: {
     fontWeight: '800',

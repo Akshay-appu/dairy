@@ -1,5 +1,6 @@
 import React from 'react';
 import { DimensionValue, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as SQLite from 'expo-sqlite';
 import { GridList } from '../components/GridList';
 import { ListCard } from '../components/ListCard';
@@ -12,6 +13,7 @@ import { FarmerToolCard } from '../components/FarmerToolCard';
 import { Copy, Language } from '../i18n/copy';
 import { Entry, FarmProfile } from '../db/schema';
 import { shared } from '../styles/shared';
+import { GREEN } from '../theme';
 import { formatShortDate } from '../utils/format';
 
 export function HomeScreen({
@@ -63,9 +65,10 @@ export function HomeScreen({
     <>
       <View style={[shared.welcome, lg && shared.welcomeLg]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
-          <View style={{ backgroundColor: '#E8F5E9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginRight: 4, flexShrink: 0 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#E8F5E9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginRight: 4, flexShrink: 0 }}>
+            <Ionicons name="business-outline" size={13} color="#2E7D32" />
             <Text style={{ fontSize: 12, fontWeight: '700', color: '#2E7D32' }}>
-              🏢 {workspaceName || t.defaultWorkspaceName}
+              {workspaceName || t.defaultWorkspaceName}
             </Text>
           </View>
           <Text style={[shared.date, lg && shared.dateLg, { marginBottom: 0, flexShrink: 1 }]}>{dateLabel}</Text>
@@ -77,7 +80,10 @@ export function HomeScreen({
             style={[shared.primaryButton, lg && shared.primaryButtonLg, { flex: 1, minWidth: 150 }]}
             onPress={onOpenMarket}
           >
-            <Text style={[shared.primaryButtonText, lg && shared.primaryButtonTextLg]}>🏪 {t.dailyMarket}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+              <Ionicons name="storefront-outline" size={17} color="#FFFFFF" />
+              <Text style={[shared.primaryButtonText, lg && shared.primaryButtonTextLg]}>{t.dailyMarket}</Text>
+            </View>
           </TouchableOpacity>
           <TouchableOpacity
             style={[shared.secondaryButton, { flex: 1, minWidth: 140 }]}
@@ -89,7 +95,10 @@ export function HomeScreen({
             style={[shared.secondaryButton, { flex: 1, minWidth: 140 }]}
             onPress={onOpenExport}
           >
-            <Text style={shared.secondaryButtonText}>📄 {t.exportReportButton}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <Ionicons name="document-text-outline" size={16} color={GREEN} />
+              <Text style={shared.secondaryButtonText}>{t.exportReportButton}</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -114,6 +123,7 @@ export function HomeScreen({
           cardWidth={cardWidth}
           renderItem={entry => (
             <ListCard
+              icon={<Ionicons name="checkmark-circle-outline" size={20} color={GREEN} />}
               title={entry.title}
               meta={`${entry.category} · ${formatShortDate(entry.createdAt, locale)}`}
               note={entry.note}

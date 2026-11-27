@@ -662,6 +662,7 @@ export function AccountSection({
               <Text style={styles.previewToneBtnText}>{t.previewAlarmTone}</Text>
             </TouchableOpacity>
           </View>
+          <Text style={styles.alarmTroubleshootText}>{t.alarmTroubleshootHint}</Text>
         </View>
 
         <View style={styles.divider} />
@@ -1226,6 +1227,12 @@ const styles = StyleSheet.create({
     color: GREEN,
     fontSize: 12,
     fontWeight: '700',
+  },
+  alarmTroubleshootText: {
+    fontSize: 11,
+    color: '#3B5C45',
+    marginTop: 8,
+    lineHeight: 16,
   },
   notifStatusWrap: {
     marginTop: 10,

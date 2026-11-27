@@ -91,7 +91,7 @@ export type Harvest = {
   updatedAt: string;
 } & SyncColumns;
 
-const SCHEMA_VERSION = 6;
+const SCHEMA_VERSION = 7;
 
 // Every syncable table except farm_profile (singleton, no uuid/tombstone needed).
 const SYNCABLE_TABLES = ['plots', 'crops', 'diary_entries', 'finance_entries', 'harvests'] as const;
@@ -236,7 +236,7 @@ async function migrateToV4(db: SQLite.SQLiteDatabase): Promise<void> {
 
 let databasePromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
-async function createFreshV6Schema(database: SQLite.SQLiteDatabase): Promise<void> {
+async function createFreshV7Schema(database: SQLite.SQLiteDatabase): Promise<void> {
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS diary_entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -366,7 +366,10 @@ async function createFreshV6Schema(database: SQLite.SQLiteDatabase): Promise<voi
       title TEXT NOT NULL,
       category TEXT NOT NULL,
       localUri TEXT NOT NULL,
-      capturedAt TEXT NOT NULL
+      capturedAt TEXT NOT NULL,
+      warrantyExpiryDate TEXT,
+      warrantyItemName TEXT,
+      warrantyAlertDaysBefore INTEGER DEFAULT 7
     );
     CREATE INDEX IF NOT EXISTS idx_vault_documents_workspace ON vault_documents(workspaceId);
 
@@ -454,7 +457,10 @@ async function migrateToV5(database: SQLite.SQLiteDatabase): Promise<void> {
       title TEXT NOT NULL,
       category TEXT NOT NULL,
       localUri TEXT NOT NULL,
-      capturedAt TEXT NOT NULL
+      capturedAt TEXT NOT NULL,
+      warrantyExpiryDate TEXT,
+      warrantyItemName TEXT,
+      warrantyAlertDaysBefore INTEGER DEFAULT 7
     );
     CREATE INDEX IF NOT EXISTS idx_vault_documents_workspace ON vault_documents(workspaceId);
   `);
@@ -591,6 +597,12 @@ async function migrateToV6(database: SQLite.SQLiteDatabase): Promise<void> {
   `);
 }
 
+async function migrateToV7(database: SQLite.SQLiteDatabase): Promise<void> {
+  await addColumnIfMissing(database, 'vault_documents', 'warrantyExpiryDate', 'warrantyExpiryDate TEXT');
+  await addColumnIfMissing(database, 'vault_documents', 'warrantyItemName', 'warrantyItemName TEXT');
+  await addColumnIfMissing(database, 'vault_documents', 'warrantyAlertDaysBefore', 'warrantyAlertDaysBefore INTEGER DEFAULT 7');
+}
+
 async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
   const database = await SQLite.openDatabaseAsync('bhoomishakti-diary.db');
   await database.execAsync('PRAGMA journal_mode = WAL;');
@@ -603,13 +615,13 @@ async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
     return database;
   }
 
-  // Fast path: brand-new fresh install creates all V6 tables in one batched SQL exec
+  // Fast path: brand-new fresh install creates all V7 tables in one batched SQL exec
   if (version === 0) {
     const existingLegacy = await database.getFirstAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'diary_entries'"
     );
     if (!existingLegacy) {
-      await createFreshV6Schema(database);
+      await createFreshV7Schema(database);
       return database;
     }
   }
@@ -646,6 +658,10 @@ async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
   }
   if (version < 6) {
     await migrateToV6(database);
+    version = 6;
+  }
+  if (version < 7) {
+    await migrateToV7(database);
   }
 
   await database.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION}`);

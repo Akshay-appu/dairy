@@ -664,9 +664,12 @@ export function MarketRecordModal({
                 style={[styles.collapseRow, { borderTopColor: theme.cardBorder }]}
               >
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={[styles.collapseTitle, { color: theme.text }]}>
-                    📍 {t.marketLocationHeading}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <Ionicons name="location-outline" size={15} color={theme.accent} />
+                    <Text style={[styles.collapseTitle, { color: theme.text }]}>
+                      {t.marketLocationHeading}
+                    </Text>
+                  </View>
                   {!locationExpanded && (
                     <Text style={[styles.collapseSub, { color: theme.muted }]} numberOfLines={1}>
                       {locationSummary || t.marketNamePlaceholder}
@@ -736,9 +739,12 @@ export function MarketRecordModal({
             {/* Dynamic + Vegetable Boxes Section */}
             <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderColor: theme.cardBorder }]}>
               <View style={styles.sectionHeaderRow}>
-                <Text style={[styles.sectionHeading, { color: theme.text }]}>
-                  🥬 {t.vegetableBoxesHeading} ({vegBoxes.length})
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
+                  <Ionicons name="basket-outline" size={16} color={theme.accent} />
+                  <Text style={[styles.sectionHeading, { color: theme.text }]}>
+                    {t.vegetableBoxesHeading} ({vegBoxes.length})
+                  </Text>
+                </View>
                 <Text style={[styles.sectionTotal, { color: theme.accent }]}>
                   {formatINR(grossIncome)}
                 </Text>
@@ -909,9 +915,12 @@ export function MarketRecordModal({
                 onPress={() => setExpensesExpanded(v => !v)}
                 style={styles.sectionHeaderRow}
               >
-                <Text style={[styles.sectionHeading, { color: theme.text }]}>
-                  🧾 {t.marketExpensesHeading} ({expenses.length})
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
+                  <Ionicons name="receipt-outline" size={16} color={theme.accent} />
+                  <Text style={[styles.sectionHeading, { color: theme.text }]}>
+                    {t.marketExpensesHeading} ({expenses.length})
+                  </Text>
+                </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={[styles.sectionTotal, { color: theme.lossColor }]}>
                     - {formatINR(totalExpense)}
@@ -1025,9 +1034,12 @@ export function MarketRecordModal({
 
             {/* Settlement, Crates & Patti Photo Section */}
             <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderColor: theme.cardBorder }]}>
-              <Text style={[styles.sectionHeading, { color: theme.text, marginBottom: 10 }]}>
-                💳 {t.settlementHeading}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                <Ionicons name="card-outline" size={16} color={theme.accent} />
+                <Text style={[styles.sectionHeading, { color: theme.text }]}>
+                  {t.settlementHeading}
+                </Text>
+              </View>
 
               <Text style={[styles.miniLabel, { color: theme.muted, marginBottom: 6 }]}>
                 {t.paymentStatusLabel}
@@ -1120,9 +1132,12 @@ export function MarketRecordModal({
               )}
 
               {/* Patti Photo */}
-              <Text style={[styles.miniLabel, { color: theme.muted, marginTop: 14, marginBottom: 6 }]}>
-                📸 {t.attachPattiPhoto}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 14, marginBottom: 6 }}>
+                <Ionicons name="camera-outline" size={14} color={theme.muted} />
+                <Text style={[styles.miniLabel, { color: theme.muted, marginBottom: 0 }]}>
+                  {t.attachPattiPhoto}
+                </Text>
+              </View>
               <View style={styles.rowGap}>
                 <TouchableOpacity
                   onPress={() => void handleAttachPhoto('camera')}

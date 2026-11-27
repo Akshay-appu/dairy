@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { DimensionValue, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { PrimaryButton } from '../components/Buttons';
 import { ChipRow } from '../components/ChipRow';
 import { EmptyState } from '../components/EmptyState';
@@ -13,6 +14,7 @@ import { areaUnitLabel, areaUnitLabels, areaUnits, seasonLabel } from '../i18n/v
 import { CropFormModal, CropFormState } from './CropFormModal';
 import { PlotFormModal, PlotFormState } from './PlotFormModal';
 import { shared } from '../styles/shared';
+import { GREEN } from '../theme';
 import { isValidDateString, parseAmount, todayDateString } from '../utils/format';
 
 type FarmSection = 'profile' | 'plots' | 'crops';
@@ -203,7 +205,7 @@ export function FarmScreen({
               cardWidth={cardWidth}
               renderItem={plot => (
                 <ListCard
-                  icon="🧭"
+                  icon={<Ionicons name="map-outline" size={20} color={GREEN} />}
                   title={plot.name}
                   meta={plot.area != null ? `${plot.area} ${areaUnitLabel(language, plot.areaUnit)}` : areaUnitLabel(language, plot.areaUnit)}
                   note={plot.notes}
@@ -227,7 +229,7 @@ export function FarmScreen({
               cardWidth={cardWidth}
               renderItem={crop => (
                 <ListCard
-                  icon="🌱"
+                  icon={<Ionicons name="leaf-outline" size={20} color={GREEN} />}
                   title={crop.cropName}
                   meta={`${seasonLabel(language, crop.season)} · ${plots.items.find(p => p.id === crop.plotId)?.name ?? t.noPlotLinked}`}
                   note={crop.expectedHarvestDate ? `${t.expectedHarvestDate}: ${crop.expectedHarvestDate}` : undefined}

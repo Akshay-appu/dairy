@@ -12,9 +12,24 @@ export interface StageDefinition {
   fertilizerReminder: string;
 }
 
+export type CropIconName =
+  | 'barley'
+  | 'seed-outline'
+  | 'corn'
+  | 'leaf'
+  | 'flower-outline'
+  | 'sprout-outline'
+  | 'food-apple-outline'
+  | 'chili-mild'
+  | 'spa-outline'
+  | 'peanut-outline'
+  | 'palm-tree'
+  | 'fruit-cherries'
+  | 'tree-outline';
+
 export interface CropGrowthProfile {
   crop: string;
-  emoji: string;
+  iconName: CropIconName;
   label: string;
   defaultTotalDays: number;
   totalDays: number;
@@ -23,24 +38,24 @@ export interface CropGrowthProfile {
 
 export interface PopularCropPreset {
   key: string;
-  emoji: string;
+  iconName: CropIconName;
   defaultDays: number;
   labels: Record<Language, string>;
 }
 
 export const POPULAR_CROP_PRESETS: PopularCropPreset[] = [
-  { key: 'paddy', emoji: '🌾', defaultDays: 130, labels: { en: 'Paddy', kn: 'ಭತ್ತ', hi: 'धान' } },
-  { key: 'ragi', emoji: '🥣', defaultDays: 110, labels: { en: 'Ragi', kn: 'ರಾಗಿ', hi: 'रागी' } },
-  { key: 'maize', emoji: '🌽', defaultDays: 105, labels: { en: 'Maize', kn: 'ಮೆಕ್ಕೆಜೋಳ', hi: 'मक्का' } },
-  { key: 'wheat', emoji: '🌿', defaultDays: 120, labels: { en: 'Wheat', kn: 'ಗೋಧಿ', hi: 'गेहूं' } },
-  { key: 'cotton', emoji: '☁️', defaultDays: 160, labels: { en: 'Cotton', kn: 'ಹತ್ತಿ', hi: 'कपास' } },
-  { key: 'sugarcane', emoji: '🎋', defaultDays: 330, labels: { en: 'Sugarcane', kn: 'ಕಬ್ಬು', hi: 'गन्ना' } },
-  { key: 'tomato', emoji: '🍅', defaultDays: 110, labels: { en: 'Tomato', kn: 'ಟೊಮ್ಯಾಟೊ', hi: 'टमाटर' } },
-  { key: 'chilli', emoji: '🌶️', defaultDays: 150, labels: { en: 'Chilli', kn: 'ಮೆಣಸಿನಕಾಯಿ', hi: 'मिर्च' } },
-  { key: 'onion', emoji: '🧅', defaultDays: 125, labels: { en: 'Onion', kn: 'ಈರುಳ್ಳಿ', hi: 'प्याज' } },
-  { key: 'groundnut', emoji: '🥜', defaultDays: 115, labels: { en: 'Groundnut', kn: 'ಶೇಂಗಾ', hi: 'मूंगफली' } },
-  { key: 'arecanut', emoji: '🌴', defaultDays: 180, labels: { en: 'Arecanut / Coconut', kn: 'ಅಡಿಕೆ / ತೆಂಗು', hi: 'सुपारी / नारियल' } },
-  { key: 'banana', emoji: '🍌', defaultDays: 300, labels: { en: 'Banana', kn: 'ಬಾಳೆ', hi: 'केला' } },
+  { key: 'paddy', iconName: 'barley', defaultDays: 130, labels: { en: 'Paddy', kn: 'ಭತ್ತ', hi: 'धान' } },
+  { key: 'ragi', iconName: 'seed-outline', defaultDays: 110, labels: { en: 'Ragi', kn: 'ರಾಗಿ', hi: 'रागी' } },
+  { key: 'maize', iconName: 'corn', defaultDays: 105, labels: { en: 'Maize', kn: 'ಮೆಕ್ಕೆಜೋಳ', hi: 'मक्का' } },
+  { key: 'wheat', iconName: 'barley', defaultDays: 120, labels: { en: 'Wheat', kn: 'ಗೋಧಿ', hi: 'गेहूं' } },
+  { key: 'cotton', iconName: 'flower-outline', defaultDays: 160, labels: { en: 'Cotton', kn: 'ಹತ್ತಿ', hi: 'कपास' } },
+  { key: 'sugarcane', iconName: 'sprout-outline', defaultDays: 330, labels: { en: 'Sugarcane', kn: 'ಕಬ್ಬು', hi: 'गन्ना' } },
+  { key: 'tomato', iconName: 'food-apple-outline', defaultDays: 110, labels: { en: 'Tomato', kn: 'ಟೊಮ್ಯಾಟೊ', hi: 'टमाटर' } },
+  { key: 'chilli', iconName: 'chili-mild', defaultDays: 150, labels: { en: 'Chilli', kn: 'ಮೆಣಸಿನಕಾಯಿ', hi: 'मिर्च' } },
+  { key: 'onion', iconName: 'spa-outline', defaultDays: 125, labels: { en: 'Onion', kn: 'ಈರುಳ್ಳಿ', hi: 'प्याज' } },
+  { key: 'groundnut', iconName: 'peanut-outline', defaultDays: 115, labels: { en: 'Groundnut', kn: 'ಶೇಂಗಾ', hi: 'मूंगफली' } },
+  { key: 'arecanut', iconName: 'palm-tree', defaultDays: 180, labels: { en: 'Arecanut / Coconut', kn: 'ಅಡಿಕೆ / ತೆಂಗು', hi: 'सुपारी / नारियल' } },
+  { key: 'banana', iconName: 'fruit-cherries', defaultDays: 300, labels: { en: 'Banana', kn: 'ಬಾಳೆ', hi: 'केला' } },
 ];
 
 type LocalizedStageTemplate = {
@@ -53,7 +68,7 @@ type LocalizedStageTemplate = {
 };
 
 type CropTemplate = {
-  emoji: string;
+  iconName: CropIconName;
   defaultTotalDays: number;
   stages: [
     LocalizedStageTemplate,
@@ -65,7 +80,7 @@ type CropTemplate = {
 
 const CROP_TEMPLATES: Record<string, CropTemplate> = {
   paddy: {
-    emoji: '🌾',
+    iconName: 'barley',
     defaultTotalDays: 130,
     stages: [
       {
@@ -151,7 +166,7 @@ const CROP_TEMPLATES: Record<string, CropTemplate> = {
     ],
   },
   ragi: {
-    emoji: '🥣',
+    iconName: 'seed-outline',
     defaultTotalDays: 110,
     stages: [
       {
@@ -237,7 +252,7 @@ const CROP_TEMPLATES: Record<string, CropTemplate> = {
     ],
   },
   maize: {
-    emoji: '🌽',
+    iconName: 'corn',
     defaultTotalDays: 105,
     stages: [
       {
@@ -323,7 +338,7 @@ const CROP_TEMPLATES: Record<string, CropTemplate> = {
     ],
   },
   wheat: {
-    emoji: '🌿',
+    iconName: 'barley',
     defaultTotalDays: 120,
     stages: [
       {
@@ -409,7 +424,7 @@ const CROP_TEMPLATES: Record<string, CropTemplate> = {
     ],
   },
   cotton: {
-    emoji: '☁️',
+    iconName: 'flower-outline',
     defaultTotalDays: 160,
     stages: [
       {
@@ -495,7 +510,7 @@ const CROP_TEMPLATES: Record<string, CropTemplate> = {
     ],
   },
   sugarcane: {
-    emoji: '🎋',
+    iconName: 'sprout-outline',
     defaultTotalDays: 330,
     stages: [
       {
@@ -581,7 +596,7 @@ const CROP_TEMPLATES: Record<string, CropTemplate> = {
     ],
   },
   tomato: {
-    emoji: '🍅',
+    iconName: 'food-apple-outline',
     defaultTotalDays: 110,
     stages: [
       {
@@ -667,7 +682,7 @@ const CROP_TEMPLATES: Record<string, CropTemplate> = {
     ],
   },
   chilli: {
-    emoji: '🌶️',
+    iconName: 'chili-mild',
     defaultTotalDays: 150,
     stages: [
       {
@@ -753,7 +768,7 @@ const CROP_TEMPLATES: Record<string, CropTemplate> = {
     ],
   },
   onion: {
-    emoji: '🧅',
+    iconName: 'spa-outline',
     defaultTotalDays: 125,
     stages: [
       {
@@ -839,7 +854,7 @@ const CROP_TEMPLATES: Record<string, CropTemplate> = {
     ],
   },
   groundnut: {
-    emoji: '🥜',
+    iconName: 'peanut-outline',
     defaultTotalDays: 115,
     stages: [
       {
@@ -925,7 +940,7 @@ const CROP_TEMPLATES: Record<string, CropTemplate> = {
     ],
   },
   arecanut: {
-    emoji: '🌴',
+    iconName: 'palm-tree',
     defaultTotalDays: 180,
     stages: [
       {
@@ -1011,7 +1026,7 @@ const CROP_TEMPLATES: Record<string, CropTemplate> = {
     ],
   },
   banana: {
-    emoji: '🍌',
+    iconName: 'fruit-cherries',
     defaultTotalDays: 300,
     stages: [
       {
@@ -1103,7 +1118,7 @@ const CATEGORY_TEMPLATES: Record<
   CropTemplate
 > = {
   cereal: {
-    emoji: '🌾',
+    iconName: 'barley',
     defaultTotalDays: 105,
     stages: [
       {
@@ -1189,7 +1204,7 @@ const CATEGORY_TEMPLATES: Record<
     ],
   },
   pulse: {
-    emoji: '🌱',
+    iconName: 'sprout-outline',
     defaultTotalDays: 100,
     stages: [
       {
@@ -1275,7 +1290,7 @@ const CATEGORY_TEMPLATES: Record<
     ],
   },
   vegetable: {
-    emoji: '🥬',
+    iconName: 'leaf',
     defaultTotalDays: 105,
     stages: [
       {
@@ -1361,7 +1376,7 @@ const CATEGORY_TEMPLATES: Record<
     ],
   },
   cash: {
-    emoji: '🌻',
+    iconName: 'flower-outline',
     defaultTotalDays: 120,
     stages: [
       {
@@ -1447,7 +1462,7 @@ const CATEGORY_TEMPLATES: Record<
     ],
   },
   plantation: {
-    emoji: '🌳',
+    iconName: 'tree-outline',
     defaultTotalDays: 180,
     stages: [
       {
@@ -1533,7 +1548,7 @@ const CATEGORY_TEMPLATES: Record<
     ],
   },
   general: {
-    emoji: '🌱',
+    iconName: 'sprout-outline',
     defaultTotalDays: 120,
     stages: [
       {
@@ -1624,7 +1639,7 @@ function matchesAny(lower: string, keywords: string[]): boolean {
   return keywords.some(kw => lower.includes(kw));
 }
 
-function resolveTemplateKey(rawCropName: string): { kind: 'crop' | 'category'; key: string; emojiOverride?: string; defaultDaysOverride?: number } {
+function resolveTemplateKey(rawCropName: string): { kind: 'crop' | 'category'; key: string; iconOverride?: CropIconName; defaultDaysOverride?: number } {
   const lower = rawCropName.toLowerCase().trim();
   if (!lower) return { kind: 'category', key: 'general' };
 
@@ -1638,7 +1653,7 @@ function resolveTemplateKey(rawCropName: string): { kind: 'crop' | 'category'; k
   if (matchesAny(lower, ['maize', 'corn', 'ಮೆಕ್ಕೆಜೋಳ', 'ಜೋಳ', 'मक्का', 'makka', 'bhutta'])) {
     // Note: jowar/sorghum checked below if specifically typed; 'ಜೋಳ' without 'ಮೆಕ್ಕೆ' could be jowar
     if (lower === 'ಜೋಳ' || lower.includes('jowar') || lower.includes('sorghum')) {
-      return { kind: 'category', key: 'cereal', emojiOverride: '🌾', defaultDaysOverride: 110 };
+      return { kind: 'category', key: 'cereal', iconOverride: 'barley', defaultDaysOverride: 110 };
     }
     return { kind: 'crop', key: 'maize' };
   }
@@ -1656,7 +1671,7 @@ function resolveTemplateKey(rawCropName: string): { kind: 'crop' | 'category'; k
   }
   if (matchesAny(lower, ['chilli', 'chili', 'pepper', 'ಮೆಣಸಿನಕಾಯಿ', 'ಮೆಣಸು', 'मिर्च', 'mirchi'])) {
     if (lower.includes('black pepper') || lower.includes('ಕಾಳುಮೆಣಸು') || lower.includes('काली मिर्च')) {
-      return { kind: 'category', key: 'plantation', emojiOverride: '🌿', defaultDaysOverride: 210 };
+      return { kind: 'category', key: 'plantation', iconOverride: 'leaf', defaultDaysOverride: 210 };
     }
     return { kind: 'crop', key: 'chilli' };
   }
@@ -1675,41 +1690,41 @@ function resolveTemplateKey(rawCropName: string): { kind: 'crop' | 'category'; k
 
   // Smart categorization for any custom typed crop
   if (matchesAny(lower, ['jowar', 'sorghum', 'bajra', 'pearl millet', 'foxtail', 'barley', 'oats', 'millet', 'navane', 'sajje', 'ಸಿರಿಧಾನ್ಯ', 'ಸಜ್ಜೆ', 'ನವಣೆ', 'ज्वार', 'बाजरा', 'जौ', 'कोदो'])) {
-    return { kind: 'category', key: 'cereal', emojiOverride: '🌾', defaultDaysOverride: 105 };
+    return { kind: 'category', key: 'cereal', iconOverride: 'barley', defaultDaysOverride: 105 };
   }
   if (matchesAny(lower, ['pulse', 'dal', 'daal', 'gram', 'tur', 'toor', 'arhar', 'moong', 'mung', 'urad', 'chana', 'chickpea', 'soy', 'cowpea', 'horsegram', 'lentil', 'ತೊಗರಿ', 'ಹೆಸರು', 'ಉದ್ದು', 'ಕಡಲೆ', 'ಅವರೆ', 'ಸೋಯಾ', 'ದಾಳ', 'दाल', 'अरहर', 'तूर', 'मूंग', 'उड़द', 'चना', 'सोयाबीन', 'मसूर'])) {
-    return { kind: 'category', key: 'pulse', emojiOverride: '🌱', defaultDaysOverride: 100 };
+    return { kind: 'category', key: 'pulse', iconOverride: 'sprout-outline', defaultDaysOverride: 100 };
   }
   if (matchesAny(lower, ['ginger', 'turmeric', 'ಶುಂಠಿ', 'ಅರಿಶಿನ', 'अदरक', 'हल्दी'])) {
-    return { kind: 'category', key: 'vegetable', emojiOverride: '🫚', defaultDaysOverride: 210 };
+    return { kind: 'category', key: 'vegetable', iconOverride: 'spa-outline', defaultDaysOverride: 210 };
   }
   if (matchesAny(lower, ['potato', 'brinjal', 'eggplant', 'okra', 'bhindi', 'cabbage', 'cauliflower', 'beans', 'carrot', 'radish', 'gourd', 'cucumber', 'pumpkin', 'garlic', 'spinach', 'coriander', 'vegetable', 'ಬದನೆ', 'ಬೆಂಡೆ', 'ಆಲೂ', 'ಕೋಸು', 'ಹುರುಳಿ', 'ಸೌತೆ', 'ಕುಂಬಳ', 'ಬೆಳ್ಳುಳ್ಳಿ', 'ಸೊಪ್ಪು', 'ತರಕಾರಿ', 'आलू', 'बैंगन', 'भिंडी', 'गोभी', 'सेम', 'लौकी', 'खीरा', 'कद्दू', 'लहसुन', 'सब्जी', 'पालक'])) {
-    const vegEmoji = lower.includes('potato') || lower.includes('ಆಲೂ') || lower.includes('आलू') ? '🥔' : '🥬';
-    return { kind: 'category', key: 'vegetable', emojiOverride: vegEmoji, defaultDaysOverride: 105 };
+    const vegIcon: CropIconName =
+      lower.includes('potato') || lower.includes('ಆಲೂ') || lower.includes('आलू') ? 'seed-outline' : 'leaf';
+    return { kind: 'category', key: 'vegetable', iconOverride: vegIcon, defaultDaysOverride: 105 };
   }
   if (matchesAny(lower, ['sunflower', 'mustard', 'sesame', 'til', 'castor', 'safflower', 'soybean', 'tobacco', 'jute', 'oilseed', 'ಸೂರ್ಯಕಾಂತಿ', 'ಸಾಸಿವೆ', 'ಎಳ್ಳು', 'ಹರಳು', 'ತಂಬಾಕು', 'सूरजमुखी', 'सरसों', 'तिल', 'अरंडी', 'तंबाकू'])) {
-    const cashEmoji = lower.includes('sunflower') || lower.includes('ಸೂರ್ಯಕಾಂತಿ') || lower.includes('सूरजमुखी') ? '🌻' : '🌼';
-    return { kind: 'category', key: 'cash', emojiOverride: cashEmoji, defaultDaysOverride: 120 };
+    return { kind: 'category', key: 'cash', iconOverride: 'flower-outline', defaultDaysOverride: 120 };
   }
   if (matchesAny(lower, ['coffee', 'tea', 'mango', 'pomegranate', 'papaya', 'guava', 'grape', 'citrus', 'lemon', 'orange', 'cardamom', 'cashew', 'rubber', 'sapota', 'jackfruit', 'watermelon', 'काफी', 'ಕಾಫಿ', 'ಮಾವು', 'ದಾಳಿಂಬೆ', 'ಪಪ್ಪಾಯಿ', 'ಸೀಬೆ', 'ದ್ರಾಕ್ಷಿ', 'ನಿಂಬೆ', 'ಏಲಕ್ಕಿ', 'ಗೋಡಂಬಿ', 'आम', 'अनार', 'पपीता', 'अमरूद', 'अंगूर', 'नींबू', 'इलायची', 'काजू', 'कल्लंगडी'])) {
-    const fruitEmoji = lower.includes('mango') || lower.includes('ಮಾವು') || lower.includes('आम')
-      ? '🥭'
-      : lower.includes('grape') || lower.includes('ದ್ರಾಕ್ಷಿ') || lower.includes('अंगूर')
-      ? '🍇'
-      : '🌳';
-    return { kind: 'category', key: 'plantation', emojiOverride: fruitEmoji, defaultDaysOverride: 180 };
+    const fruitIcon: CropIconName =
+      lower.includes('mango') || lower.includes('ಮಾವು') || lower.includes('आम') ||
+      lower.includes('grape') || lower.includes('ದ್ರಾಕ್ಷಿ') || lower.includes('अंगूर')
+        ? 'fruit-cherries'
+        : 'tree-outline';
+    return { kind: 'category', key: 'plantation', iconOverride: fruitIcon, defaultDaysOverride: 180 };
   }
 
   return { kind: 'category', key: 'general' };
 }
 
-export function getCropEmoji(name: string): string {
+export function getCropIconName(name: string): CropIconName {
   const resolved = resolveTemplateKey(name);
-  if (resolved.emojiOverride) return resolved.emojiOverride;
+  if (resolved.iconOverride) return resolved.iconOverride;
   if (resolved.kind === 'crop') {
-    return CROP_TEMPLATES[resolved.key]?.emoji ?? '🌱';
+    return CROP_TEMPLATES[resolved.key]?.iconName ?? 'sprout-outline';
   }
-  return CATEGORY_TEMPLATES[resolved.key as keyof typeof CATEGORY_TEMPLATES]?.emoji ?? '🌱';
+  return CATEGORY_TEMPLATES[resolved.key as keyof typeof CATEGORY_TEMPLATES]?.iconName ?? 'sprout-outline';
 }
 
 export function computeCropProfile(
@@ -1726,7 +1741,7 @@ export function computeCropProfile(
       : CATEGORY_TEMPLATES[resolved.key as keyof typeof CATEGORY_TEMPLATES];
 
   const defaultTotalDays = resolved.defaultDaysOverride ?? template.defaultTotalDays;
-  const emoji = resolved.emojiOverride ?? template.emoji;
+  const iconName = resolved.iconOverride ?? template.iconName;
 
   const hasValidCustomTotal =
     typeof customTotalDays === 'number' &&
@@ -1769,7 +1784,7 @@ export function computeCropProfile(
 
   return {
     crop: displayName,
-    emoji,
+    iconName,
     label: displayName,
     defaultTotalDays,
     totalDays: targetTotalDays,

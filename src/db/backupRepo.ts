@@ -309,14 +309,19 @@ export async function restoreBackup(db: SQLite.SQLiteDatabase, data: BackupData,
 
     for (const doc of data.vaultDocuments ?? []) {
       await db.runAsync(
-        `INSERT OR REPLACE INTO vault_documents (id, workspaceId, title, category, localUri, capturedAt)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT OR REPLACE INTO vault_documents (
+           id, workspaceId, title, category, localUri, capturedAt,
+           warrantyExpiryDate, warrantyItemName, warrantyAlertDaysBefore
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         doc.id || uuidv4(),
         workspaceId,
         doc.title,
         doc.category,
         doc.localUri,
-        doc.capturedAt ?? now
+        doc.capturedAt ?? now,
+        doc.warrantyExpiryDate ?? null,
+        doc.warrantyItemName ?? null,
+        doc.warrantyAlertDaysBefore ?? null
       );
     }
   });

@@ -386,42 +386,59 @@ export async function fetchLiveAreaWeather(options: {
   throw new Error('WEATHER_FETCH_FAILED');
 }
 
+export type WeatherIconName =
+  | 'sunny-outline'
+  | 'moon-outline'
+  | 'partly-sunny-outline'
+  | 'cloudy-night-outline'
+  | 'cloud-outline'
+  | 'rainy-outline'
+  | 'thunderstorm-outline';
+
 export function getWeatherConditionMeta(
   weatherCode: number,
   isDay: boolean,
   t: Copy
-): { icon: string; label: string } {
+): { iconName: WeatherIconName; iconColor: string; label: string } {
   if (weatherCode === 0) {
-    return { icon: isDay ? '☀️' : '🌙', label: t.weatherClear };
+    return {
+      iconName: isDay ? 'sunny-outline' : 'moon-outline',
+      iconColor: isDay ? '#D97706' : '#4F46E5',
+      label: t.weatherClear,
+    };
   }
   if (weatherCode === 1) {
-    return { icon: isDay ? '🌤️' : '🌙', label: t.weatherMainlyClear };
+    return {
+      iconName: isDay ? 'partly-sunny-outline' : 'cloudy-night-outline',
+      iconColor: isDay ? '#D97706' : '#4F46E5',
+      label: t.weatherMainlyClear,
+    };
   }
   if (weatherCode === 2) {
-    return { icon: '⛅', label: t.weatherPartlyCloudy };
+    return { iconName: 'partly-sunny-outline', iconColor: '#0284C7', label: t.weatherPartlyCloudy };
   }
   if (weatherCode === 3) {
-    return { icon: '☁️', label: t.weatherOvercast };
+    return { iconName: 'cloud-outline', iconColor: '#64748B', label: t.weatherOvercast };
   }
   if (weatherCode === 45 || weatherCode === 48) {
-    return { icon: '🌫️', label: t.weatherFoggy };
+    return { iconName: 'cloud-outline', iconColor: '#64748B', label: t.weatherFoggy };
   }
   if (weatherCode >= 51 && weatherCode <= 57) {
-    return { icon: '🌦️', label: t.weatherDrizzle };
+    return { iconName: 'rainy-outline', iconColor: '#0284C7', label: t.weatherDrizzle };
   }
   if (weatherCode >= 61 && weatherCode <= 63) {
-    return { icon: '🌧️', label: t.weatherRain };
+    return { iconName: 'rainy-outline', iconColor: '#2563EB', label: t.weatherRain };
   }
   if (weatherCode >= 65 && weatherCode <= 67) {
-    return { icon: '⛈️', label: t.weatherHeavyRain };
+    return { iconName: 'thunderstorm-outline', iconColor: '#1D4ED8', label: t.weatherHeavyRain };
   }
   if (weatherCode >= 80 && weatherCode <= 82) {
-    return { icon: '🌦️', label: t.weatherShowers };
+    return { iconName: 'rainy-outline', iconColor: '#2563EB', label: t.weatherShowers };
   }
   if (weatherCode >= 95) {
-    return { icon: '⛈️', label: t.weatherThunderstorm };
+    return { iconName: 'thunderstorm-outline', iconColor: '#7C3AED', label: t.weatherThunderstorm };
   }
-  return { icon: '🌤️', label: t.weatherPartlyCloudy };
+  return { iconName: 'partly-sunny-outline', iconColor: '#0284C7', label: t.weatherPartlyCloudy };
 }
 
 export function getLocalizedFarmingAdvisory(

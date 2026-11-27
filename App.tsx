@@ -42,7 +42,11 @@ import { MoreScreen } from './src/screens/MoreScreen';
 import { shared } from './src/styles/shared';
 import { GREEN } from './src/theme';
 import { useGoogleDriveAuth } from './src/services/googleDriveAuth';
-import { setupNotificationHandler, setupNotificationChannels } from './src/services/notifications';
+import {
+  rescheduleAllActiveRemindersForLanguage,
+  setupNotificationChannels,
+  setupNotificationHandler,
+} from './src/services/notifications';
 
 type Tab = 'Home' | 'Diary' | 'Farm' | 'Records' | 'More';
 
@@ -136,6 +140,11 @@ function MainApp() {
     }, 300);
     return () => clearTimeout(channelTimer);
   }, []);
+
+  useEffect(() => {
+    if (!dbReady || !db) return;
+    void rescheduleAllActiveRemindersForLanguage(db, activeWsId, language, copy[language]);
+  }, [db, dbReady, activeWsId, language]);
 
   useEffect(() => {
     if (Platform.OS === 'web') return;

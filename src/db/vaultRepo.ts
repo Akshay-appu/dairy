@@ -2,7 +2,7 @@ import * as SQLite from 'expo-sqlite';
 import * as FileSystem from 'expo-file-system/legacy';
 import { uuidv4 } from '../utils/uuid';
 
-export type VaultCategory = 'Fertilizer Bill' | 'Mandi Slip' | 'Soil Report' | 'Other';
+export type VaultCategory = 'Fertilizer Bill' | 'Mandi Slip' | 'Soil Report' | 'Warranty Slip' | 'Other';
 
 export type VaultDocument = {
   id: string;
@@ -11,6 +11,9 @@ export type VaultDocument = {
   category: VaultCategory;
   localUri: string;
   capturedAt: string;
+  warrantyExpiryDate?: string | null;
+  warrantyItemName?: string | null;
+  warrantyAlertDaysBefore?: number | null;
 };
 
 export type VaultDocumentInput = {
@@ -18,6 +21,9 @@ export type VaultDocumentInput = {
   category: VaultCategory;
   localUri: string;
   capturedAt?: string;
+  warrantyExpiryDate?: string | null;
+  warrantyItemName?: string | null;
+  warrantyAlertDaysBefore?: number | null;
 };
 
 export async function listVaultDocuments(
@@ -42,14 +48,29 @@ export async function addVaultDocument(
 ): Promise<VaultDocument> {
   const id = uuidv4();
   const capturedAt = input.capturedAt || new Date().toISOString();
+  const isWarranty = input.category === 'Warranty Slip';
+  const warrantyExpiryDate = isWarranty ? (input.warrantyExpiryDate?.trim() || null) : null;
+  const warrantyItemName = isWarranty ? (input.warrantyItemName?.trim() || null) : null;
+  const warrantyAlertDaysBefore = isWarranty
+    ? (typeof input.warrantyAlertDaysBefore === 'number' && Number.isFinite(input.warrantyAlertDaysBefore)
+      ? Math.max(0, Math.round(input.warrantyAlertDaysBefore))
+      : 7)
+    : null;
+
   await db.runAsync(
-    'INSERT INTO vault_documents (id, workspaceId, title, category, localUri, capturedAt) VALUES (?, ?, ?, ?, ?, ?)',
+    `INSERT INTO vault_documents (
+       id, workspaceId, title, category, localUri, capturedAt,
+       warrantyExpiryDate, warrantyItemName, warrantyAlertDaysBefore
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     workspaceId,
     input.title,
     input.category,
     input.localUri,
-    capturedAt
+    capturedAt,
+    warrantyExpiryDate,
+    warrantyItemName,
+    warrantyAlertDaysBefore
   );
   return {
     id,
@@ -58,6 +79,9 @@ export async function addVaultDocument(
     category: input.category,
     localUri: input.localUri,
     capturedAt,
+    warrantyExpiryDate,
+    warrantyItemName,
+    warrantyAlertDaysBefore,
   };
 }
 

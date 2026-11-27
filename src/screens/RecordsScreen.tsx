@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { DimensionValue, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
-import { CurrentDateBadge } from '../components/CurrentDateBadge';
 import { EmptyState } from '../components/EmptyState';
 import { GridList } from '../components/GridList';
 import { ListCard } from '../components/ListCard';
@@ -17,6 +17,7 @@ import { HarvestFormModal, HarvestFormState } from './HarvestFormModal';
 import { MarketScreen } from './MarketScreen';
 import type { GoogleDriveController } from '../services/googleDriveAuth';
 import { shared } from '../styles/shared';
+import { DANGER, GREEN } from '../theme';
 import { formatINR, formatShortDate, isValidDateString, parseAmount, todayDateString } from '../utils/format';
 
 export type RecordsSection = 'overview' | 'market' | 'finance' | 'harvests';
@@ -224,7 +225,11 @@ export function RecordsScreen({
             />
           </View>
           <View style={{ marginBottom: 14 }}>
-            <SecondaryButton label={`📄 ${t.shareBackup}`} onPress={onOpenExport} />
+            <SecondaryButton
+              icon={<Ionicons name="document-text-outline" size={16} color={GREEN} />}
+              label={t.shareBackup}
+              onPress={onOpenExport}
+            />
           </View>
           <SectionTitle title={t.seasonalHistory} lg={lg} />
           {seasonalGroups.length ? (
@@ -238,7 +243,7 @@ export function RecordsScreen({
               cardWidth={cardWidth}
               renderItem={group => (
                 <ListCard
-                  icon={<CurrentDateBadge />}
+                  icon={<Ionicons name="calendar-outline" size={20} color={GREEN} />}
                   title={seasonLabel(language, group.season)}
                   meta={`${group.list.length} ${t.cropsTab.toLowerCase()}`}
                   note={group.list.map(c => c.cropName).join(', ')}
@@ -265,7 +270,11 @@ export function RecordsScreen({
               cardWidth={cardWidth}
               renderItem={entry => (
                 <ListCard
-                  icon={entry.type === 'expense' ? '💸' : '💰'}
+                  icon={
+                    entry.type === 'expense'
+                      ? <Ionicons name="trending-down" size={20} color={DANGER} />
+                      : <Ionicons name="cash-outline" size={20} color={GREEN} />
+                  }
                   title={entry.type === 'expense' ? expenseCategoryLabel(language, entry.category) : incomeCategoryLabel(language, entry.category)}
                   meta={`${formatINR(entry.amount)} · ${formatShortDate(entry.date, locale)}`}
                   note={entry.notes}
@@ -294,7 +303,7 @@ export function RecordsScreen({
                 const valueLabel = h.sellingPrice != null ? formatINR(h.quantity * h.sellingPrice) : t.valueNotRecorded;
                 return (
                   <ListCard
-                    icon="🌾"
+                    icon={<Ionicons name="layers-outline" size={20} color={GREEN} />}
                     title={cropName}
                     meta={`${h.quantity} ${quantityUnitLabel(language, h.quantityUnit)} · ${formatShortDate(h.harvestDate, locale)}`}
                     note={`${t.totalValue}: ${valueLabel}${h.buyer ? ` · ${h.buyer}` : ''}`}

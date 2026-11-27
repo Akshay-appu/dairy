@@ -202,9 +202,12 @@ export function MarketScreen({
           </Text>
         </View>
         {!!liveLocationText && (
-          <Text style={styles.liveLocText} numberOfLines={1}>
-            📍 {liveLocationText}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 }}>
+            <Ionicons name="location-outline" size={14} color={GREEN} />
+            <Text style={styles.liveLocText} numberOfLines={1}>
+              {liveLocationText}
+            </Text>
+          </View>
         )}
       </View>
 
@@ -251,7 +254,8 @@ export function MarketScreen({
         </View>
         <View style={{ flex: 1, minWidth: 165 }}>
           <SecondaryButton
-            label={busyExportKey === 'ledger' ? t.exportGeneratingCsv : `📊 ${t.exportMarketLedgerCsv}`}
+            icon={<Ionicons name="download-outline" size={16} color={GREEN} />}
+            label={busyExportKey === 'ledger' ? t.exportGeneratingCsv : t.exportMarketLedgerCsv}
             onPress={() =>
               void runExport('ledger', () =>
                 exportMarketLedgerCsv(marketRecords.items, t, language, workspaceName)
@@ -316,9 +320,12 @@ export function MarketScreen({
                       )}
                     </View>
                     {(record.marketName || locText) && (
-                      <Text style={styles.cardLocation} numberOfLines={2}>
-                        🏪 {[record.marketName, locText].filter(Boolean).join(' · ')}
-                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 }}>
+                        <Ionicons name="storefront-outline" size={13} color={MUTED} />
+                        <Text style={[styles.cardLocation, { marginTop: 0, flexShrink: 1 }]} numberOfLines={2}>
+                          {[record.marketName, locText].filter(Boolean).join(' · ')}
+                        </Text>
+                      </View>
                     )}
                   </View>
 

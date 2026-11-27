@@ -45,6 +45,7 @@
         {
           "icon": "./assets/icon.png",
           "color": "#1B5E20",
+          "defaultChannel": "farm-alarms-v3",
           "sounds": ["./assets/sounds/farm_alarm.wav"]
         }
       ],

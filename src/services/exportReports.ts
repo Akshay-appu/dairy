@@ -171,7 +171,7 @@ function buildReportHtml(snapshot: FarmReportSnapshot, t: Copy): string {
         profile.stages.find(st => elapsed >= st.startDay && elapsed <= st.endDay) ??
         profile.stages[profile.stages.length - 1];
       return `<tr>
-        <td><strong>${escapeHtml(`${profile.emoji} ${s.cropName}`)}</strong></td>
+        <td><strong>${escapeHtml(s.cropName)}</strong></td>
         <td>${escapeHtml(s.sowingDate)}</td>
         <td>${escapeHtml(`${t.dayWord} ${elapsed} / ${profile.totalDays}`)}</td>
         <td>${escapeHtml(activeStage.name)}</td>

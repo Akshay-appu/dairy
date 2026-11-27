@@ -401,6 +401,27 @@ export type Copy = {
   driveErrorInvalidBackup: string;
   driveErrorCancelled: string;
   driveErrorGeneric: string;
+
+  // Warranty Slips, Expiry Alarms & Notification Troubleshooting
+  vaultCatWarrantySlip: string;
+  warrantyItemNameLabel: string;
+  warrantyItemNamePlaceholder: string;
+  warrantyExpiryDateLabel: string;
+  warrantyQuickDurationLabel: string;
+  warrantyAlertBeforeLabel: string;
+  warrantyAlertSameDay: string;
+  warrantyAlert3Days: string;
+  warrantyAlert7Days: string;
+  warrantyAlert15Days: string;
+  warrantyInvalidExpiryMsg: string;
+  warrantyExpiresInDays: string;
+  warrantyExpiringToday: string;
+  warrantyExpired: string;
+  warrantyExpiryNotifTitle: string;
+  warrantyExpiryNotifBody: string;
+  warrantyPreExpiryNotifTitle: string;
+  warrantyPreExpiryNotifBody: string;
+  alarmTroubleshootHint: string;
 };
 
 export const copy: Record<Language, Copy> = {
@@ -595,11 +616,11 @@ export const copy: Record<Language, Copy> = {
     chooseAlarmTone: 'Choose Alarm Tone',
     previewAlarmTone: 'Preview Tone',
     alarmTonePreviewing: 'Alarm tone preview triggered — check your sound and volume!',
-    alarmTonePreviewTitle: '🔔 BS Diary Alarm Tone',
+    alarmTonePreviewTitle: 'BS Diary Alarm Tone',
     alarmTonePreviewBody: 'Farm Chime alarm preview. Tap Choose Alarm Tone anytime to pick your device alarm sound.',
     morningWeatherAlert: 'Morning Weather & Spray Alert (6:30 AM)',
     morningWeatherAlertSubtitle: 'Daily 6:30 AM alert to check local wind, rain risk, and safe spraying conditions before field work.',
-    morningWeatherAlertNotifTitle: '☀️ Morning Weather & Spray Alert',
+    morningWeatherAlertNotifTitle: 'Morning Weather & Spray Alert',
     morningWeatherAlertNotifBody: 'Check wind speed, rain risk, and today’s safe spraying window in BS Diary before heading to your field.',
 
     daysCultivatedLabel: 'Days Already Cultivated',
@@ -798,7 +819,7 @@ export const copy: Record<Language, Copy> = {
     mandiAlarmTimeLabel: 'Alarm Time',
     mandiAlarmCustomTimePlaceholder: 'HH:MM (e.g. 03:15)',
     mandiAlarmSetTimeBtn: 'Set Time',
-    mandiAlarmNotifTitle: '🏪 Mandi Morning Alarm',
+    mandiAlarmNotifTitle: 'Mandi Morning Alarm',
     mandiAlarmNotifBody: 'Time to prepare for the morning mandi! Open BS Diary to log today’s vegetable boxes.',
     mandiAlarmScheduledNote: 'Scheduled daily at {time}',
 
@@ -830,6 +851,26 @@ export const copy: Record<Language, Copy> = {
     driveErrorInvalidBackup: 'The backup file in Google Drive could not be read.',
     driveErrorCancelled: 'Google Drive sign-in was cancelled.',
     driveErrorGeneric: 'Google Drive action could not complete. Please try again.',
+
+    vaultCatWarrantySlip: 'Warranty Slip',
+    warrantyItemNameLabel: 'Equipment / Item Name',
+    warrantyItemNamePlaceholder: 'e.g. Borewell Motor, Battery Sprayer, Tractor…',
+    warrantyExpiryDateLabel: 'Warranty Expiry Date (YYYY-MM-DD)',
+    warrantyQuickDurationLabel: 'Quick warranty duration:',
+    warrantyAlertBeforeLabel: 'Expiry Alarm Reminder',
+    warrantyAlertSameDay: 'Same Day',
+    warrantyAlert3Days: '3 Days Before',
+    warrantyAlert7Days: '7 Days Before',
+    warrantyAlert15Days: '15 Days Before',
+    warrantyInvalidExpiryMsg: 'Please enter a valid warranty expiry date as YYYY-MM-DD.',
+    warrantyExpiresInDays: 'Expires in {days}d',
+    warrantyExpiringToday: 'Expiring Today',
+    warrantyExpired: 'Expired',
+    warrantyExpiryNotifTitle: 'Warranty Expires Today · BS Diary',
+    warrantyExpiryNotifBody: 'Your warranty for {item} expires today ({date}). Open BS Diary Vault to check the warranty slip.',
+    warrantyPreExpiryNotifTitle: 'Warranty Expiring in {days} Days · BS Diary',
+    warrantyPreExpiryNotifBody: 'Your warranty for {item} expires on {date} ({days} days left). Check your slip in BS Diary Vault.',
+    alarmTroubleshootHint: 'Tip: Keep your phone Alarm volume up and allow BS Diary notifications in Android Settings so alarms ring and vibrate loudly.',
   },
   kn: {
     tagline: 'ಪ್ರತಿ ಹೊಲದ ಕಥೆ, ಒಂದೇ ಡೈರಿಯಲ್ಲಿ',
@@ -1022,11 +1063,11 @@ export const copy: Record<Language, Copy> = {
     chooseAlarmTone: 'ಅಲಾರಾಂ ಶಬ್ದ ಆಯ್ಕೆ ಮಾಡಿ',
     previewAlarmTone: 'ಶಬ್ದ ಆಲಿಸಿ',
     alarmTonePreviewing: 'ಅಲಾರಾಂ ಶಬ್ದ ಪೂರ್ವವೀಕ್ಷಣೆ ಕಳುಹಿಸಲಾಗಿದೆ — ನಿಮ್ಮ ಫೋನ್ ಶಬ್ದವನ್ನು ಪರಿಶೀಲಿಸಿ!',
-    alarmTonePreviewTitle: '🔔 ಬಿಎಸ್ ಡೈರಿ ಅಲಾರಾಂ ಶಬ್ದ',
+    alarmTonePreviewTitle: 'ಬಿಎಸ್ ಡೈರಿ ಅಲಾರಾಂ ಶಬ್ದ',
     alarmTonePreviewBody: 'ಕೃಷಿ ಗಂಟೆ ಅಲಾರಾಂ ಪೂರ್ವವೀಕ್ಷಣೆ. ನಿಮ್ಮ ಫೋನ್ ಅಲಾರಾಂ ಶಬ್ದ ಬದಲಿಸಲು ಅಲಾರಾಂ ಶಬ್ದ ಆಯ್ಕೆ ಮಾಡಿ ಒತ್ತಿ.',
     morningWeatherAlert: 'ಬೆಳಗಿನ ಹವಾಮಾನ ಮತ್ತು ಸಿಂಪಡಣೆ ಎಚ್ಚರಿಕೆ (ಬೆಳಿಗ್ಗೆ 6:30)',
     morningWeatherAlertSubtitle: 'ಹೊಲದ ಕೆಲಸದ ಮೊದಲು ಗಾಳಿ, ಮಳೆ ಸಾಧ್ಯತೆ ಮತ್ತು ಸುರಕ್ಷಿತ ಸಿಂಪಡಣೆ ಸಮಯ ಪರಿಶೀಲಿಸಲು ಬೆಳಿಗ್ಗೆ 6:30 ಗಂಟೆಗೆ ಎಚ್ಚರಿಕೆ.',
-    morningWeatherAlertNotifTitle: '☀️ ಬೆಳಗಿನ ಹವಾಮಾನ ಮತ್ತು ಸಿಂಪಡಣೆ ಎಚ್ಚರಿಕೆ',
+    morningWeatherAlertNotifTitle: 'ಬೆಳಗಿನ ಹವಾಮಾನ ಮತ್ತು ಸಿಂಪಡಣೆ ಎಚ್ಚರಿಕೆ',
     morningWeatherAlertNotifBody: 'ಹೊಲಕ್ಕೆ ಹೋಗುವ ಮೊದಲು ಬಿಎಸ್ ಡೈರಿಯಲ್ಲಿ ಇಂದಿನ ಗಾಳಿ, ಮಳೆ ಸಾಧ್ಯತೆ ಮತ್ತು ಸುರಕ್ಷಿತ ಸಿಂಪಡಣೆ ಸಮಯ ಪರಿಶೀಲಿಸಿ.',
 
     daysCultivatedLabel: 'ಈಗಾಗಲೇ ಬೆಳೆದ ದಿನಗಳು',
@@ -1225,7 +1266,7 @@ export const copy: Record<Language, Copy> = {
     mandiAlarmTimeLabel: 'ಅಲಾರಾಂ ಸಮಯ',
     mandiAlarmCustomTimePlaceholder: 'HH:MM (ಉದಾ. 03:15)',
     mandiAlarmSetTimeBtn: 'ಸಮಯ ಹೊಂದಿಸಿ',
-    mandiAlarmNotifTitle: '🏪 ಮಂಡಿ ಬೆಳಗಿನ ಅಲಾರಾಂ',
+    mandiAlarmNotifTitle: 'ಮಂಡಿ ಬೆಳಗಿನ ಅಲಾರಾಂ',
     mandiAlarmNotifBody: 'ಬೆಳಗಿನ ಮಂಡಿಗೆ ಸಿದ್ಧರಾಗುವ ಸಮಯ! ಇಂದಿನ ತರಕಾರಿ ಬಾಕ್ಸ್‌ಗಳನ್ನು ದಾಖಲಿಸಲು ಬಿಎಸ್ ಡೈರಿ ತೆರೆಯಿರಿ.',
     mandiAlarmScheduledNote: 'ಪ್ರತಿದಿನ {time} ಕ್ಕೆ ನಿಗದಿಯಾಗಿದೆ',
 
@@ -1257,6 +1298,26 @@ export const copy: Record<Language, Copy> = {
     driveErrorInvalidBackup: 'Google Drive ನಲ್ಲಿರುವ ಬ್ಯಾಕಪ್ ಫೈಲ್ ಅನ್ನು ಓದಲಾಗಲಿಲ್ಲ.',
     driveErrorCancelled: 'Google Drive ಸೈನ್-ಇನ್ ರದ್ದುಗೊಳಿಸಲಾಗಿದೆ.',
     driveErrorGeneric: 'Google Drive ಕ್ರಿಯೆ ಪೂರ್ಣಗೊಳ್ಳಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+
+    vaultCatWarrantySlip: 'ವಾರಂಟಿ ಸ್ಲಿಪ್',
+    warrantyItemNameLabel: 'ಉಪಕರಣ / ವಸ್ತುವಿನ ಹೆಸರು',
+    warrantyItemNamePlaceholder: 'ಉದಾ. ಬೋರ್‌ವೆಲ್ ಮೋಟಾರ್, ಬ್ಯಾಟರಿ ಸ್ಪ್ರೇಯರ್, ಟ್ರ್ಯಾಕ್ಟರ್…',
+    warrantyExpiryDateLabel: 'ವಾರಂಟಿ ಮುಕ್ತಾಯ ದಿನಾಂಕ (YYYY-MM-DD)',
+    warrantyQuickDurationLabel: 'ತ್ವರಿತ ವಾರಂಟಿ ಅವಧಿ:',
+    warrantyAlertBeforeLabel: 'ಮುಕ್ತಾಯ ಅಲಾರಾಂ ಜ್ಞಾಪನೆ',
+    warrantyAlertSameDay: 'ಅದೇ ದಿನ',
+    warrantyAlert3Days: '3 ದಿನ ಮೊದಲು',
+    warrantyAlert7Days: '7 ದಿನ ಮೊದಲು',
+    warrantyAlert15Days: '15 ದಿನ ಮೊದಲು',
+    warrantyInvalidExpiryMsg: 'ದಯವಿಟ್ಟು ಸರಿಯಾದ ವಾರಂಟಿ ಮುಕ್ತಾಯ ದಿನಾಂಕವನ್ನು YYYY-MM-DD ರೂಪದಲ್ಲಿ ನಮೂದಿಸಿ.',
+    warrantyExpiresInDays: '{days} ದಿನಗಳಲ್ಲಿ ಮುಕ್ತಾಯ',
+    warrantyExpiringToday: 'ಇಂದೇ ಮುಕ್ತಾಯ',
+    warrantyExpired: 'ಅವಧಿ ಮುಗಿದಿದೆ',
+    warrantyExpiryNotifTitle: 'ವಾರಂಟಿ ಇಂದೇ ಮುಕ್ತಾಯ · ಬಿಎಸ್ ಡೈರಿ',
+    warrantyExpiryNotifBody: '{item} ನ ವಾರಂಟಿ ಇಂದೇ ({date}) ಮುಕ್ತಾಯವಾಗುತ್ತದೆ. ಸ್ಲಿಪ್ ನೋಡಲು ಬಿಎಸ್ ಡೈರಿ ವಾಲ್ಟ್ ತೆರೆಯಿರಿ.',
+    warrantyPreExpiryNotifTitle: '{days} ದಿನಗಳಲ್ಲಿ ವಾರಂಟಿ ಮುಕ್ತಾಯ · ಬಿಎಸ್ ಡೈರಿ',
+    warrantyPreExpiryNotifBody: '{item} ನ ವಾರಂಟಿ {date} ರಂದು ಮುಕ್ತಾಯವಾಗುತ್ತದೆ ({days} ದಿನ ಬಾಕಿ). ಬಿಎಸ್ ಡೈರಿ ವಾಲ್ಟ್ ಪರಿಶೀಲಿಸಿ.',
+    alarmTroubleshootHint: 'ಸಲಹೆ: ಅಲಾರಾಂ ಜೋರಾಗಿ ಬಾರಿಸಲು ಮತ್ತು ವೈಬ್ರೇಟ್ ಆಗಲು ಫೋನ್ ಅಲಾರಾಂ ವಾಲ್ಯೂಮ್ ಹೆಚ್ಚಿಸಿ ಮತ್ತು Android ಸೆಟ್ಟಿಂಗ್ಸ್‌ನಲ್ಲಿ BS Diary ಅಧಿಸೂಚನೆಗಳನ್ನು ಅನುಮತಿಸಿ.',
   },
   hi: {
     tagline: 'हर खेत की कहानी, एक ही डायरी में',
@@ -1449,11 +1510,11 @@ export const copy: Record<Language, Copy> = {
     chooseAlarmTone: 'अलार्म टोन चुनें',
     previewAlarmTone: 'टोन सुनें',
     alarmTonePreviewing: 'अलार्म टोन प्रीव्यू चालू किया गया — अपने फ़ोन की आवाज़ और वॉल्यूम जांचें!',
-    alarmTonePreviewTitle: '🔔 बीएस डायरी अलार्म टोन',
+    alarmTonePreviewTitle: 'बीएस डायरी अलार्म टोन',
     alarmTonePreviewBody: 'फ़ार्म चाइम अलार्म प्रीव्यू। अपने फ़ोन की अलार्म टोन बदलने के लिए अलार्म टोन चुनें पर टैप करें।',
     morningWeatherAlert: 'सुबह मौसम और स्प्रे अलर्ट (सुबह 6:30 बजे)',
     morningWeatherAlertSubtitle: 'खेत में जाने से पहले हवा, बारिश की संभावना और सुरक्षित स्प्रे समय जांचने के लिए रोज़ सुबह 6:30 बजे अलर्ट।',
-    morningWeatherAlertNotifTitle: '☀️ सुबह का मौसम और स्प्रे अलर्ट',
+    morningWeatherAlertNotifTitle: 'सुबह का मौसम और स्प्रे अलर्ट',
     morningWeatherAlertNotifBody: 'खेत पर जाने से पहले बीएस डायरी में आज की हवा, बारिश और सुरक्षित स्प्रे समय जांचें।',
 
     daysCultivatedLabel: 'बुआई के बाद बीते दिन',
@@ -1652,7 +1713,7 @@ export const copy: Record<Language, Copy> = {
     mandiAlarmTimeLabel: 'अलार्म का समय',
     mandiAlarmCustomTimePlaceholder: 'HH:MM (जैसे 03:15)',
     mandiAlarmSetTimeBtn: 'समय सेट करें',
-    mandiAlarmNotifTitle: '🏪 मंडी सुबह का अलार्म',
+    mandiAlarmNotifTitle: 'मंडी सुबह का अलार्म',
     mandiAlarmNotifBody: 'सुबह की मंडी की तैयारी का समय! आज के सब्ज़ी बॉक्स दर्ज करने के लिए BS डायरी खोलें।',
     mandiAlarmScheduledNote: 'रोज़ {time} पर निर्धारित',
 
@@ -1684,5 +1745,25 @@ export const copy: Record<Language, Copy> = {
     driveErrorInvalidBackup: 'Google Drive की बैकअप फ़ाइल पढ़ी नहीं जा सकी।',
     driveErrorCancelled: 'Google Drive साइन-इन रद्द कर दिया गया।',
     driveErrorGeneric: 'Google Drive कार्य पूरा नहीं हो सका। कृपया फिर प्रयास करें।',
+
+    vaultCatWarrantySlip: 'वारंटी पर्ची',
+    warrantyItemNameLabel: 'उपकरण / वस्तु का नाम',
+    warrantyItemNamePlaceholder: 'जैसे बोरवेल मोटर, बैटरी स्प्रेयर, ट्रैक्टर…',
+    warrantyExpiryDateLabel: 'वारंटी समाप्ति तिथि (YYYY-MM-DD)',
+    warrantyQuickDurationLabel: 'त्वरित वारंटी अवधि:',
+    warrantyAlertBeforeLabel: 'समाप्ति अलार्म अनुस्मारक',
+    warrantyAlertSameDay: 'उसी दिन',
+    warrantyAlert3Days: '3 दिन पहले',
+    warrantyAlert7Days: '7 दिन पहले',
+    warrantyAlert15Days: '15 दिन पहले',
+    warrantyInvalidExpiryMsg: 'कृपया सही वारंटी समाप्ति तिथि YYYY-MM-DD रूप में दर्ज करें।',
+    warrantyExpiresInDays: '{days} दिन में समाप्त',
+    warrantyExpiringToday: 'आज समाप्त हो रही है',
+    warrantyExpired: 'समाप्त हो चुकी है',
+    warrantyExpiryNotifTitle: 'वारंटी आज समाप्त · BS डायरी',
+    warrantyExpiryNotifBody: '{item} की वारंटी आज ({date}) समाप्त हो रही है। पर्ची देखने के लिए BS डायरी वॉल्ट खोलें।',
+    warrantyPreExpiryNotifTitle: 'वारंटी {days} दिन में समाप्त · BS डायरी',
+    warrantyPreExpiryNotifBody: '{item} की वारंटी {date} को समाप्त हो रही है ({days} दिन शेष)। BS डायरी वॉल्ट में पर्ची देखें।',
+    alarmTroubleshootHint: 'सुझाव: अलार्म की तेज़ आवाज़ और वाइब्रेशन के लिए फ़ोन का अलार्म वॉल्यूम बढ़ाएं और Android सेटिंग्स में BS Diary सूचनाएं चालू रखें।',
   },
 };

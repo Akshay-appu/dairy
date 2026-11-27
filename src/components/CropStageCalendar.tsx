@@ -20,7 +20,7 @@ import {
 import {
   computeCropProfile,
   CropGrowthProfile,
-  getCropEmoji,
+  getCropIconName,
   POPULAR_CROP_PRESETS,
   StageCategory,
   StageDefinition,
@@ -351,7 +351,7 @@ export function CropStageCalendar({
           <View style={styles.savedPillsRow}>
             {savedSchedules.map(sch => {
               const isSelected = activeScheduleId === sch.id;
-              const schEmoji = getCropEmoji(sch.cropName);
+              const schIcon = getCropIconName(sch.cropName);
               const schElapsed = getDaysSinceSowing(sch.sowingDate);
               return (
                 <View
@@ -365,7 +365,11 @@ export function CropStageCalendar({
                     onPress={() => handleSelectSaved(sch)}
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 }}
                   >
-                    <Text style={{ fontSize: 13 }}>{schEmoji}</Text>
+                    <MaterialCommunityIcons
+                      name={schIcon}
+                      size={14}
+                      color={isSelected ? '#FFFFFF' : GREEN}
+                    />
                     <Text
                       style={[
                         styles.savedPillText,
@@ -438,7 +442,11 @@ export function CropStageCalendar({
                 }}
                 style={[styles.presetChip, isSelected && styles.presetChipActive]}
               >
-                <Text style={{ fontSize: 13 }}>{preset.emoji}</Text>
+                <MaterialCommunityIcons
+                  name={preset.iconName}
+                  size={14}
+                  color={isSelected ? '#FFFFFF' : GREEN}
+                />
                 <Text style={[styles.presetChipText, isSelected && styles.presetChipTextActive]}>
                   {label}
                 </Text>
@@ -518,9 +526,12 @@ export function CropStageCalendar({
       <View style={styles.progressBanner}>
         <View style={styles.progressBannerHeader}>
           <View style={styles.bannerCropTitleCol}>
-            <Text style={styles.bannerCropTitle} numberOfLines={2}>
-              {profile.emoji} {profile.label} {t.growthSchedule}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <MaterialCommunityIcons name={profile.iconName} size={18} color={GREEN} />
+              <Text style={[styles.bannerCropTitle, { flexShrink: 1 }]} numberOfLines={2}>
+                {profile.label} {t.growthSchedule}
+              </Text>
+            </View>
             <Text style={styles.bannerDaysText}>
               {daysElapsed < 0
                 ? `${t.sowingInDays} ${Math.abs(daysElapsed)} ${t.daysUnit}`

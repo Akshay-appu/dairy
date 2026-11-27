@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { GREEN, INK, LIGHT_GREEN, MUTED, DANGER } from '../theme';
 
 interface ErrorBoundaryProps {
@@ -57,7 +58,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
           <ScrollView contentContainerStyle={styles.content}>
             <View style={styles.iconCircle}>
-              <Text style={styles.iconText}>🌾</Text>
+              <MaterialCommunityIcons name="sprout" size={32} color={GREEN} />
             </View>
 
             <Text style={styles.brandTitle}>BHOOMISHAKTI DIARY</Text>
@@ -84,7 +85,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               onPress={this.handleRestart}
               activeOpacity={0.8}
             >
-              <Text style={styles.retryButtonText}>🔄 Try Again</Text>
+              <View style={styles.retryButtonContent}>
+                <Ionicons name="refresh" size={18} color="#FFFFFF" />
+                <Text style={styles.retryButtonText}>Try Again</Text>
+              </View>
             </TouchableOpacity>
           </ScrollView>
         </SafeAreaView>
@@ -180,6 +184,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     maxWidth: 300,
+  },
+  retryButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   retryButtonText: {
     color: '#FFFFFF',

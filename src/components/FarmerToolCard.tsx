@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { FarmProfile } from '../db/schema';
 import { Copy, Language } from '../i18n/copy';
 import { useActiveLanguage } from '../i18n/LanguageContext';
 import { areaUnitLabel } from '../i18n/vocab';
 import { shared } from '../styles/shared';
-import { GREEN, LIGHT_GREEN, DANGER } from '../theme';
+import { GREEN, LIGHT_GREEN, DANGER, MUTED } from '../theme';
 import { WeatherCard } from './WeatherCard';
 
 export function FarmerToolCard({
@@ -69,9 +70,12 @@ export function FarmerToolCard({
   return (
     <View style={[shared.tipCard, lg && shared.tipCardLg, { backgroundColor: '#FFFFFF', borderColor: '#D9E8DD' }]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
-        <Text style={[shared.tipTitle, lg && shared.tipTitleLg, { fontSize: 16, flexShrink: 1, minWidth: 0 }]}>
-          🌱 {t.farmerTools}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexShrink: 1, minWidth: 0 }}>
+          <Ionicons name="leaf-outline" size={18} color={GREEN} />
+          <Text style={[shared.tipTitle, lg && shared.tipTitleLg, { fontSize: 16, flexShrink: 1, minWidth: 0 }]}>
+            {t.farmerTools}
+          </Text>
+        </View>
         <Text style={{ fontSize: 12, fontWeight: '700', color: GREEN, flexShrink: 0 }}>
           {t.interactiveHub}
         </Text>
@@ -82,25 +86,34 @@ export function FarmerToolCard({
           style={[shared.segmentItem, activeTab === 'weather' && shared.segmentItemActive]}
           onPress={() => setActiveTab('weather')}
         >
-          <Text style={[shared.segmentText, activeTab === 'weather' && shared.segmentTextActive]}>
-            🌤 {t.toolWeather}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <Ionicons name="partly-sunny-outline" size={14} color={activeTab === 'weather' ? GREEN : MUTED} />
+            <Text style={[shared.segmentText, activeTab === 'weather' && shared.segmentTextActive]}>
+              {t.toolWeather}
+            </Text>
+          </View>
         </TouchableOpacity>
         <TouchableOpacity
           style={[shared.segmentItem, activeTab === 'converter' && shared.segmentItemActive]}
           onPress={() => setActiveTab('converter')}
         >
-          <Text style={[shared.segmentText, activeTab === 'converter' && shared.segmentTextActive]}>
-            📐 {t.toolLandUnit}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <Ionicons name="resize-outline" size={14} color={activeTab === 'converter' ? GREEN : MUTED} />
+            <Text style={[shared.segmentText, activeTab === 'converter' && shared.segmentTextActive]}>
+              {t.toolLandUnit}
+            </Text>
+          </View>
         </TouchableOpacity>
         <TouchableOpacity
           style={[shared.segmentItem, activeTab === 'profit' && shared.segmentItemActive]}
           onPress={() => setActiveTab('profit')}
         >
-          <Text style={[shared.segmentText, activeTab === 'profit' && shared.segmentTextActive]}>
-            💰 {t.toolProfitPlanner}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <Ionicons name="cash-outline" size={14} color={activeTab === 'profit' ? GREEN : MUTED} />
+            <Text style={[shared.segmentText, activeTab === 'profit' && shared.segmentTextActive]}>
+              {t.toolProfitPlanner}
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
 

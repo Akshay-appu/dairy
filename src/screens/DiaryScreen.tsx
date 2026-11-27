@@ -1,5 +1,6 @@
 import React from 'react';
 import { DimensionValue, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { EmptyState } from '../components/EmptyState';
 import { GridList } from '../components/GridList';
 import { ListCard } from '../components/ListCard';
@@ -8,6 +9,7 @@ import { Entry } from '../db/schema';
 import { Copy, Language } from '../i18n/copy';
 import { useActiveLanguage } from '../i18n/LanguageContext';
 import { shared } from '../styles/shared';
+import { GREEN } from '../theme';
 import { formatShortDate } from '../utils/format';
 
 export function DiaryScreen({
@@ -39,6 +41,7 @@ export function DiaryScreen({
           cardWidth={cardWidth}
           renderItem={entry => (
             <ListCard
+              icon={<Ionicons name="journal-outline" size={20} color={GREEN} />}
               title={entry.title}
               meta={`${entry.category} · ${formatShortDate(entry.createdAt, locale)}`}
               note={entry.note}

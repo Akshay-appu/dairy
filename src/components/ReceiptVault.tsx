@@ -16,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import * as SQLite from 'expo-sqlite';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -28,10 +29,15 @@ import {
 } from '../db/vaultRepo';
 import { Copy, Language } from '../i18n/copy';
 import { useActiveLanguage } from '../i18n/LanguageContext';
+import { FormField } from './FormField';
+import {
+  cancelWarrantyExpiryNotification,
+  scheduleWarrantyExpiryNotification,
+} from '../services/notifications';
 import { GREEN, LIGHT_GREEN, DANGER, INK, MUTED } from '../theme';
 import { shared } from '../styles/shared';
 import { uuidv4 } from '../utils/uuid';
-import { formatShortDate } from '../utils/format';
+import { formatShortDate, isValidDateString } from '../utils/format';
 
 export type ReceiptVaultProps = {
   db: SQLite.SQLiteDatabase | null;
@@ -41,12 +47,40 @@ export type ReceiptVaultProps = {
   language?: Language;
 };
 
-const CATEGORIES: { key: VaultCategory; icon: string; bg: string; text: string }[] = [
-  { key: 'Fertilizer Bill', icon: '🧪', bg: '#E8F5E9', text: '#2E7D32' },
-  { key: 'Mandi Slip', icon: '🌾', bg: '#FFF8E1', text: '#B78103' },
-  { key: 'Soil Report', icon: '🔬', bg: '#E1F5FE', text: '#0277BD' },
-  { key: 'Other', icon: '📄', bg: '#F1F3F4', text: '#5F6368' },
+type VaultIconName =
+  | 'flask-outline'
+  | 'receipt-outline'
+  | 'layers-outline'
+  | 'ribbon-outline'
+  | 'document-text-outline';
+
+const CATEGORIES: { key: VaultCategory; iconName: VaultIconName; bg: string; text: string }[] = [
+  { key: 'Fertilizer Bill', iconName: 'flask-outline', bg: '#E8F5E9', text: '#2E7D32' },
+  { key: 'Mandi Slip', iconName: 'receipt-outline', bg: '#FFF8E1', text: '#B78103' },
+  { key: 'Soil Report', iconName: 'layers-outline', bg: '#E1F5FE', text: '#0277BD' },
+  { key: 'Warranty Slip', iconName: 'ribbon-outline', bg: '#EDE9FE', text: '#5B21B6' },
+  { key: 'Other', iconName: 'document-text-outline', bg: '#F1F3F4', text: '#5F6368' },
 ];
+
+const WARRANTY_ALERT_PRESETS = [0, 3, 7, 15] as const;
+
+function addMonthsToToday(months: number): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() + months);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function getWarrantyDaysRemaining(expiryDateStr: string): number | null {
+  if (!isValidDateString(expiryDateStr)) return null;
+  const parts = expiryDateStr.trim().split('-');
+  const expiry = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}
 
 function getVaultCategoryLabel(category: VaultCategory, t: Copy): string {
   switch (category) {
@@ -56,6 +90,8 @@ function getVaultCategoryLabel(category: VaultCategory, t: Copy): string {
       return t.vaultCatMandiSlip;
     case 'Soil Report':
       return t.vaultCatSoilReport;
+    case 'Warranty Slip':
+      return t.vaultCatWarrantySlip;
     case 'Other':
     default:
       return t.vaultCatOther;
@@ -81,6 +117,9 @@ export function ReceiptVault({
   const [draftUri, setDraftUri] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState('');
   const [draftCategory, setDraftCategory] = useState<VaultCategory>('Fertilizer Bill');
+  const [draftWarrantyItemName, setDraftWarrantyItemName] = useState('');
+  const [draftWarrantyExpiryDate, setDraftWarrantyExpiryDate] = useState('');
+  const [draftWarrantyAlertDays, setDraftWarrantyAlertDays] = useState<number>(7);
   const [isSaving, setIsSaving] = useState(false);
   const insets = useSafeAreaInsets();
   const topInset = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0);
@@ -196,6 +235,9 @@ export function ReceiptVault({
         setDraftUri(picked.uri);
         setDraftCategory('Fertilizer Bill');
         setDraftTitle(`${t.vaultCatFertilizerBill} - ${new Date().toLocaleDateString(locale)}`);
+        setDraftWarrantyItemName('');
+        setDraftWarrantyExpiryDate(addMonthsToToday(12));
+        setDraftWarrantyAlertDays(7);
       }
     } catch (e) {
       console.error('Camera capture error:', e);
@@ -221,6 +263,9 @@ export function ReceiptVault({
         setDraftUri(picked.uri);
         setDraftCategory('Soil Report');
         setDraftTitle(`${t.vaultCatSoilReport} - ${new Date().toLocaleDateString(locale)}`);
+        setDraftWarrantyItemName('');
+        setDraftWarrantyExpiryDate(addMonthsToToday(12));
+        setDraftWarrantyAlertDays(7);
       }
     } catch (e) {
       console.error('Gallery pick error:', e);
@@ -233,6 +278,13 @@ export function ReceiptVault({
     const cleanTitle = draftTitle.trim();
     if (!cleanTitle) {
       Alert.alert(t.vaultTitleRequiredTitle, t.vaultTitleRequiredMsg);
+      return;
+    }
+
+    const isWarranty = draftCategory === 'Warranty Slip';
+    const cleanExpiry = draftWarrantyExpiryDate.trim();
+    if (isWarranty && !isValidDateString(cleanExpiry)) {
+      Alert.alert(t.vaultSaveErrorTitle, t.warrantyInvalidExpiryMsg);
       return;
     }
 
@@ -262,18 +314,26 @@ export function ReceiptVault({
         destUri = draftUri;
       }
 
-      await addVaultDocument(
+      const savedDoc = await addVaultDocument(
         db,
         {
           title: cleanTitle,
           category: draftCategory,
           localUri: destUri,
+          warrantyExpiryDate: isWarranty ? cleanExpiry : null,
+          warrantyItemName: isWarranty ? (draftWarrantyItemName.trim() || cleanTitle) : null,
+          warrantyAlertDaysBefore: isWarranty ? draftWarrantyAlertDays : null,
         },
         workspaceId
       );
 
+      if (isWarranty) {
+        void scheduleWarrantyExpiryNotification(savedDoc, language, t);
+      }
+
       setDraftUri(null);
       setDraftTitle('');
+      setDraftWarrantyItemName('');
       await loadDocuments();
     } catch (e) {
       console.error('Failed to save document:', e);
@@ -287,6 +347,7 @@ export function ReceiptVault({
     const doDelete = async () => {
       if (!db) return;
       try {
+        await cancelWarrantyExpiryNotification(doc.id);
         await deleteVaultDocument(db, doc.id, workspaceId);
         if (previewDoc?.id === doc.id) {
           setPreviewDoc(null);
@@ -329,7 +390,7 @@ export function ReceiptVault({
       <View style={styles.headerRow}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
           <View style={styles.iconCircle}>
-            <Text style={{ fontSize: 18 }}>📸</Text>
+            <Ionicons name="shield-checkmark-outline" size={20} color={GREEN} />
           </View>
           <View style={{ flex: 1, minWidth: 0, flexShrink: 1 }}>
             <Text style={[shared.tipTitle, lg && shared.tipTitleLg, { color: INK, flexWrap: 'wrap' }]}>
@@ -350,7 +411,7 @@ export function ReceiptVault({
           accessibilityRole="button"
           accessibilityLabel={t.vaultTakePhoto}
         >
-          <Text style={styles.actionBtnIcon}>📷</Text>
+          <Ionicons name="camera-outline" size={17} color="#FFFFFF" />
           <Text style={styles.actionBtnTextPrimary}>{t.vaultTakePhoto}</Text>
         </TouchableOpacity>
 
@@ -360,7 +421,7 @@ export function ReceiptVault({
           accessibilityRole="button"
           accessibilityLabel={t.vaultUploadGallery}
         >
-          <Text style={styles.actionBtnIcon}>🖼️</Text>
+          <Ionicons name="images-outline" size={17} color={GREEN} />
           <Text style={styles.actionBtnTextSecondary}>{t.vaultUploadGallery}</Text>
         </TouchableOpacity>
       </View>
@@ -394,7 +455,7 @@ export function ReceiptVault({
               onPress={() => setActiveFilter(cat.key)}
               style={[styles.filterChip, isSelected && styles.filterChipActive]}
             >
-              <Text style={{ fontSize: 13 }}>{cat.icon}</Text>
+              <Ionicons name={cat.iconName} size={13} color={isSelected ? '#FFFFFF' : cat.text} />
               <Text
                 style={[
                   styles.filterChipText,
@@ -411,7 +472,9 @@ export function ReceiptVault({
       {/* Documents Grid / List */}
       {filteredDocs.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={{ fontSize: 30, marginBottom: 6 }}>📑</Text>
+          <View style={styles.emptyIconCircle}>
+            <Ionicons name="document-text-outline" size={26} color={GREEN} />
+          </View>
           <Text style={styles.emptyTitle}>{t.vaultEmptyTitle}</Text>
           <Text style={styles.emptySubtitle}>
             {activeFilter === 'All'
@@ -422,8 +485,23 @@ export function ReceiptVault({
       ) : (
         <View style={styles.docList}>
           {filteredDocs.map(doc => {
-            const catMeta = CATEGORIES.find(c => c.key === doc.category) || CATEGORIES[3];
+            const catMeta = CATEGORIES.find(c => c.key === doc.category) || CATEGORIES[4];
             const catLabel = getVaultCategoryLabel(doc.category, t);
+            const warrantyDays =
+              doc.category === 'Warranty Slip' && doc.warrantyExpiryDate
+                ? getWarrantyDaysRemaining(doc.warrantyExpiryDate)
+                : null;
+            const warrantyBadgeStyle =
+              warrantyDays === null
+                ? null
+                : warrantyDays < 0
+                  ? { bg: '#FEE2E2', text: '#B91C1C', label: t.warrantyExpired }
+                  : warrantyDays === 0
+                    ? { bg: '#FEF3C7', text: '#B45309', label: t.warrantyExpiringToday }
+                    : warrantyDays <= 15
+                      ? { bg: '#FEF3C7', text: '#B45309', label: t.warrantyExpiresInDays.replace('{days}', String(warrantyDays)) }
+                      : { bg: '#EDE9FE', text: '#5B21B6', label: t.warrantyExpiresInDays.replace('{days}', String(warrantyDays)) };
+
             return (
               <TouchableOpacity
                 key={doc.id}
@@ -441,12 +519,26 @@ export function ReceiptVault({
                   <Text style={styles.docTitle} numberOfLines={2}>
                     {doc.title}
                   </Text>
+                  {doc.category === 'Warranty Slip' && (doc.warrantyItemName || doc.warrantyExpiryDate) && (
+                    <Text style={styles.warrantySubLine} numberOfLines={1}>
+                      {[doc.warrantyItemName, doc.warrantyExpiryDate].filter(Boolean).join(' · ')}
+                    </Text>
+                  )}
                   <View style={styles.docMetaRow}>
                     <View style={[styles.categoryBadge, { backgroundColor: catMeta.bg }]}>
+                      <Ionicons name={catMeta.iconName} size={11} color={catMeta.text} />
                       <Text style={[styles.categoryBadgeText, { color: catMeta.text }]}>
-                        {catMeta.icon} {catLabel}
+                        {catLabel}
                       </Text>
                     </View>
+                    {warrantyBadgeStyle && (
+                      <View style={[styles.categoryBadge, { backgroundColor: warrantyBadgeStyle.bg }]}>
+                        <Ionicons name="shield-checkmark-outline" size={11} color={warrantyBadgeStyle.text} />
+                        <Text style={[styles.categoryBadgeText, { color: warrantyBadgeStyle.text }]}>
+                          {warrantyBadgeStyle.label}
+                        </Text>
+                      </View>
+                    )}
                     <Text style={styles.docDate}>
                       {formatShortDate(doc.capturedAt, locale)}
                     </Text>
@@ -459,7 +551,7 @@ export function ReceiptVault({
                     style={styles.deleteBtn}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
-                    <Text style={{ fontSize: 16, color: DANGER }}>🗑️</Text>
+                    <Ionicons name="trash-outline" size={18} color={DANGER} />
                   </TouchableOpacity>
                 </View>
               </TouchableOpacity>
@@ -551,13 +643,16 @@ export function ReceiptVault({
                       onPress={() => {
                         setDraftCategory(cat.key);
                         setDraftTitle(`${catLabel} - ${new Date().toLocaleDateString(locale)}`);
+                        if (cat.key === 'Warranty Slip' && !draftWarrantyExpiryDate) {
+                          setDraftWarrantyExpiryDate(addMonthsToToday(12));
+                        }
                       }}
                       style={[
                         styles.categoryOptionChip,
                         isSelected && styles.categoryOptionChipSelected,
                       ]}
                     >
-                      <Text style={{ fontSize: 14 }}>{cat.icon}</Text>
+                      <Ionicons name={cat.iconName} size={14} color={isSelected ? '#FFFFFF' : cat.text} />
                       <Text
                         style={[
                           styles.categoryOptionText,
@@ -570,6 +665,87 @@ export function ReceiptVault({
                   );
                 })}
               </View>
+
+              {draftCategory === 'Warranty Slip' && (
+                <View style={styles.warrantySectionBox}>
+                  <FormField
+                    label={t.warrantyItemNameLabel}
+                    value={draftWarrantyItemName}
+                    onChangeText={setDraftWarrantyItemName}
+                    placeholder={t.warrantyItemNamePlaceholder}
+                    onFocus={scrollDraftToEnd}
+                  />
+
+                  <Text style={[styles.fieldLabel, { marginTop: 12 }]}>
+                    {t.warrantyExpiryDateLabel} *
+                  </Text>
+                  <TextInput
+                    value={draftWarrantyExpiryDate}
+                    onChangeText={setDraftWarrantyExpiryDate}
+                    placeholder="YYYY-MM-DD"
+                    keyboardType="numbers-and-punctuation"
+                    maxLength={10}
+                    style={styles.titleInput}
+                    onFocus={scrollDraftToEnd}
+                  />
+
+                  <Text style={[styles.warrantySubLabel, { marginTop: 8 }]}>
+                    {t.warrantyQuickDurationLabel}
+                  </Text>
+                  <View style={styles.warrantyChipRow}>
+                    {[
+                      { label: '+6M', months: 6 },
+                      { label: '+1Y', months: 12 },
+                      { label: '+2Y', months: 24 },
+                      { label: '+3Y', months: 36 },
+                    ].map(opt => (
+                      <TouchableOpacity
+                        key={opt.label}
+                        onPress={() => setDraftWarrantyExpiryDate(addMonthsToToday(opt.months))}
+                        style={styles.warrantyQuickChip}
+                      >
+                        <Text style={styles.warrantyQuickChipText}>{opt.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  <Text style={[styles.fieldLabel, { marginTop: 12 }]}>
+                    {t.warrantyAlertBeforeLabel}
+                  </Text>
+                  <View style={styles.warrantyChipRow}>
+                    {WARRANTY_ALERT_PRESETS.map(days => {
+                      const active = draftWarrantyAlertDays === days;
+                      const label =
+                        days === 0
+                          ? t.warrantyAlertSameDay
+                          : days === 3
+                            ? t.warrantyAlert3Days
+                            : days === 7
+                              ? t.warrantyAlert7Days
+                              : t.warrantyAlert15Days;
+                      return (
+                        <TouchableOpacity
+                          key={days}
+                          onPress={() => setDraftWarrantyAlertDays(days)}
+                          style={[
+                            styles.warrantyAlertChip,
+                            active && styles.warrantyAlertChipActive,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.warrantyAlertChipText,
+                              active && styles.warrantyAlertChipTextActive,
+                            ]}
+                          >
+                            {label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
 
               <View style={styles.modalActionButtons}>
                 <TouchableOpacity
@@ -619,7 +795,7 @@ export function ReceiptVault({
                 }}
                 style={styles.fullscreenIconBtn}
               >
-                <Text style={{ fontSize: 18 }}>🗑️</Text>
+                <Ionicons name="trash-outline" size={19} color="#FFFFFF" />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setPreviewDoc(null)}
@@ -743,6 +919,15 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginVertical: 6,
   },
+  emptyIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: LIGHT_GREEN,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
   emptyTitle: {
     fontSize: 14,
     fontWeight: '800',
@@ -791,6 +976,9 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   categoryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -802,6 +990,64 @@ const styles = StyleSheet.create({
   docDate: {
     fontSize: 11,
     color: MUTED,
+  },
+  warrantySubLine: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#5B21B6',
+    marginBottom: 4,
+  },
+  warrantySectionBox: {
+    backgroundColor: '#F7F5FF',
+    borderWidth: 1,
+    borderColor: '#DDD6FE',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  warrantySubLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: MUTED,
+    marginBottom: 6,
+  },
+  warrantyChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 7,
+  },
+  warrantyQuickChip: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#C4B5FD',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  warrantyQuickChipText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#5B21B6',
+  },
+  warrantyAlertChip: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D8E5DC',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  warrantyAlertChipActive: {
+    backgroundColor: GREEN,
+    borderColor: GREEN,
+  },
+  warrantyAlertChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: INK,
+  },
+  warrantyAlertChipTextActive: {
+    color: '#FFFFFF',
   },
   docActions: {
     paddingLeft: 4,

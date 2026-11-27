@@ -1,9 +1,11 @@
-import { Linking, Platform } from 'react-native';
+import { Linking, Platform, Vibration } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import * as SQLite from 'expo-sqlite';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CropSchedule } from '../db/cropSchedulesRepo';
-import { CropGrowthProfile } from '../data/cropProfiles';
-import { Language } from '../i18n/copy';
+import { CropSchedule, listCropSchedules } from '../db/cropSchedulesRepo';
+import { listVaultDocuments, VaultDocument } from '../db/vaultRepo';
+import { computeCropProfile, CropGrowthProfile } from '../data/cropProfiles';
+import { Copy, Language } from '../i18n/copy';
 
 const DAILY_REMINDER_KEY = '@bhoomi_daily_reminder_enabled';
 const MORNING_WEATHER_ALERT_KEY = '@bhoomi_morning_weather_alert_enabled';
@@ -11,10 +13,11 @@ const MANDI_ALARM_ENABLED_KEY = '@bhoomi_mandi_alarm_enabled';
 const MANDI_ALARM_TIME_KEY = '@bhoomi_mandi_alarm_time';
 const ANDROID_PACKAGE_NAME = 'com.bhoomishakti.diary';
 
-export const FARM_ALARMS_CHANNEL_ID = 'farm-alarms-v2';
+export const FARM_ALARMS_CHANNEL_ID = 'farm-alarms-v3';
 export const FARM_REMINDERS_CHANNEL_ID = FARM_ALARMS_CHANNEL_ID;
 export const FARM_ALARM_SOUND = 'farm_alarm.wav';
-const ALARM_VIBRATION_PATTERN = [0, 400, 200, 400];
+const LEGACY_CHANNEL_ID = 'farm-alarms-v2';
+const ALARM_VIBRATION_PATTERN = [0, 600, 250, 600, 250, 800];
 
 export type BhoomiEmailEventType = 'account_created' | 'report_requested';
 
@@ -58,30 +61,41 @@ export function setupNotificationHandler(): void {
 
 export async function setupNotificationChannels(): Promise<void> {
   if (Platform.OS !== 'android') return;
-  try {
-    await Notifications.setNotificationChannelAsync(FARM_ALARMS_CHANNEL_ID, {
-      name: 'Farm Alarms & Reminders',
-      description: 'Daily 7:00 PM diary alarms, 6:30 AM morning weather & spray alerts, and crop stage milestones',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: ALARM_VIBRATION_PATTERN,
-      lightColor: '#1B5E20',
-      sound: FARM_ALARM_SOUND,
-      enableLights: true,
-      enableVibrate: true,
-      showBadge: true,
-      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-      bypassDnd: false,
-      audioAttributes: {
-        usage: Notifications.AndroidAudioUsage.ALARM,
-        contentType: Notifications.AndroidAudioContentType.SONIFICATION,
-        flags: {
-          enforceAudibility: true,
-          requestHardwareAudioVideoSynchronization: false,
-        },
+  const channelConfig = {
+    name: 'BS Diary Farm Alarms',
+    description: 'Daily diary alarms, mandi wake-up alarms, morning weather alerts, crop milestones, and warranty expiry alarms',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: ALARM_VIBRATION_PATTERN,
+    lightColor: '#1B5E20',
+    sound: FARM_ALARM_SOUND,
+    enableLights: true,
+    enableVibrate: true,
+    showBadge: true,
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    bypassDnd: false,
+    audioAttributes: {
+      usage: Notifications.AndroidAudioUsage.ALARM,
+      contentType: Notifications.AndroidAudioContentType.SONIFICATION,
+      flags: {
+        enforceAudibility: true,
+        requestHardwareAudioVideoSynchronization: false,
       },
-    });
+    },
+  };
+
+  try {
+    await Notifications.deleteNotificationChannelAsync(LEGACY_CHANNEL_ID).catch(() => {});
+    await Notifications.setNotificationChannelAsync(FARM_ALARMS_CHANNEL_ID, channelConfig);
   } catch (err) {
-    console.warn('Failed to set up farm-alarms-v2 notification channel:', err);
+    console.warn('Custom sound channel setup failed, falling back to default alarm sound:', err);
+    try {
+      await Notifications.setNotificationChannelAsync(FARM_ALARMS_CHANNEL_ID, {
+        ...channelConfig,
+        sound: 'default',
+      });
+    } catch (fallbackErr) {
+      console.warn('Failed to set up farm-alarms-v3 notification channel:', fallbackErr);
+    }
   }
 }
 
@@ -119,7 +133,7 @@ export async function isDailyReminderEnabled(): Promise<boolean> {
 
 export async function setDailyReminderEnabled(
   enabled: boolean,
-  title: string = '📖 Daily Farm Diary Reminder',
+  title: string = 'Daily Farm Diary Reminder',
   body: string = 'Take a moment to record today’s farm activities, expenses, and harvests before resting.'
 ): Promise<boolean> {
   try {
@@ -175,7 +189,7 @@ export async function isMorningWeatherAlertEnabled(): Promise<boolean> {
 
 export async function setMorningWeatherAlertEnabled(
   enabled: boolean,
-  title: string = '☀️ Morning Weather & Spray Alert',
+  title: string = 'Morning Weather & Spray Alert',
   body: string = 'Check local wind, rain risk, and today’s safe spraying window in BS Diary.'
 ): Promise<boolean> {
   try {
@@ -250,7 +264,7 @@ export async function setMandiAlarm(
   enabled: boolean,
   hour: number,
   minute: number,
-  title: string = '🏪 Mandi Morning Alarm',
+  title: string = 'Mandi Morning Alarm',
   body: string = 'Time to prepare for the morning mandi! Open BS Diary to log today’s vegetable boxes.'
 ): Promise<boolean> {
   const safeHour = Math.max(0, Math.min(23, Math.floor(Number.isFinite(hour) ? hour : 3)));
@@ -329,16 +343,107 @@ export async function openNotificationAlarmSettings(): Promise<boolean> {
   }
 }
 
+function playWebPreviewChime(): void {
+  try {
+    const win = globalThis as unknown as {
+      AudioContext?: new () => {
+        currentTime: number;
+        destination: unknown;
+        createOscillator: () => {
+          type: string;
+          frequency: { setValueAtTime: (freq: number, t: number) => void };
+          connect: (dest: unknown) => void;
+          start: (t?: number) => void;
+          stop: (t?: number) => void;
+        };
+        createGain: () => {
+          gain: { setValueAtTime: (v: number, t: number) => void; exponentialRampToValueAtTime: (v: number, t: number) => void };
+          connect: (dest: unknown) => void;
+        };
+      };
+      webkitAudioContext?: new () => {
+        currentTime: number;
+        destination: unknown;
+        createOscillator: () => {
+          type: string;
+          frequency: { setValueAtTime: (freq: number, t: number) => void };
+          connect: (dest: unknown) => void;
+          start: (t?: number) => void;
+          stop: (t?: number) => void;
+        };
+        createGain: () => {
+          gain: { setValueAtTime: (v: number, t: number) => void; exponentialRampToValueAtTime: (v: number, t: number) => void };
+          connect: (dest: unknown) => void;
+        };
+      };
+    };
+    const AudioCtx = win.AudioContext || win.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+    const notes = [880, 1174.66];
+    notes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.18);
+      gain.gain.setValueAtTime(0.25, now + idx * 0.18);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.18 + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + idx * 0.18);
+      osc.stop(now + idx * 0.18 + 0.36);
+    });
+  } catch {
+    // Ignore autoplay/WebAudio restrictions
+  }
+}
+
 export async function previewFarmAlarmTone(
-  title: string = '🔔 BS Diary Alarm Tone',
+  title: string = 'BS Diary Alarm Tone',
   body: string = 'Farm Chime alarm preview. You can pick any phone alarm tone in settings.'
 ): Promise<boolean> {
-  if (Platform.OS === 'web') return false;
+  if (Platform.OS === 'web') {
+    playWebPreviewChime();
+    try {
+      const WebNotif = (globalThis as unknown as {
+        Notification?: {
+          permission: string;
+          requestPermission?: () => Promise<string>;
+          new (t: string, opts?: { body?: string }): unknown;
+        };
+      }).Notification;
+      if (WebNotif) {
+        if (WebNotif.permission === 'granted') {
+          new WebNotif(title, { body });
+        } else if (WebNotif.permission !== 'denied' && typeof WebNotif.requestPermission === 'function') {
+          const perm = await WebNotif.requestPermission();
+          if (perm === 'granted') {
+            new WebNotif(title, { body });
+          }
+        }
+      }
+    } catch {
+      // Browser notifications optional on web
+    }
+    return true;
+  }
+
   try {
+    setupNotificationHandler();
     const granted = await requestNotificationPermissions();
     if (!granted) return false;
 
     await setupNotificationChannels();
+
+    // Direct haptic pulse alongside the channel vibration so preview immediately confirms vibration
+    try {
+      Vibration.vibrate([0, 400, 200, 400]);
+    } catch {
+      // Non-fatal if device lacks vibrator
+    }
+
+    await Notifications.cancelScheduledNotificationAsync('farm-alarm-tone-preview').catch(() => {});
 
     await Notifications.scheduleNotificationAsync({
       identifier: 'farm-alarm-tone-preview',
@@ -406,12 +511,12 @@ export async function scheduleCropStageNotifications(
 
       if (stageDate.getTime() > now) {
         const title = language === 'kn'
-          ? `${profile.emoji} ${schedule.cropName}: ${stage.name} ಆರಂಭ`
+          ? `${schedule.cropName}: ${stage.name} ಆರಂಭ`
           : language === 'hi'
-          ? `${profile.emoji} ${schedule.cropName}: ${stage.name} प्रारंभ`
-          : `${profile.emoji} ${schedule.cropName}: Stage ${stage.stageNumber} Milestone (${stage.name})`;
+          ? `${schedule.cropName}: ${stage.name} प्रारंभ`
+          : `${schedule.cropName}: Stage ${stage.stageNumber} Milestone (${stage.name})`;
 
-        const body = `💧 ${stage.irrigationReminder} | 🌱 ${stage.fertilizerReminder}`;
+        const body = `${stage.irrigationReminder} | ${stage.fertilizerReminder}`;
 
         await Notifications.scheduleNotificationAsync({
           identifier,
@@ -454,6 +559,188 @@ export async function cancelCropStageNotifications(scheduleId: string): Promise<
     }
   } catch (err) {
     console.warn(`Failed to cancel notifications for schedule ${scheduleId}:`, err);
+  }
+}
+
+export async function cancelWarrantyExpiryNotification(docId: string): Promise<void> {
+  if (Platform.OS === 'web') return;
+  try {
+    await Notifications.cancelScheduledNotificationAsync(`warranty-${docId}-expiry`).catch(() => {});
+    await Notifications.cancelScheduledNotificationAsync(`warranty-${docId}-pre`).catch(() => {});
+  } catch (err) {
+    console.warn(`Failed to cancel warranty notifications for ${docId}:`, err);
+  }
+}
+
+export async function scheduleWarrantyExpiryNotification(
+  doc: VaultDocument,
+  language: Language,
+  t: Copy
+): Promise<number> {
+  if (Platform.OS === 'web') return 0;
+  await cancelWarrantyExpiryNotification(doc.id);
+
+  if (doc.category !== 'Warranty Slip' || !doc.warrantyExpiryDate) {
+    return 0;
+  }
+
+  try {
+    const granted = await requestNotificationPermissions();
+    if (!granted) return 0;
+
+    await setupNotificationChannels();
+
+    const expiryDate = parseLocalDate(doc.warrantyExpiryDate);
+    expiryDate.setHours(7, 0, 0, 0);
+
+    const itemName = (doc.warrantyItemName?.trim() || doc.title || 'Equipment').trim();
+    const dateLabel = doc.warrantyExpiryDate.trim();
+    const now = Date.now();
+    let scheduled = 0;
+
+    if (expiryDate.getTime() > now) {
+      const title = t.warrantyExpiryNotifTitle;
+      const body = t.warrantyExpiryNotifBody
+        .replace('{item}', itemName)
+        .replace('{date}', dateLabel);
+
+      await Notifications.scheduleNotificationAsync({
+        identifier: `warranty-${doc.id}-expiry`,
+        content: {
+          title,
+          body,
+          sound: FARM_ALARM_SOUND,
+          priority: Notifications.AndroidNotificationPriority.MAX,
+          vibrate: ALARM_VIBRATION_PATTERN,
+          interruptionLevel: 'timeSensitive',
+          color: '#1B5E20',
+          data: {
+            type: 'warranty_expiry',
+            docId: doc.id,
+            language,
+          },
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: expiryDate,
+          channelId: FARM_ALARMS_CHANNEL_ID,
+        },
+      });
+      scheduled += 1;
+    }
+
+    const alertDays =
+      typeof doc.warrantyAlertDaysBefore === 'number' && Number.isFinite(doc.warrantyAlertDaysBefore)
+        ? Math.max(0, Math.round(doc.warrantyAlertDaysBefore))
+        : 7;
+
+    if (alertDays > 0) {
+      const preDate = addDays(expiryDate, -alertDays);
+      preDate.setHours(7, 0, 0, 0);
+      if (preDate.getTime() > now) {
+        const title = t.warrantyPreExpiryNotifTitle.replace('{days}', String(alertDays));
+        const body = t.warrantyPreExpiryNotifBody
+          .replace('{item}', itemName)
+          .replace('{date}', dateLabel)
+          .replace('{days}', String(alertDays));
+
+        await Notifications.scheduleNotificationAsync({
+          identifier: `warranty-${doc.id}-pre`,
+          content: {
+            title,
+            body,
+            sound: FARM_ALARM_SOUND,
+            priority: Notifications.AndroidNotificationPriority.MAX,
+            vibrate: ALARM_VIBRATION_PATTERN,
+            interruptionLevel: 'timeSensitive',
+            color: '#1B5E20',
+            data: {
+              type: 'warranty_pre_expiry',
+              docId: doc.id,
+              daysBefore: alertDays,
+              language,
+            },
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: preDate,
+            channelId: FARM_ALARMS_CHANNEL_ID,
+          },
+        });
+        scheduled += 1;
+      }
+    }
+
+    return scheduled;
+  } catch (err) {
+    console.warn('Failed to schedule warranty expiry notification:', err);
+    return 0;
+  }
+}
+
+export async function rescheduleAllActiveRemindersForLanguage(
+  db: SQLite.SQLiteDatabase | null,
+  workspaceId: string,
+  language: Language,
+  t: Copy
+): Promise<void> {
+  if (Platform.OS === 'web') return;
+  try {
+    // Only reschedule if notification permission is already granted so switching
+    // languages never pops an unexpected OS permission dialog.
+    const perm = await Notifications.getPermissionsAsync();
+    const hasPerm =
+      perm.granted || perm.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL;
+    if (!hasPerm) return;
+
+    await setupNotificationChannels();
+
+    const [dailyEnabled, morningEnabled, mandiEnabled, mandiTime] = await Promise.all([
+      isDailyReminderEnabled(),
+      isMorningWeatherAlertEnabled(),
+      isMandiAlarmEnabled(),
+      getMandiAlarmTime(),
+    ]);
+
+    if (dailyEnabled) {
+      await setDailyReminderEnabled(true, t.dailyReminderNotifTitle, t.dailyReminderNotifBody);
+    }
+    if (morningEnabled) {
+      await setMorningWeatherAlertEnabled(
+        true,
+        t.morningWeatherAlertNotifTitle,
+        t.morningWeatherAlertNotifBody
+      );
+    }
+    if (mandiEnabled) {
+      await setMandiAlarm(
+        true,
+        mandiTime.hour,
+        mandiTime.minute,
+        t.mandiAlarmNotifTitle,
+        t.mandiAlarmNotifBody
+      );
+    }
+
+    if (db) {
+      const [schedules, docs] = await Promise.all([
+        listCropSchedules(db, workspaceId),
+        listVaultDocuments(db, workspaceId),
+      ]);
+
+      for (const sch of schedules) {
+        const profile = computeCropProfile(sch.cropName, language, sch.totalDays);
+        await scheduleCropStageNotifications(sch, profile, language);
+      }
+
+      for (const doc of docs) {
+        if (doc.category === 'Warranty Slip' && doc.warrantyExpiryDate) {
+          await scheduleWarrantyExpiryNotification(doc, language, t);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to reschedule active reminders for language change:', err);
   }
 }
 
