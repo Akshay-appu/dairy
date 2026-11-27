@@ -409,8 +409,40 @@ export function MarketScreen({
                   </Text>
                 </View>
 
-                {(item.pendingBaaki > 0 || item.pendingCrates > 0) && (
+                {(item.buyerIncome > 0 || item.buyerExpense > 0) && (
+                  <View style={styles.buyerBreakdownStrip}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 }}>
+                      <Ionicons name="briefcase-outline" size={13} color={GREEN} />
+                      <Text style={styles.buyerBreakdownTitle}>{t.buyerMarketerNetLabel}</Text>
+                      <Text
+                        style={[
+                          styles.buyerBreakdownNet,
+                          { color: item.buyerNet < 0 ? DANGER : '#15803D' },
+                        ]}
+                      >
+                        {formatINR(item.buyerNet)}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                      <Text style={styles.breakdownText}>
+                        {t.buyerIncomeLabel}: <Text style={styles.breakdownBold}>{formatINR(item.buyerIncome)}</Text>
+                      </Text>
+                      <Text style={styles.breakdownText}>
+                        {t.buyerExpenseLabel}: <Text style={[styles.breakdownBold, { color: DANGER }]}>-{formatINR(item.buyerExpense)}</Text>
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {(item.pendingBaaki > 0 || item.pendingCrates > 0 || (item.settledAmount > 0 && item.pendingBaaki > 0)) && (
                   <View style={styles.badgesRow}>
+                    {item.settledAmount > 0 && item.pendingBaaki > 0 && (
+                      <View style={styles.statusChip}>
+                        <Text style={styles.statusChipText}>
+                          {t.settledAmountShort}: {formatINR(item.settledAmount)}
+                        </Text>
+                      </View>
+                    )}
                     {item.pendingBaaki > 0 && (
                       <View style={styles.warnBadge}>
                         <Text style={styles.warnBadgeText}>
@@ -529,6 +561,15 @@ export function MarketScreen({
                   )}
                 </View>
 
+                {!!record.customItemsNote && (
+                  <View style={styles.customItemsStrip}>
+                    <Ionicons name="list-outline" size={13} color={GREEN} />
+                    <Text style={styles.customItemsText} numberOfLines={2}>
+                      {record.customItemsNote}
+                    </Text>
+                  </View>
+                )}
+
                 {/* Gross / Expense Strip */}
                 <View style={styles.breakdownRow}>
                   <Text style={styles.breakdownText}>
@@ -539,17 +580,31 @@ export function MarketScreen({
                   </Text>
                 </View>
 
-                {/* Status, Baaki & Crates Badges */}
+                {/* Status, Baaki, Settled, Buyer Net & Crates Badges */}
                 <View style={styles.badgesRow}>
                   <View style={styles.statusChip}>
                     <Text style={styles.statusChipText}>
                       {marketPaymentStatusLabel(language, record.paymentStatus)}
                     </Text>
                   </View>
+                  {record.settledAmount > 0 && record.pendingAmount > 0 && (
+                    <View style={styles.statusChip}>
+                      <Text style={styles.statusChipText}>
+                        {t.settledAmountShort}: {formatINR(record.settledAmount)}
+                      </Text>
+                    </View>
+                  )}
                   {record.pendingAmount > 0 && (
                     <View style={styles.warnBadge}>
                       <Text style={styles.warnBadgeText}>
                         {t.pendingBaaki}: {formatINR(record.pendingAmount)}
+                      </Text>
+                    </View>
+                  )}
+                  {(record.buyerIncome > 0 || record.buyerExpense > 0) && (
+                    <View style={styles.buyerNetChip}>
+                      <Text style={styles.buyerNetChipText}>
+                        {t.buyerMarketerNetLabel}: {formatINR(record.buyerIncome - record.buyerExpense)}
                       </Text>
                     </View>
                   )}
@@ -924,6 +979,54 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#92400E',
+  },
+  customItemsStrip: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    backgroundColor: '#F4FAF5',
+    borderWidth: 1,
+    borderColor: '#DCECE0',
+    borderRadius: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+  },
+  customItemsText: {
+    flex: 1,
+    fontSize: 12,
+    color: INK,
+    lineHeight: 16,
+  },
+  buyerNetChip: {
+    backgroundColor: LIGHT_GREEN,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  buyerNetChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: GREEN,
+  },
+  buyerBreakdownStrip: {
+    backgroundColor: '#F4FAF5',
+    borderWidth: 1,
+    borderColor: '#DCECE0',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  buyerBreakdownTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: GREEN,
+  },
+  buyerBreakdownNet: {
+    fontSize: 12,
+    fontWeight: '900',
+    marginLeft: 'auto',
   },
   cardActionsRow: {
     flexDirection: 'row',

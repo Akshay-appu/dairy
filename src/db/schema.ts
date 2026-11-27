@@ -91,7 +91,7 @@ export type Harvest = {
   updatedAt: string;
 } & SyncColumns;
 
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 8;
 
 // Every syncable table except farm_profile (singleton, no uuid/tombstone needed).
 const SYNCABLE_TABLES = ['plots', 'crops', 'diary_entries', 'finance_entries', 'harvests'] as const;
@@ -236,7 +236,7 @@ async function migrateToV4(db: SQLite.SQLiteDatabase): Promise<void> {
 
 let databasePromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
-async function createFreshV7Schema(database: SQLite.SQLiteDatabase): Promise<void> {
+async function createFreshV8Schema(database: SQLite.SQLiteDatabase): Promise<void> {
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS diary_entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -395,6 +395,10 @@ async function createFreshV7Schema(database: SQLite.SQLiteDatabase): Promise<voi
       cratesReturned INTEGER NOT NULL DEFAULT 0,
       pattiPhotoUri TEXT,
       notes TEXT NOT NULL DEFAULT '',
+      customItemsNote TEXT,
+      buyerIncome REAL DEFAULT 0,
+      buyerExpense REAL DEFAULT 0,
+      settledAmount REAL DEFAULT 0,
       createdAt TEXT NOT NULL,
       updatedAt TEXT NOT NULL,
       deletedAt TEXT,
@@ -603,6 +607,13 @@ async function migrateToV7(database: SQLite.SQLiteDatabase): Promise<void> {
   await addColumnIfMissing(database, 'vault_documents', 'warrantyAlertDaysBefore', 'warrantyAlertDaysBefore INTEGER DEFAULT 7');
 }
 
+async function migrateToV8(database: SQLite.SQLiteDatabase): Promise<void> {
+  await addColumnIfMissing(database, 'market_records', 'customItemsNote', 'customItemsNote TEXT');
+  await addColumnIfMissing(database, 'market_records', 'buyerIncome', 'buyerIncome REAL DEFAULT 0');
+  await addColumnIfMissing(database, 'market_records', 'buyerExpense', 'buyerExpense REAL DEFAULT 0');
+  await addColumnIfMissing(database, 'market_records', 'settledAmount', 'settledAmount REAL DEFAULT 0');
+}
+
 async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
   const database = await SQLite.openDatabaseAsync('bhoomishakti-diary.db');
   await database.execAsync('PRAGMA journal_mode = WAL;');
@@ -615,13 +626,13 @@ async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
     return database;
   }
 
-  // Fast path: brand-new fresh install creates all V7 tables in one batched SQL exec
+  // Fast path: brand-new fresh install creates all V8 tables in one batched SQL exec
   if (version === 0) {
     const existingLegacy = await database.getFirstAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'diary_entries'"
     );
     if (!existingLegacy) {
-      await createFreshV7Schema(database);
+      await createFreshV8Schema(database);
       return database;
     }
   }
@@ -662,6 +673,10 @@ async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
   }
   if (version < 7) {
     await migrateToV7(database);
+    version = 7;
+  }
+  if (version < 8) {
+    await migrateToV8(database);
   }
 
   await database.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION}`);

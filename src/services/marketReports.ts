@@ -61,6 +61,8 @@ function buildMarketPattiHtml(
   const pendingCrates = Math.max(0, record.cratesSent - record.cratesReturned);
   const isLoss = record.netProfit < 0;
   const slipCode = formatMarketSlipCode(record);
+  const hasBuyerAccounting = (record.buyerIncome ?? 0) > 0 || (record.buyerExpense ?? 0) > 0;
+  const buyerNet = Math.round(((record.buyerIncome ?? 0) - (record.buyerExpense ?? 0)) * 100) / 100;
 
   const farmerMeta = [
     farmProfile?.farmName,
@@ -184,6 +186,8 @@ function buildMarketPattiHtml(
       : `<p class="empty">${escapeHtml(t.reportNoRecords)}</p>`
   }
 
+  ${record.customItemsNote ? `<div class="notes-box"><strong>${escapeHtml(t.customItemsNoteLabel)}:</strong> ${escapeHtml(record.customItemsNote)}</div>` : ''}
+
   <h2>${escapeHtml(t.marketExpensesHeading)} (${record.expenses.length})</h2>
   ${
     record.expenses.length
@@ -219,9 +223,21 @@ function buildMarketPattiHtml(
   <div class="pills-row">
     <span class="pill">${escapeHtml(t.paymentStatusLabel)}: ${escapeHtml(paymentLabel)}</span>
     ${record.agentName ? `<span class="pill">${escapeHtml(t.agentNameLabel)}: ${escapeHtml(record.agentName)}</span>` : ''}
+    ${(record.settledAmount ?? 0) > 0 ? `<span class="pill">${escapeHtml(t.settledAmountLabel)}: ${escapeHtml(formatINR(record.settledAmount))}</span>` : ''}
     ${record.pendingAmount > 0 ? `<span class="pill pill-warn">${escapeHtml(t.pendingBaaki)}: ${escapeHtml(formatINR(record.pendingAmount))}</span>` : ''}
     ${(record.cratesSent > 0 || record.cratesReturned > 0) ? `<span class="pill ${pendingCrates > 0 ? 'pill-warn' : ''}">${escapeHtml(t.cratesSentLabel)}: ${record.cratesSent} · ${escapeHtml(t.cratesReturnedLabel)}: ${record.cratesReturned}${pendingCrates > 0 ? ` (${escapeHtml(t.cratesPendingBadge.replace('{count}', String(pendingCrates)))})` : ''}</span>` : ''}
   </div>
+
+  ${
+    hasBuyerAccounting
+      ? `<div class="notes-box">
+          <strong>${escapeHtml(t.buyerMarketerSectionHeading)}</strong><br/>
+          ${escapeHtml(t.buyerIncomeLabel)}: <strong>${escapeHtml(formatINR(record.buyerIncome))}</strong> ·
+          ${escapeHtml(t.buyerExpenseLabel)}: <strong class="neg">${escapeHtml(formatINR(record.buyerExpense))}</strong> ·
+          ${escapeHtml(t.buyerMarketerNetLabel)}: <strong${buyerNet < 0 ? ' class="neg"' : ''}>${escapeHtml(formatINR(buyerNet))}</strong>
+        </div>`
+      : ''
+  }
 
   ${record.notes ? `<div class="notes-box"><strong>${escapeHtml(t.notes)}:</strong> ${escapeHtml(record.notes)}</div>` : ''}
 
@@ -252,6 +268,8 @@ function buildSingleRecordCsv(
   rows.push([
     t.paymentStatusLabel,
     marketPaymentStatusLabel(language, record.paymentStatus),
+    t.settledAmountLabel,
+    record.settledAmount ?? 0,
     t.pendingBaaki,
     record.pendingAmount,
     t.agentNameLabel,
@@ -263,6 +281,9 @@ function buildSingleRecordCsv(
     t.pendingCrates,
     pendingCrates,
   ]);
+  if (record.customItemsNote) {
+    rows.push([t.customItemsNoteLabel, record.customItemsNote]);
+  }
   rows.push([]);
 
   rows.push([t.vegetableBoxesHeading]);
@@ -302,6 +323,13 @@ function buildSingleRecordCsv(
   rows.push([t.marketGrossIncome, record.grossIncome]);
   rows.push([t.marketTotalExpenses, record.totalExpense]);
   rows.push([t.marketNetProfit, record.netProfit]);
+  if ((record.buyerIncome ?? 0) > 0 || (record.buyerExpense ?? 0) > 0) {
+    rows.push([]);
+    rows.push([t.buyerMarketerSectionHeading]);
+    rows.push([t.buyerIncomeLabel, record.buyerIncome ?? 0]);
+    rows.push([t.buyerExpenseLabel, record.buyerExpense ?? 0]);
+    rows.push([t.buyerMarketerNetLabel, Math.round(((record.buyerIncome ?? 0) - (record.buyerExpense ?? 0)) * 100) / 100]);
+  }
   if (record.notes) {
     rows.push([t.notes, record.notes]);
   }
@@ -329,12 +357,17 @@ function buildLedgerCsv(
     t.district,
     t.stateField,
     t.vegetableBoxesHeading,
+    t.customItemsNoteLabel,
     t.marketGrossIncome,
     t.marketTotalExpenses,
     t.marketNetProfit,
     t.paymentStatusLabel,
+    t.settledAmountLabel,
     t.pendingBaaki,
     t.agentNameLabel,
+    t.buyerIncomeLabel,
+    t.buyerExpenseLabel,
+    t.buyerMarketerNetLabel,
     t.cratesSentLabel,
     t.cratesReturnedLabel,
     t.pendingCrates,
@@ -344,15 +377,26 @@ function buildLedgerCsv(
   let totalGross = 0;
   let totalExp = 0;
   let totalNet = 0;
+  let totalSettled = 0;
   let totalPending = 0;
+  let totalBuyerIncome = 0;
+  let totalBuyerExpense = 0;
   let totalPendingCrates = 0;
 
   for (const r of records) {
     const pendingCrates = Math.max(0, r.cratesSent - r.cratesReturned);
+    const bInc = r.buyerIncome ?? 0;
+    const bExp = r.buyerExpense ?? 0;
+    const bNet = Math.round((bInc - bExp) * 100) / 100;
+    const settled = r.settledAmount ?? 0;
+
     totalGross += r.grossIncome;
     totalExp += r.totalExpense;
     totalNet += r.netProfit;
+    totalSettled += settled;
     totalPending += r.pendingAmount;
+    totalBuyerIncome += bInc;
+    totalBuyerExpense += bExp;
     totalPendingCrates += pendingCrates;
 
     const boxesSummary = r.vegetables
@@ -369,12 +413,17 @@ function buildLedgerCsv(
       r.district,
       r.state,
       boxesSummary,
+      r.customItemsNote ?? '',
       r.grossIncome,
       r.totalExpense,
       r.netProfit,
       marketPaymentStatusLabel(language, r.paymentStatus),
+      settled,
       r.pendingAmount,
       r.agentName,
+      bInc,
+      bExp,
+      bNet,
       r.cratesSent,
       r.cratesReturned,
       pendingCrates,
@@ -393,12 +442,17 @@ function buildLedgerCsv(
     '',
     '',
     `${records.length}`,
+    '',
     totalGross,
     totalExp,
     totalNet,
     '',
+    totalSettled,
     totalPending,
     '',
+    totalBuyerIncome,
+    totalBuyerExpense,
+    Math.round((totalBuyerIncome - totalBuyerExpense) * 100) / 100,
     '',
     '',
     totalPendingCrates,
@@ -417,7 +471,11 @@ function buildLedgerCsv(
       t.marketGrossIncome,
       t.marketTotalExpenses,
       t.marketNetProfit,
+      t.settledAmountLabel,
       t.pendingBaaki,
+      t.buyerIncomeLabel,
+      t.buyerExpenseLabel,
+      t.buyerMarketerNetLabel,
       t.pendingCrates,
       t.latestTripLabel,
     ]);
@@ -430,7 +488,11 @@ function buildLedgerCsv(
         s.grossIncome,
         s.totalExpense,
         s.netProfit,
+        s.settledAmount,
         s.pendingBaaki,
+        s.buyerIncome,
+        s.buyerExpense,
+        s.buyerNet,
         s.pendingCrates,
         s.latestMarketDate,
       ]);

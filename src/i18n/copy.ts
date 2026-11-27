@@ -441,6 +441,18 @@ export type Copy = {
   shareAppCopyBtn: string;
   shareAppCopied: string;
   shareAppMessage: string;
+
+  // Phase 2 Sprint 7 — Custom Items Box & Buyer/Marketer Income/Expense
+  customItemsNoteLabel: string;
+  customItemsNotePlaceholder: string;
+  buyerMarketerSectionHeading: string;
+  buyerMarketerSectionHint: string;
+  buyerIncomeLabel: string;
+  buyerExpenseLabel: string;
+  buyerMarketerNetLabel: string;
+  settledAmountLabel: string;
+  settledAmountShort: string;
+  fillPendingBalanceBtn: string;
 };
 
 export const copy: Record<Language, Copy> = {
@@ -908,6 +920,17 @@ export const copy: Record<Language, Copy> = {
     shareAppCopyBtn: 'Copy Invite',
     shareAppCopied: 'Share message copied to clipboard.',
     shareAppMessage: 'BS Diary by BhoomiShakti — Track daily farm activities, mandi sales pattis, crop stages, and expenses offline.\nOpen App: https://app.bhoomishakti.in\nWebsite: https://www.bhoomishakti.in/',
+
+    customItemsNoteLabel: 'Custom Items / Extra Details (Optional)',
+    customItemsNotePlaceholder: 'e.g. 2 bags loose chilli, sample crates, mixed lot details…',
+    buyerMarketerSectionHeading: 'Buyer / Marketer Income & Expenses (Optional)',
+    buyerMarketerSectionHint: 'Optional for traders, agents, or marketers to track their own margin on this slip.',
+    buyerIncomeLabel: 'Buyer/Marketer Income (₹)',
+    buyerExpenseLabel: 'Buyer/Marketer Expenses (₹)',
+    buyerMarketerNetLabel: 'Buyer/Marketer Net',
+    settledAmountLabel: 'Amount Settled / Paid (₹)',
+    settledAmountShort: 'Settled',
+    fillPendingBalanceBtn: 'Fill balance',
   },
   kn: {
     tagline: 'ಪ್ರತಿ ಹೊಲದ ಕಥೆ, ಒಂದೇ ಡೈರಿಯಲ್ಲಿ',
@@ -1373,6 +1396,17 @@ export const copy: Record<Language, Copy> = {
     shareAppCopyBtn: 'ಸಂದೇಶ ನಕಲಿಸಿ',
     shareAppCopied: 'ಹಂಚಿಕೆ ಸಂದೇಶವನ್ನು ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ಗೆ ನಕಲಿಸಲಾಗಿದೆ.',
     shareAppMessage: 'ಭೂಮಿಶಕ್ತಿ ಬಿಎಸ್ ಡೈರಿ (BS Diary) — ದೈನಂದಿನ ಕೃಷಿ ಕೆಲಸ, ಮಂಡಿ ಮಾರಾಟ ಪಟ್ಟಿ, ಬೆಳೆ ಹಂತಗಳು ಮತ್ತು ಖರ್ಚು-ವೆಚ್ಚಗಳನ್ನು ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ದಾಖಲಿಸಿ.\nಆ್ಯಪ್ ತೆರೆಯಿರಿ: https://app.bhoomishakti.in\nವೆಬ್‌ಸೈಟ್: https://www.bhoomishakti.in/',
+
+    customItemsNoteLabel: 'ಇತರೆ ವಸ್ತುಗಳು / ಹೆಚ್ಚುವರಿ ವಿವರ (ಐಚ್ಛಿಕ)',
+    customItemsNotePlaceholder: 'ಉದಾ. 2 ಚೀಲ ಬಿಡಿ ಮೆಣಸಿನಕಾಯಿ, ಮಾದರಿ ಬಾಕ್ಸ್, ಮಿಶ್ರ ಲಾಟ್ ವಿವರ…',
+    buyerMarketerSectionHeading: 'ಖರೀದಿದಾರ / ವ್ಯಾಪಾರಿ ಆದಾಯ ಮತ್ತು ಖರ್ಚು (ಐಚ್ಛಿಕ)',
+    buyerMarketerSectionHint: 'ವ್ಯಾಪಾರಿಗಳು, ಏಜೆಂಟರು ಅಥವಾ ಮಾರ್ಕೆಟರ್‌ಗಳು ತಮ್ಮ ಸ್ವಂತ ಲಾಭ-ಖರ್ಚು ದಾಖಲಿಸಲು (ಐಚ್ಛಿಕ).',
+    buyerIncomeLabel: 'ಖರೀದಿದಾರ/ವ್ಯಾಪಾರಿ ಆದಾಯ (₹)',
+    buyerExpenseLabel: 'ಖರೀದಿದಾರ/ವ್ಯಾಪಾರಿ ಖರ್ಚು (₹)',
+    buyerMarketerNetLabel: 'ಖರೀದಿದಾರ/ವ್ಯಾಪಾರಿ ನಿವ್ವಳ',
+    settledAmountLabel: 'ಪಾವತಿಸಿದ ಮೊತ್ತ (₹)',
+    settledAmountShort: 'ಪಾವತಿಸಲಾಗಿದೆ',
+    fillPendingBalanceBtn: 'ಬಾಕಿ ತುಂಬಿಸಿ',
   },
   hi: {
     tagline: 'हर खेत की कहानी, एक ही डायरी में',
@@ -1838,5 +1872,16 @@ export const copy: Record<Language, Copy> = {
     shareAppCopyBtn: 'संदेश कॉपी करें',
     shareAppCopied: 'साझा करने का संदेश क्लिपबोर्ड पर कॉपी हो गया।',
     shareAppMessage: 'भूमि शक्ति BS डायरी (BS Diary) — रोज़ के कृषि कार्य, मंडी बिक्री पट्टी, फसल अवस्था और खर्च को ऑफ़लाइन दर्ज करें।\nऐप खोलें: https://app.bhoomishakti.in\nवेबसाइट: https://www.bhoomishakti.in/',
+
+    customItemsNoteLabel: 'अतिरिक्त वस्तुएँ / कस्टम विवरण (वैकल्पिक)',
+    customItemsNotePlaceholder: 'जैसे 2 बोरी खुली मिर्च, सैंपल क्रेट, मिक्स लॉट विवरण…',
+    buyerMarketerSectionHeading: 'ख़रीदार / मार्केटर आय और खर्च (वैकल्पिक)',
+    buyerMarketerSectionHint: 'व्यापारियों, आढ़तियों या मार्केटर के लिए इस पर्ची का अपना लाभ-खर्च दर्ज करने हेतु (वैकल्पिक)।',
+    buyerIncomeLabel: 'ख़रीदार/मार्केटर आय (₹)',
+    buyerExpenseLabel: 'ख़रीदार/मार्केटर खर्च (₹)',
+    buyerMarketerNetLabel: 'ख़रीदार/मार्केटर शुद्ध',
+    settledAmountLabel: 'चुकाई गई राशि (₹)',
+    settledAmountShort: 'चुकाया गया',
+    fillPendingBalanceBtn: 'बकाया भरें',
   },
 };

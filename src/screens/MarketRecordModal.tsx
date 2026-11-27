@@ -123,6 +123,7 @@ export function MarketRecordModal({
   const [saving, setSaving] = useState(false);
   const [locationExpanded, setLocationExpanded] = useState(true);
   const [expensesExpanded, setExpensesExpanded] = useState(false);
+  const [buyerSectionExpanded, setBuyerSectionExpanded] = useState(false);
 
   // Core fields
   const [marketDate, setMarketDate] = useState(todayDateString());
@@ -140,11 +141,15 @@ export function MarketRecordModal({
   // Settlement, crates, photo & notes
   const [paymentStatus, setPaymentStatus] = useState<MarketPaymentStatus>('cash');
   const [pendingAmount, setPendingAmount] = useState('');
+  const [settledAmount, setSettledAmount] = useState('');
   const [agentName, setAgentName] = useState('');
   const [cratesSent, setCratesSent] = useState('');
   const [cratesReturned, setCratesReturned] = useState('');
   const [pattiPhotoUri, setPattiPhotoUri] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+  const [customItemsNote, setCustomItemsNote] = useState('');
+  const [buyerIncome, setBuyerIncome] = useState('');
+  const [buyerExpense, setBuyerExpense] = useState('');
 
   // Validation errors
   const [errors, setErrors] = useState<{ date?: string; time?: string; vegetables?: string }>({});
@@ -205,11 +210,16 @@ export function MarketRecordModal({
             : 'cash';
         setPaymentStatus(safeStatus);
         setPendingAmount(editingRecord.pendingAmount > 0 ? String(editingRecord.pendingAmount) : '');
+        setSettledAmount(editingRecord.settledAmount > 0 ? String(editingRecord.settledAmount) : '');
         setAgentName(editingRecord.agentName);
         setCratesSent(editingRecord.cratesSent > 0 ? String(editingRecord.cratesSent) : '');
         setCratesReturned(editingRecord.cratesReturned > 0 ? String(editingRecord.cratesReturned) : '');
         setPattiPhotoUri(editingRecord.pattiPhotoUri);
         setNotes(editingRecord.notes);
+        setCustomItemsNote(editingRecord.customItemsNote ?? '');
+        setBuyerIncome(editingRecord.buyerIncome > 0 ? String(editingRecord.buyerIncome) : '');
+        setBuyerExpense(editingRecord.buyerExpense > 0 ? String(editingRecord.buyerExpense) : '');
+        setBuyerSectionExpanded(editingRecord.buyerIncome > 0 || editingRecord.buyerExpense > 0);
       } else {
         setMarketDate(todayDateString());
         setMarketOpenTime(currentLocalTimeHHMM());
@@ -224,11 +234,16 @@ export function MarketRecordModal({
         setExpensesExpanded(false);
         setPaymentStatus('cash');
         setPendingAmount('');
+        setSettledAmount('');
         setAgentName('');
         setCratesSent('');
         setCratesReturned('');
         setPattiPhotoUri(null);
         setNotes('');
+        setCustomItemsNote('');
+        setBuyerIncome('');
+        setBuyerExpense('');
+        setBuyerSectionExpanded(false);
       }
     }
   }
@@ -317,6 +332,11 @@ export function MarketRecordModal({
   );
 
   const netProfit = grossIncome - totalExpense;
+  const buyerIncomeNum = parseNonNegNumber(buyerIncome);
+  const buyerExpenseNum = parseNonNegNumber(buyerExpense);
+  const buyerNet = Math.round((buyerIncomeNum - buyerExpenseNum) * 100) / 100;
+  const settledAmountNum = parseNonNegNumber(settledAmount);
+  const remainingPendingBalance = Math.max(0, Math.round((netProfit - settledAmountNum) * 100) / 100);
   const cratesSentNum = Math.round(parseNonNegNumber(cratesSent));
   const cratesReturnedNum = Math.round(parseNonNegNumber(cratesReturned));
   const pendingCratesCount = Math.max(0, cratesSentNum - cratesReturnedNum);
@@ -428,6 +448,21 @@ export function MarketRecordModal({
       return;
     }
 
+    const resolvedPendingAmount =
+      paymentStatus === 'pending'
+        ? pendingAmount.trim().length > 0
+          ? parseNonNegNumber(pendingAmount)
+          : settledAmountNum > 0
+            ? remainingPendingBalance
+            : 0
+        : 0;
+    const resolvedSettledAmount =
+      paymentStatus === 'pending'
+        ? settledAmountNum
+        : settledAmount.trim().length > 0
+          ? settledAmountNum
+          : Math.max(0, Math.round(netProfit * 100) / 100);
+
     const input: MarketRecordInput = {
       marketDate: marketDate.trim(),
       marketOpenTime: marketOpenTime.trim(),
@@ -440,12 +475,16 @@ export function MarketRecordModal({
       totalExpense,
       netProfit,
       paymentStatus,
-      pendingAmount: paymentStatus === 'pending' ? parseNonNegNumber(pendingAmount) : 0,
+      pendingAmount: resolvedPendingAmount,
       agentName: agentName.trim(),
       cratesSent: cratesSentNum,
       cratesReturned: cratesReturnedNum,
       pattiPhotoUri,
       notes: notes.trim(),
+      customItemsNote: customItemsNote.trim() || null,
+      buyerIncome: buyerIncomeNum,
+      buyerExpense: buyerExpenseNum,
+      settledAmount: resolvedSettledAmount,
       vegetables: validVegs.map((v, idx) => {
         const quantity = parseNonNegNumber(v.quantity);
         const ratePerUnit = parseNonNegNumber(v.ratePerUnit);
@@ -918,6 +957,17 @@ export function MarketRecordModal({
                   ＋ {t.addVegetableBox}
                 </Text>
               </TouchableOpacity>
+
+              <View style={{ marginTop: 10 }}>
+                <FormField
+                  label={t.customItemsNoteLabel}
+                  value={customItemsNote}
+                  onChangeText={setCustomItemsNote}
+                  placeholder={t.customItemsNotePlaceholder}
+                  multiline
+                  dark={isDarkSlip}
+                />
+              </View>
             </View>
 
             {/* Collapsible Market Expenses Section */}
@@ -1043,6 +1093,102 @@ export function MarketRecordModal({
               )}
             </View>
 
+            {/* Optional Collapsible Buyer / Marketer Income & Expenses Section */}
+            <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderColor: theme.cardBorder }]}>
+              <TouchableOpacity
+                onPress={() => setBuyerSectionExpanded(v => !v)}
+                style={styles.sectionHeaderRow}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
+                  <Ionicons name="briefcase-outline" size={16} color={theme.accent} />
+                  <Text style={[styles.sectionHeading, { color: theme.text }]}>
+                    {t.buyerMarketerSectionHeading}
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  {(buyerIncomeNum > 0 || buyerExpenseNum > 0) && (
+                    <Text
+                      style={[
+                        styles.sectionTotal,
+                        { color: buyerNet < 0 ? theme.lossColor : theme.profitColor },
+                      ]}
+                    >
+                      {formatINR(buyerNet)}
+                    </Text>
+                  )}
+                  <Ionicons
+                    name={buyerSectionExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={18}
+                    color={theme.muted}
+                  />
+                </View>
+              </TouchableOpacity>
+
+              {buyerSectionExpanded && (
+                <View style={{ marginTop: 10 }}>
+                  <Text style={[styles.buyerHintText, { color: theme.muted }]}>
+                    {t.buyerMarketerSectionHint}
+                  </Text>
+                  <View style={[styles.rowGap, { marginTop: 8 }]}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.miniLabel, { color: theme.muted }]}>
+                        {t.buyerIncomeLabel}
+                      </Text>
+                      <TextInput
+                        value={buyerIncome}
+                        onChangeText={setBuyerIncome}
+                        placeholder="0"
+                        placeholderTextColor={theme.muted}
+                        keyboardType="decimal-pad"
+                        style={[
+                          styles.compactInput,
+                          { backgroundColor: theme.inputBg, borderColor: theme.inputBorder, color: theme.text },
+                        ]}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.miniLabel, { color: theme.muted }]}>
+                        {t.buyerExpenseLabel}
+                      </Text>
+                      <TextInput
+                        value={buyerExpense}
+                        onChangeText={setBuyerExpense}
+                        placeholder="0"
+                        placeholderTextColor={theme.muted}
+                        keyboardType="decimal-pad"
+                        style={[
+                          styles.compactInput,
+                          { backgroundColor: theme.inputBg, borderColor: theme.inputBorder, color: theme.text },
+                        ]}
+                      />
+                    </View>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.buyerNetSummaryRow,
+                      {
+                        backgroundColor: theme.accentBg,
+                        borderColor: theme.cardBorder,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.buyerNetLabel, { color: theme.muted }]}>
+                      {t.buyerMarketerNetLabel}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.buyerNetValue,
+                        { color: buyerNet < 0 ? theme.lossColor : theme.profitColor },
+                      ]}
+                    >
+                      {formatINR(buyerNet)}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+
             {/* Settlement, Crates & Patti Photo Section */}
             <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderColor: theme.cardBorder }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
@@ -1084,14 +1230,54 @@ export function MarketRecordModal({
               </View>
 
               {paymentStatus === 'pending' && (
-                <FormField
-                  label={t.pendingAmountLabel}
-                  value={pendingAmount}
-                  onChangeText={setPendingAmount}
-                  placeholder={netProfit > 0 ? String(Math.round(netProfit)) : '0'}
-                  keyboardType="decimal-pad"
-                  dark={isDarkSlip}
-                />
+                <View style={{ marginTop: 10 }}>
+                  <View style={styles.rowGap}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.miniLabel, { color: theme.muted }]}>
+                        {t.settledAmountLabel}
+                      </Text>
+                      <TextInput
+                        value={settledAmount}
+                        onChangeText={setSettledAmount}
+                        placeholder="0"
+                        placeholderTextColor={theme.muted}
+                        keyboardType="decimal-pad"
+                        style={[
+                          styles.compactInput,
+                          { backgroundColor: theme.inputBg, borderColor: theme.inputBorder, color: theme.text },
+                        ]}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <View style={styles.labelActionRow}>
+                        <Text style={[styles.miniLabel, { color: theme.muted, marginBottom: 0 }]}>
+                          {t.pendingAmountLabel}
+                        </Text>
+                        {remainingPendingBalance > 0 && (
+                          <TouchableOpacity
+                            onPress={() => setPendingAmount(String(remainingPendingBalance))}
+                            style={[styles.nowBtn, { backgroundColor: theme.accentBg }]}
+                          >
+                            <Text style={[styles.actionLink, { color: theme.accent }]}>
+                              {t.fillPendingBalanceBtn}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                      <TextInput
+                        value={pendingAmount}
+                        onChangeText={setPendingAmount}
+                        placeholder={remainingPendingBalance > 0 ? String(Math.round(remainingPendingBalance)) : '0'}
+                        placeholderTextColor={theme.muted}
+                        keyboardType="decimal-pad"
+                        style={[
+                          styles.compactInput,
+                          { backgroundColor: theme.inputBg, borderColor: theme.inputBorder, color: theme.text },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                </View>
               )}
 
               <FormField
@@ -1358,6 +1544,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
+  },
+  buyerHintText: {
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  buyerNetSummaryRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 11,
+    borderWidth: 1,
+  },
+  buyerNetLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  buyerNetValue: {
+    fontSize: 15,
+    fontWeight: '900',
   },
   nowBtnText: {
     fontSize: 11,

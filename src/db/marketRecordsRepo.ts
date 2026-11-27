@@ -68,6 +68,10 @@ type MarketRecordRow = {
   cratesReturned: number;
   pattiPhotoUri: string | null;
   notes: string;
+  customItemsNote: string | null;
+  buyerIncome: number;
+  buyerExpense: number;
+  settledAmount: number;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -97,6 +101,10 @@ export type MarketRecordInput = {
   cratesReturned?: number;
   pattiPhotoUri?: string | null;
   notes?: string;
+  customItemsNote?: string | null;
+  buyerIncome?: number;
+  buyerExpense?: number;
+  settledAmount?: number;
   vegetables: MarketVegetableItemInput[];
   expenses: MarketExpenseItemInput[];
 };
@@ -123,6 +131,10 @@ export type MarketEntitySummary = {
   netProfit: number;
   pendingBaaki: number;
   pendingCrates: number;
+  settledAmount: number;
+  buyerIncome: number;
+  buyerExpense: number;
+  buyerNet: number;
   latestMarketDate: string;
 };
 
@@ -162,6 +174,9 @@ export function summarizeMarketByBuyerOrMarket(
       netProfit: number;
       pendingBaaki: number;
       pendingCrates: number;
+      settledAmount: number;
+      buyerIncome: number;
+      buyerExpense: number;
       latestMarketDate: string;
     }
   >();
@@ -176,6 +191,9 @@ export function summarizeMarketByBuyerOrMarket(
     );
     const itemLines = (r.vegetables ?? []).length;
     const pendingCrates = Math.max(0, (r.cratesSent ?? 0) - (r.cratesReturned ?? 0));
+    const settledAmt = toFiniteNumber(r.settledAmount, 0);
+    const buyerInc = toFiniteNumber(r.buyerIncome, 0);
+    const buyerExp = toFiniteNumber(r.buyerExpense, 0);
 
     const existing = groups.get(key);
     if (!existing) {
@@ -194,6 +212,9 @@ export function summarizeMarketByBuyerOrMarket(
         netProfit: r.netProfit,
         pendingBaaki: r.pendingAmount,
         pendingCrates,
+        settledAmount: settledAmt,
+        buyerIncome: buyerInc,
+        buyerExpense: buyerExp,
         latestMarketDate: r.marketDate,
       });
     } else {
@@ -205,6 +226,9 @@ export function summarizeMarketByBuyerOrMarket(
       existing.netProfit += r.netProfit;
       existing.pendingBaaki += r.pendingAmount;
       existing.pendingCrates += pendingCrates;
+      existing.settledAmount += settledAmt;
+      existing.buyerIncome += buyerInc;
+      existing.buyerExpense += buyerExp;
       if (r.marketDate >= existing.latestMarketDate) {
         existing.latestMarketDate = r.marketDate;
         if (r.state?.trim()) existing.state = r.state.trim();
@@ -226,6 +250,8 @@ export function summarizeMarketByBuyerOrMarket(
     const locationSummary = [g.state, g.district, g.taluk, g.village]
       .filter(Boolean)
       .join(' · ');
+    const buyerIncome = Math.round(g.buyerIncome * 100) / 100;
+    const buyerExpense = Math.round(g.buyerExpense * 100) / 100;
     results.push({
       key,
       marketName: g.marketName,
@@ -240,6 +266,10 @@ export function summarizeMarketByBuyerOrMarket(
       netProfit: Math.round(g.netProfit * 100) / 100,
       pendingBaaki: Math.round(g.pendingBaaki * 100) / 100,
       pendingCrates: g.pendingCrates,
+      settledAmount: Math.round(g.settledAmount * 100) / 100,
+      buyerIncome,
+      buyerExpense,
+      buyerNet: Math.round((buyerIncome - buyerExpense) * 100) / 100,
       latestMarketDate: g.latestMarketDate,
     });
   }
@@ -335,6 +365,10 @@ function normalizeMarketRecordInput(input: MarketRecordInput) {
     cratesReturned: Math.max(0, Math.round(toFiniteNumber(input.cratesReturned, 0))),
     pattiPhotoUri: input.pattiPhotoUri ?? null,
     notes: (input.notes ?? '').trim(),
+    customItemsNote: (input.customItemsNote ?? '').trim() || null,
+    buyerIncome: Math.max(0, toFiniteNumber(input.buyerIncome, 0)),
+    buyerExpense: Math.max(0, toFiniteNumber(input.buyerExpense, 0)),
+    settledAmount: Math.max(0, toFiniteNumber(input.settledAmount, 0)),
     vegetables,
     expenses,
   };
@@ -394,6 +428,10 @@ export async function listMarketRecords(
 
     hydratedRecords = records.map(record => ({
       ...record,
+      customItemsNote: record.customItemsNote ?? null,
+      buyerIncome: toFiniteNumber(record.buyerIncome, 0),
+      buyerExpense: toFiniteNumber(record.buyerExpense, 0),
+      settledAmount: toFiniteNumber(record.settledAmount, 0),
       vegetables: vegByRecord.get(record.id) ?? [],
       expenses: expenseByRecord.get(record.id) ?? [],
     }));
@@ -423,8 +461,9 @@ export async function addMarketRecord(
         paymentStatus, pendingAmount, agentName,
         cratesSent, cratesReturned,
         pattiPhotoUri, notes,
+        customItemsNote, buyerIncome, buyerExpense, settledAmount,
         createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       uuid,
       ownerId,
       workspaceId,
@@ -445,6 +484,10 @@ export async function addMarketRecord(
       normalized.cratesReturned,
       normalized.pattiPhotoUri,
       normalized.notes,
+      normalized.customItemsNote,
+      normalized.buyerIncome,
+      normalized.buyerExpense,
+      normalized.settledAmount,
       now,
       now
     );
@@ -505,6 +548,7 @@ export async function updateMarketRecord(
         paymentStatus = ?, pendingAmount = ?, agentName = ?,
         cratesSent = ?, cratesReturned = ?,
         pattiPhotoUri = ?, notes = ?,
+        customItemsNote = ?, buyerIncome = ?, buyerExpense = ?, settledAmount = ?,
         updatedAt = ?
        WHERE id = ? AND (userId IS ?) AND workspaceId = ? AND deletedAt IS NULL`,
       normalized.marketDate,
@@ -524,6 +568,10 @@ export async function updateMarketRecord(
       normalized.cratesReturned,
       normalized.pattiPhotoUri,
       normalized.notes,
+      normalized.customItemsNote,
+      normalized.buyerIncome,
+      normalized.buyerExpense,
+      normalized.settledAmount,
       now,
       id,
       ownerId,
